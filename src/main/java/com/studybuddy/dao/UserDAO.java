@@ -1,0 +1,753 @@
+package com.studybuddy.dao;
+
+import com.studybuddy.models.User;
+import java.sql.*;
+import java.time.LocalDate;
+
+/**
+ * Data Access Object for User operations.
+ * Extended with methods for Edit Profile functionality including
+ * personal information, study preferences, email settings, and security.
+ */
+public class UserDAO {
+
+    // =========================
+    // CREATE USER (REGISTER)
+    // =========================
+
+    /**
+     * Create a new user in the database.
+     * @param user User object to create
+     * @return true if creation successful, false otherwise
+     */
+    public boolean createUser(User user) {
+        String sql = "INSERT INTO Users (name, email, password, role) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPassword());
+            ps.setString(4, user.getRole() == null ? "user" : user.getRole());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
+    // GET USER BY EMAIL (LOGIN)
+    // =========================
+
+    /**
+     * Get user by email address.
+     * @param email User's email address
+     * @return User object or null if not found
+     */
+    public User getUserByEmail(String email) {
+        String sql = "SELECT * FROM Users WHERE email = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setName(rs.getString("name"));
+                user.setEmail(rs.getString("email"));
+                user.setPassword(rs.getString("password"));
+                user.setRole(rs.getString("role"));
+                user.setCreatedAt(rs.getTimestamp("created_at") != null ?
+                        rs.getTimestamp("created_at").toLocalDateTime() : null);
+                return user;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    // =========================
+    // GET USER BY ID
+    // =========================
+
+    /**
+     * Get user by ID.
+     * @param userId User's ID
+     * @return User object or null if not found
+     */
+    public User getUserById(int userId) {
+        String sql = "SELECT * FROM Users WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    // =========================
+    // UPDATE USER (BASIC)
+    // =========================
+
+    /**
+     * Update basic user information.
+     * @param user User object with updated information
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateUser(User user) {
+        String sql = "UPDATE Users SET name=?, email=?, password=?, role=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPassword());
+            ps.setString(4, user.getRole());
+            ps.setInt(5, user.getId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
+    // UPDATE PERSONAL INFORMATION
+    // =========================
+
+    /**
+     * Update user's personal information.
+     * @param user User object with updated personal details
+     * @return true if update successful, false otherwise
+     */
+    public boolean updatePersonalInformation(User user) {
+        String sql = "UPDATE Users SET fullName=?, username=?, bio=?, educationLevel=?, dateOfBirth=?, profileImagePath=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, user.getFullName());
+            ps.setString(2, user.getUsername());
+            ps.setString(3, user.getBio());
+            ps.setString(4, user.getEducationLevel());
+
+            if (user.getDateOfBirth() != null) {
+                ps.setDate(5, Date.valueOf(user.getDateOfBirth()));
+            } else {
+                ps.setNull(5, Types.DATE);
+            }
+
+            ps.setString(6, user.getProfileImagePath());
+            ps.setInt(7, user.getId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's full name.
+     * @param userId User's ID
+     * @param fullName New full name
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateFullName(int userId, String fullName) {
+        String sql = "UPDATE Users SET fullName=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, fullName);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's username.
+     * @param userId User's ID
+     * @param username New username
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateUsername(int userId, String username) {
+        String sql = "UPDATE Users SET username=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's bio.
+     * @param userId User's ID
+     * @param bio New bio text
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateBio(int userId, String bio) {
+        String sql = "UPDATE Users SET bio=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, bio);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's education level.
+     * @param userId User's ID
+     * @param educationLevel New education level
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateEducationLevel(int userId, String educationLevel) {
+        String sql = "UPDATE Users SET educationLevel=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, educationLevel);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's date of birth.
+     * @param userId User's ID
+     * @param dateOfBirth New date of birth
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateDateOfBirth(int userId, LocalDate dateOfBirth) {
+        String sql = "UPDATE Users SET dateOfBirth=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            if (dateOfBirth != null) {
+                ps.setDate(1, Date.valueOf(dateOfBirth));
+            } else {
+                ps.setNull(1, Types.DATE);
+            }
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's profile image path.
+     * @param userId User's ID
+     * @param profileImagePath New profile image path
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateProfileImagePath(int userId, String profileImagePath) {
+        String sql = "UPDATE Users SET profileImagePath=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, profileImagePath);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
+    // UPDATE STUDY PREFERENCES
+    // =========================
+
+    /**
+     * Update user's study preferences.
+     * @param user User object with updated study preferences
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateStudyPreferences(User user) {
+        String sql = "UPDATE Users SET preferredSubjects=?, studyGoals=?, learningInterests=?, notificationsEnabled=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, user.getPreferredSubjects());
+            ps.setString(2, user.getStudyGoals());
+            ps.setString(3, user.getLearningInterests());
+            ps.setBoolean(4, user.isNotificationsEnabled());
+            ps.setInt(5, user.getId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's preferred subjects.
+     * @param userId User's ID
+     * @param preferredSubjects New preferred subjects
+     * @return true if update successful, false otherwise
+     */
+    public boolean updatePreferredSubjects(int userId, String preferredSubjects) {
+        String sql = "UPDATE Users SET preferredSubjects=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, preferredSubjects);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's study goals.
+     * @param userId User's ID
+     * @param studyGoals New study goals
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateStudyGoals(int userId, String studyGoals) {
+        String sql = "UPDATE Users SET studyGoals=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, studyGoals);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's learning interests.
+     * @param userId User's ID
+     * @param learningInterests New learning interests
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateLearningInterests(int userId, String learningInterests) {
+        String sql = "UPDATE Users SET learningInterests=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, learningInterests);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's notifications enabled status.
+     * @param userId User's ID
+     * @param notificationsEnabled Whether notifications are enabled
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateNotificationsEnabled(int userId, boolean notificationsEnabled) {
+        String sql = "UPDATE Users SET notificationsEnabled=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setBoolean(1, notificationsEnabled);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
+    // UPDATE EMAIL SETTINGS
+    // =========================
+
+    /**
+     * Update user's email.
+     * @param userId User's ID
+     * @param newEmail New email address
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateEmail(int userId, String newEmail) {
+        String sql = "UPDATE Users SET email=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newEmail);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update user's email notification settings.
+     * @param user User object with updated email settings
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateEmailSettings(User user) {
+        String sql = "UPDATE Users SET email=?, emailNotificationsEnabled=?, resourceUpdateNotifications=?, systemNotifications=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, user.getEmail());
+            ps.setBoolean(2, user.isEmailNotificationsEnabled());
+            ps.setBoolean(3, user.isResourceUpdateNotifications());
+            ps.setBoolean(4, user.isSystemNotifications());
+            ps.setInt(5, user.getId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update email notifications enabled status.
+     * @param userId User's ID
+     * @param emailNotificationsEnabled Whether email notifications are enabled
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateEmailNotificationsEnabled(int userId, boolean emailNotificationsEnabled) {
+        String sql = "UPDATE Users SET emailNotificationsEnabled=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setBoolean(1, emailNotificationsEnabled);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update resource update notifications status.
+     * @param userId User's ID
+     * @param resourceUpdateNotifications Whether resource update notifications are enabled
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateResourceUpdateNotifications(int userId, boolean resourceUpdateNotifications) {
+        String sql = "UPDATE Users SET resourceUpdateNotifications=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setBoolean(1, resourceUpdateNotifications);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update system notifications status.
+     * @param userId User's ID
+     * @param systemNotifications Whether system notifications are enabled
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateSystemNotifications(int userId, boolean systemNotifications) {
+        String sql = "UPDATE Users SET systemNotifications=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setBoolean(1, systemNotifications);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
+    // UPDATE PASSWORD
+    // =========================
+
+    /**
+     * Update user's password.
+     * @param userId User's ID
+     * @param newPassword New password (should be encrypted)
+     * @return true if update successful, false otherwise
+     */
+    public boolean updatePassword(int userId, String newPassword) {
+        String sql = "UPDATE Users SET password=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newPassword);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Verify user's current password.
+     * @param userId User's ID
+     * @param currentPassword Current password to verify
+     * @return true if password matches, false otherwise
+     */
+    public boolean verifyPassword(int userId, String currentPassword) {
+        String sql = "SELECT password FROM Users WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String storedPassword = rs.getString("password");
+                // TODO: Implement password hashing comparison if using encrypted passwords
+                return storedPassword.equals(currentPassword);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // =========================
+    // GET USER STATISTICS
+    // =========================
+
+    /**
+     * Get user statistics.
+     * @param userId User's ID
+     * @return User object with statistics data
+     */
+    public User getUserStatistics(int userId) {
+        String sql = "SELECT id, answersCount, questionsCount, achievements, points FROM Users WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setAnswersCount(rs.getInt("answersCount"));
+                user.setQuestionsCount(rs.getInt("questionsCount"));
+                user.setAchievements(rs.getInt("achievements"));
+                user.setPoints(rs.getInt("points"));
+                return user;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Increment user's points.
+     * @param userId User's ID
+     * @param pointsToAdd Points to add
+     * @return true if update successful, false otherwise
+     */
+    public boolean incrementPoints(int userId, int pointsToAdd) {
+        String sql = "UPDATE Users SET points = points + ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, pointsToAdd);
+            ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
+    // DELETE USER
+    // =========================
+
+    /**
+     * Delete user from database.
+     * @param userId User's ID
+     * @return true if deletion successful, false otherwise
+     */
+    public boolean deleteUser(int userId) {
+        String sql = "DELETE FROM Users WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
+    // HELPER METHOD
+    // =========================
+
+    /**
+     * Map ResultSet to User object.
+     * @param rs ResultSet containing user data
+     * @return User object
+     * @throws SQLException if mapping fails
+     */
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setName(rs.getString("name"));
+        user.setEmail(rs.getString("email"));
+        user.setPassword(rs.getString("password"));
+        user.setRole(rs.getString("role"));
+
+        // Profile information
+        user.setFullName(rs.getString("fullName"));
+        user.setUsername(rs.getString("username"));
+        user.setBio(rs.getString("bio"));
+        user.setEducationLevel(rs.getString("educationLevel"));
+
+        if (rs.getDate("dateOfBirth") != null) {
+            user.setDateOfBirth(rs.getDate("dateOfBirth").toLocalDate());
+        }
+
+        user.setProfileImagePath(rs.getString("profileImagePath"));
+
+        // Study preferences
+        user.setPreferredSubjects(rs.getString("preferredSubjects"));
+        user.setStudyGoals(rs.getString("studyGoals"));
+        user.setLearningInterests(rs.getString("learningInterests"));
+        user.setNotificationsEnabled(rs.getBoolean("notificationsEnabled"));
+
+        // Notification settings
+        user.setEmailNotificationsEnabled(rs.getBoolean("emailNotificationsEnabled"));
+        user.setResourceUpdateNotifications(rs.getBoolean("resourceUpdateNotifications"));
+        user.setSystemNotifications(rs.getBoolean("systemNotifications"));
+
+        // Statistics
+        user.setAnswersCount(rs.getInt("answersCount"));
+        user.setQuestionsCount(rs.getInt("questionsCount"));
+        user.setAchievements(rs.getInt("achievements"));
+        user.setPoints(rs.getInt("points"));
+
+        // Creation timestamp
+        if (rs.getTimestamp("created_at") != null) {
+            user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        }
+
+        return user;
+    }
+}

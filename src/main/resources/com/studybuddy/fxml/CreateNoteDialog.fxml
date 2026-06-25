@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/17"
+      fx:controller="com.studybuddy.controllers.CreateNoteController"
+      styleClass="dialog"
+      spacing="20">
+
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <Label text="Create New Note" styleClass="dialog-title"/>
+
+    <!-- Note Title -->
+    <VBox spacing="8">
+        <Label text="Note Title"/>
+        <TextField fx:id="titleField" promptText="Enter note title" styleClass="form-input"/>
+    </VBox>
+
+    <!-- Subject -->
+    <VBox spacing="8">
+        <Label text="Subject"/>
+        <ComboBox fx:id="subjectField" promptText="Select subject" styleClass="combo-box"/>
+    </VBox>
+
+    <!-- Source -->
+    <VBox spacing="8">
+        <Label text="Source"/>
+        <ComboBox fx:id="sourceField" promptText="Select source" styleClass="combo-box"/>
+    </VBox>
+
+    <!-- Date -->
+    <VBox spacing="8">
+        <Label text="Date"/>
+        <DatePicker fx:id="dateField" styleClass="date-picker"/>
+    </VBox>
+
+    <!-- Description -->
+    <VBox spacing="8">
+        <Label text="Description/Content"/>
+        <TextArea fx:id="descriptionField" promptText="Enter your note content"
+                  styleClass="text-area" wrapText="true"/>
+    </VBox>
+
+    <!-- File Upload -->
+    <VBox spacing="8">
+        <Label text="Upload File (PDF, DOCX, PPTX, Images, Text)"/>
+        <HBox spacing="10">
+            <TextField fx:id="fileTextField" promptText="No file selected"
+                       styleClass="form-input" editable="false"/>
+            <Button text="📁 Upload" styleClass="upload-button" onAction="#selectFile"/>
+        </HBox>
+    </VBox>
+
+    <!-- Visibility Options -->
+    <VBox spacing="8">
+        <Label text="Visibility"/>
+        <HBox spacing="15">
+            <RadioButton fx:id="privateRadio" text="Private Note" selected="true"/>
+            <RadioButton fx:id="shareRadio" text="Share as Resource"/>
+        </HBox>
+    </VBox>
+
+    <!-- Buttons -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="💾 Save Note" styleClass="save-button" onAction="#saveNote"/>
+        <Button text="📤 Upload Resource" styleClass="upload-resource-button"
+                onAction="#uploadResource" visible="false" fx:id="uploadResourceBtn"/>
+        <Button text="Cancel" styleClass="cancel-button" onAction="#cancel"/>
+    </HBox>
+
+</VBox>

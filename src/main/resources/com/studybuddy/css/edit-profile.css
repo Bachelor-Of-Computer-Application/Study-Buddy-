@@ -1,0 +1,497 @@
+/* ===========================
+   Study Buddy - Edit Profile CSS
+   Primary Color: #2563EB
+   Background: #F5F7FB
+   =========================== */
+
+/* Root Styles */
+.borderpane-root {
+    background-color: #F5F7FB;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    background-color: #FFFFFF;
+    padding: 15px 30px;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.nav-logo-section {
+    padding: 5px 0;
+}
+
+.nav-buttons-section {
+    spacing: 15px;
+    alignment: center-right;
+}
+
+.nav-btn {
+    background-color: #FFFFFF;
+    color: #2563EB;
+    border: 1px solid #E2E8F0;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border-color: #2563EB;
+    transform: translateY(-2px);
+}
+
+.nav-btn-logout {
+    background-color: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn-logout:hover {
+    background-color: #DC2626;
+    color: #FFFFFF;
+    border-color: #DC2626;
+    transform: translateY(-2px);
+}
+
+/* Main Content */
+.main-content {
+    padding: 40px;
+    spacing: 30px;
+}
+
+/* Header Section */
+.header-section {
+    spacing: 40px;
+    alignment: center;
+}
+
+.header-left {
+    spacing: 20px;
+}
+
+.avatar-container {
+    position: relative;
+    padding: 5px;
+    background-color: #FFFFFF;
+    border-radius: 50%;
+    border: 3px solid #2563EB;
+}
+
+.avatar-image {
+    border-radius: 50%;
+}
+
+.edit-icon-overlay {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: #2563EB;
+    border-radius: 50%;
+    padding: 5px;
+}
+
+.title-section {
+    spacing: 8px;
+}
+
+.header-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1E293B;
+}
+
+.header-subtitle {
+    font-size: 16px;
+    color: #64748B;
+}
+
+.educational-illustration {
+    opacity: 0.9;
+}
+
+/* Edit Sections */
+.edit-sections {
+    spacing: 25px;
+}
+
+.edit-card {
+    background-color: #FFFFFF;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.edit-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.edit-card-header {
+    spacing: 15px;
+    alignment: center-left;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.edit-card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1E293B;
+}
+
+.edit-card-description {
+    font-size: 14px;
+    color: #64748B;
+}
+
+.edit-btn-small {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.edit-btn-small:hover {
+    background-color: #1D4ED8;
+    transform: scale(1.05);
+}
+
+.edit-fields-container {
+    spacing: 20px;
+    padding-top: 20px;
+}
+
+/* Field Groups */
+.field-group {
+    spacing: 8px;
+}
+
+.field-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.input-field {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #1E293B;
+    transition: all 0.3s ease;
+}
+
+.input-field:hover {
+    border-color: #2563EB;
+    background-color: #FFFFFF;
+}
+
+.input-field:focus {
+    border-color: #2563EB;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.textarea-field {
+    background-color: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #1E293B;
+    transition: all 0.3s ease;
+    pref-height: 80.0;
+}
+
+.textarea-field:hover {
+    border-color: #2563EB;
+    background-color: #FFFFFF;
+}
+
+.textarea-field:focus {
+    border-color: #2563EB;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.upload-btn {
+    background-color: #F9FAFB;
+    color: #2563EB;
+    border: 2px solid #2563EB;
+    padding: 12px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    transform: scale(1.02);
+}
+
+.checkbox-field {
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+}
+
+/* Action Buttons */
+.action-buttons {
+    spacing: 15px;
+    alignment: center-right;
+    padding-top: 15px;
+}
+
+.btn-primary {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1D4ED8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+    background-color: #F9FAFB;
+    color: #64748B;
+    border: 1px solid #E5E7EB;
+    padding: 12px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #E5E7EB;
+    color: #374151;
+}
+
+/* Profile Statistics */
+.stats-section {
+    spacing: 20px;
+}
+
+.stats-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1E293B;
+}
+
+.stats-cards {
+    spacing: 20px;
+    alignment: center;
+}
+
+.stat-card {
+    background-color: #FFFFFF;
+    border-radius: 20px;
+    padding: 25px;
+    spacing: 12px;
+    alignment: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2563EB;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #64748B;
+    font-weight: 600;
+}
+
+/* Footer Actions */
+.footer-actions {
+    spacing: 20px;
+    padding-top: 20px;
+}
+
+.footer-buttons {
+    spacing: 20px;
+    alignment: center;
+}
+
+.btn-primary-large {
+    background-color: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    padding: 16px 40px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-large:hover {
+    background-color: #1D4ED8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4);
+}
+
+.btn-secondary-large {
+    background-color: #F9FAFB;
+    color: #64748B;
+    border: 1px solid #E5E7EB;
+    padding: 16px 40px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary-large:hover {
+    background-color: #E5E7EB;
+    color: #374151;
+    transform: translateY(-2px);
+}
+
+.btn-danger-large {
+    background-color: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+    padding: 16px 40px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger-large:hover {
+    background-color: #DC2626;
+    color: #FFFFFF;
+    border-color: #DC2626;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(220, 38, 38, 0.4);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1200px) {
+    .main-content {
+        padding: 25px;
+    }
+
+    .header-title {
+        font-size: 28px;
+    }
+
+    .edit-card {
+        padding: 25px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .nav-bar {
+        padding: 10px 15px;
+    }
+
+    .nav-btn {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+
+    .main-content {
+        padding: 15px;
+    }
+
+    .header-title {
+        font-size: 24px;
+    }
+
+    .header-subtitle {
+        font-size: 14px;
+    }
+
+    .stats-cards {
+        flex-wrap: wrap;
+    }
+
+    .footer-buttons {
+        flex-wrap: wrap;
+    }
+
+    .btn-primary-large,
+    .btn-secondary-large,
+    .btn-danger-large {
+        padding: 14px 30px;
+        font-size: 14px;
+    }
+}
+
+/* Focus States */
+.input-field:focused,
+.textarea-field:focused {
+    outline: none;
+}
+
+/* Disabled State */
+.input-field:disabled {
+    background-color: #E5E7EB;
+    color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+/* Scrollbar Styling */
+TextArea::-webkit-scrollbar {
+    width: 8px;
+}
+
+TextArea::-webkit-scrollbar-track {
+    background: #F1F1F1;
+    border-radius: 10px;
+}
+
+TextArea::-webkit-scrollbar-thumb {
+    background: #C1C1C1;
+    border-radius: 10px;
+}
+
+TextArea::-webkit-scrollbar-thumb:hover {
+    background: #A8A8A8;
+}
