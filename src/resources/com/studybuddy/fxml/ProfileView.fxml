@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="rootPane" prefHeight="700.0" prefWidth="1000.0" styleClass="root-pane" stylesheets="@../css/profile.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.ProfileController">
+
+    <left>
+        <VBox alignment="TOP_CENTER" prefHeight="655.0" prefWidth="253.0" spacing="20.0" styleClass="profile-sidebar">
+            <padding>
+                <Insets bottom="30.0" left="20.0" right="20.0" top="30.0" />
+            </padding>
+            
+            <StackPane styleClass="avatar-circle">
+                <ImageView fx:id="profileImageView" fitHeight="120.0" fitWidth="120.0" preserveRatio="true">
+                    <image>
+                        <Image url="@../images/student.png" />
+                    </image>
+                </ImageView>
+            </StackPane>
+            
+            <VBox alignment="CENTER" spacing="5.0">
+                <Label fx:id="displayNameLabel" styleClass="display-name" text="Full Name" />
+                <Label fx:id="usernameSubLabel" styleClass="username-subtext" text="@username" />
+            </VBox>
+            
+            <VBox alignment="CENTER" spacing="8.0" styleClass="points-card">
+                <padding>
+                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                </padding>
+                <Label styleClass="points-title" text="Achievement Points" />
+                <Label fx:id="pointsBadgeLabel" styleClass="points-value" text="110 pts" />
+            </VBox>
+            
+            <VBox alignment="TOP_LEFT" spacing="10.0" styleClass="meta-card">
+                <padding>
+                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                </padding>
+                <Label styleClass="meta-title" text="Member Info" />
+                <Label fx:id="joinedDateLabel" styleClass="meta-item" text="📅 Joined: Jan 2026" />
+                <Label fx:id="userRoleLabel" styleClass="meta-item" text="🎓 Role: Student" />
+            </VBox>
+        </VBox>
+    </left>
+
+    <center>
+        <TabPane fx:id="profileTabPane" styleClass="profile-tabs" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <!-- 1. OVERVIEW -->
+                <Tab text="Overview">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="20.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Profile Overview" />
+                            
+                            <GridPane hgap="20.0" styleClass="details-grid" vgap="15.0">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="30" />
+                                    <ColumnConstraints percentWidth="70" />
+                                </columnConstraints>
+                                <Label styleClass="field-label-bold" text="Full Name:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="ovFullName" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                
+                                <Label styleClass="field-label-bold" text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="ovUsername" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                
+                                <Label styleClass="field-label-bold" text="Email:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="ovEmail" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                
+                                <Label styleClass="field-label-bold" text="Phone Number:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                <Label fx:id="ovPhone" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                
+                                <Label styleClass="field-label-bold" text="Bio:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                                <Label fx:id="ovBio" styleClass="field-value" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                
+                                <Label styleClass="field-label-bold" text="Department:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                                <Label fx:id="ovDept" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                
+                                <Label styleClass="field-label-bold" text="Semester:" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                                <Label fx:id="ovSemester" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                
+                                <Label styleClass="field-label-bold" text="Study Interests:" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                                <Label fx:id="ovInterests" styleClass="field-value" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                        <rowConstraints>
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                        </rowConstraints>
+                            </GridPane>
+                            
+                            <Label styleClass="section-header" text="Activity Stats" />
+                            <GridPane hgap="15.0" vgap="15.0">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="33.3" />
+                                    <ColumnConstraints percentWidth="33.3" />
+                                    <ColumnConstraints percentWidth="33.3" />
+                                </columnConstraints>
+                                <VBox styleClass="stat-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                    <Label styleClass="stat-label" text="Notes Created" />
+                                    <Label fx:id="statNotesCreated" styleClass="stat-number" text="0" />
+                                </VBox>
+                                <VBox styleClass="stat-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                    <Label styleClass="stat-label" text="Resources Uploaded" />
+                                    <Label fx:id="statResourcesUploaded" styleClass="stat-number" text="0" />
+                                </VBox>
+                                <VBox styleClass="stat-card" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                    <Label styleClass="stat-label" text="Questions Asked" />
+                                    <Label fx:id="statQuestionsAsked" styleClass="stat-number" text="0" />
+                                </VBox>
+                                <VBox styleClass="stat-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                    <Label styleClass="stat-label" text="Answers Posted" />
+                                    <Label fx:id="statAnswersPosted" styleClass="stat-number" text="0" />
+                                </VBox>
+                                <VBox styleClass="stat-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <Label styleClass="stat-label" text="Study Hours" />
+                                    <Label fx:id="statStudyHours" styleClass="stat-number" text="0.0h" />
+                                </VBox>
+                                <VBox styleClass="stat-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                    <Label styleClass="stat-label" text="Achievements" />
+                                    <Label fx:id="statAchievements" styleClass="stat-number" text="0" />
+                                </VBox>
+                        <rowConstraints>
+                           <RowConstraints />
+                           <RowConstraints />
+                        </rowConstraints>
+                            </GridPane>
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+                
+                <!-- 2. EDIT PROFILE -->
+                <Tab text="Edit Profile">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="15.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Edit Personal Details" />
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Profile Picture" />
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <Button fx:id="uploadAvatarBtn" onAction="#handleUploadAvatar" styleClass="secondary-btn" text="Choose Image..." />
+                                    <Label fx:id="avatarPathLabel" styleClass="help-text" text="No file chosen" />
+                                </HBox>
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Full Name" />
+                                <TextField fx:id="fullNameField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Username" />
+                                <TextField fx:id="usernameField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Phone Number" />
+                                <TextField fx:id="phoneNumberField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Bio" />
+                                <TextArea fx:id="bioField" prefHeight="80.0" styleClass="input-box" wrapText="true" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Department" />
+                                <TextField fx:id="departmentField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Semester" />
+                                <ComboBox fx:id="semesterCombo" styleClass="input-box" />
+                            </VBox>
+                            
+                            <HBox spacing="10.0">
+                                <Button onAction="#handleSavePersonal" styleClass="primary-btn" text="Save Personal Info" />
+                                <Button onAction="#handleResetPersonal" styleClass="secondary-btn" text="Reset" />
+                            </HBox>
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- 3. STUDY INTERESTS -->
+                <Tab text="Study Interests">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="15.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Study Interests &amp; Preferences" />
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Preferred Subjects" />
+                                <TextField fx:id="preferredSubjectsField" promptText="e.g. Mathematics, Physics" styleClass="input-box" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Study Goals" />
+                                <TextArea fx:id="studyGoalsField" prefHeight="100.0" promptText="What are your goals?" styleClass="input-box" wrapText="true" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Learning Interests" />
+                                <TextField fx:id="learningInterestsField" promptText="e.g. Machine Learning, Astrophotography" styleClass="input-box" />
+                            </VBox>
+                            
+                            <Button onAction="#handleSaveStudyPreferences" styleClass="primary-btn" text="Save Preferences" />
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- 4. ACCOUNT SETTINGS -->
+                <Tab text="Account Settings">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="15.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Account &amp; Security Settings" />
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Email Address" />
+                                <TextField fx:id="emailField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <Button onAction="#handleSaveAccount" styleClass="primary-btn" text="Update Email" />
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- 5. PASSWORD -->
+                <Tab text="Password">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="15.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Change Password" />
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Current Password" />
+                                <PasswordField fx:id="currentPasswordField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="New Password" />
+                                <PasswordField fx:id="newPasswordField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <VBox spacing="5.0">
+                                <Label styleClass="field-title" text="Confirm New Password" />
+                                <PasswordField fx:id="confirmPasswordField" styleClass="input-box" />
+                            </VBox>
+                            
+                            <Button onAction="#handleSavePassword" styleClass="primary-btn" text="Update Password" />
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- 6. NOTIFICATIONS -->
+                <Tab text="Notifications">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="20.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Notification Preferences" />
+                            
+                            <CheckBox fx:id="emailNotificationsCheck" styleClass="checkbox-style" text="Receive general email notifications" />
+                            <CheckBox fx:id="resourceNotificationsCheck" styleClass="checkbox-style" text="Notify me when resources are updated" />
+                            <CheckBox fx:id="systemNotificationsCheck" styleClass="checkbox-style" text="Receive critical system updates and moderator alerts" />
+                            
+                            <Button onAction="#handleSaveNotifications" styleClass="primary-btn" text="Save Preferences" />
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- 7. ACHIEVEMENTS -->
+                <Tab text="Achievements">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="20.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Achievements &amp; Badges" />
+                            
+                            <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="badge-row">
+                                <Label styleClass="badge-icon" text="🥇" />
+                                <VBox>
+                                    <Label styleClass="badge-name" text="First Step" />
+                                    <Label styleClass="badge-desc" text="Registered an account on Study Buddy." />
+                                </VBox>
+                            </HBox>
+                            
+                            <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="badge-row">
+                                <Label styleClass="badge-icon" text="📝" />
+                                <VBox>
+                                    <Label styleClass="badge-name" text="Note Scholar" />
+                                    <Label styleClass="badge-desc" text="Created your first personal study notes." />
+                                </VBox>
+                            </HBox>
+                            
+                            <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="badge-row">
+                                <Label styleClass="badge-icon" text="🙋" />
+                                <VBox>
+                                    <Label styleClass="badge-name" text="Curious Learner" />
+                                    <Label styleClass="badge-desc" text="Asked an academic question to the community." />
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- 8. ACTIVITY -->
+                <Tab text="Activity">
+                    <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                        <VBox spacing="15.0" styleClass="tab-content">
+                            <padding>
+                                <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+                            </padding>
+                            <Label styleClass="section-header" text="Recent Activities" />
+                            <ListView fx:id="activityListView" prefHeight="350.0" styleClass="activity-list" />
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+</BorderPane>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15" stylesheets="@../css/admin-dashboard.css" styleClass="content-wrap"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.studybuddy.admin.controllers.AdminQuestionsController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Header -->
+    <Label text="Q&amp;A Forum Moderation Console" styleClass="page-title" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+
+    <!-- Split Pane -->
+    <SplitPane dividerPositions="0.45" VBox.vgrow="ALWAYS" styleClass="moderation-splitpane" style="-fx-background-color: transparent;">
+        <items>
+            <!-- Left side: Questions list & Filters -->
+            <VBox spacing="12">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="Questions List" styleClass="panel-title" style="-fx-font-size: 15px;"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField" promptText="Filter questions..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
+                </HBox>
+                <ListView fx:id="questionsListView" VBox.vgrow="ALWAYS"/>
+                <HBox spacing="10">
+                    <Button text="Delete Question" styleClass="danger-btn" onAction="#handleDeleteQuestion"/>
+                    <Button text="Lock/Unlock discussion" styleClass="primary-btn" onAction="#handleToggleLockDiscussion"/>
+                </HBox>
+            </VBox>
+
+            <!-- Right side: Selected details and answers -->
+            <VBox spacing="12">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="Discussion Thread Details" styleClass="panel-title" style="-fx-font-size: 15px;"/>
+                <TextArea fx:id="questionDetailsArea" editable="false" prefHeight="100" wrapText="true" styleClass="question-detail-area" style="-fx-background-color: #f8fafc;"/>
+
+                <Label text="Nested Answers List" styleClass="panel-title" style="-fx-font-size: 13px;"/>
+                <ListView fx:id="answersListView" VBox.vgrow="ALWAYS"/>
+                
+                <Button text="Delete Selected Answer" styleClass="danger-btn" onAction="#handleDeleteAnswer"/>
+            </VBox>
+        </items>
+    </SplitPane>
+</VBox>

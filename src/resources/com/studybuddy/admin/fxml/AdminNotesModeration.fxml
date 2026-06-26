@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15" stylesheets="@../css/admin-dashboard.css" styleClass="content-wrap"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.studybuddy.admin.controllers.AdminNotesController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Header -->
+    <Label text="Community Notes Moderation Queue" styleClass="page-title" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+
+    <!-- Filter Bar -->
+    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="filter-section" style="-fx-padding: 10; -fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px;">
+        <TextField fx:id="searchField" promptText="Search notes by title or subject..." prefWidth="250.0" styleClass="search-field"/>
+        <ComboBox fx:id="subjectFilter" promptText="All Subjects" prefWidth="150.0"/>
+        <ComboBox fx:id="statusFilter" promptText="All Statuses" prefWidth="130.0"/>
+        <Button text="🔍 Filter" styleClass="primary-btn" onAction="#applyFilters"/>
+        <Button text="Reset" styleClass="cancel-btn" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569;" onAction="#clearFilters"/>
+    </HBox>
+
+    <!-- Notes Table -->
+    <TableView fx:id="notesTable" VBox.vgrow="ALWAYS" prefHeight="400">
+        <columns>
+            <TableColumn fx:id="noteIdCol" text="ID" prefWidth="60"/>
+            <TableColumn fx:id="titleCol" text="Title" prefWidth="220"/>
+            <TableColumn fx:id="subjectCol" text="Subject" prefWidth="140"/>
+            <TableColumn fx:id="authorCol" text="Uploaded By (User)" prefWidth="150"/>
+            <TableColumn fx:id="dateCol" text="Uploaded Date" prefWidth="120"/>
+            <TableColumn fx:id="statusCol" text="Moderation Status" prefWidth="140"/>
+        </columns>
+    </TableView>
+
+    <!-- Pagination Row -->
+    <HBox alignment="CENTER" spacing="15">
+        <Button fx:id="btnPrevPage" text="◀ Prev" styleClass="primary-btn" style="-fx-background-color: #e2e8f0; -fx-text-fill: #1e293b;" onAction="#handlePrevPage"/>
+        <Label fx:id="lblPageNumber" text="Page 1 of 1" style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
+        <Button fx:id="btnNextPage" text="Next ▶" styleClass="primary-btn" style="-fx-background-color: #e2e8f0; -fx-text-fill: #1e293b;" onAction="#handleNextPage"/>
+    </HBox>
+
+    <!-- Actions Row -->
+    <HBox spacing="12">
+        <Button text="Approve &amp; Publish" styleClass="success-btn" onAction="#handleApproveNote"/>
+        <Button text="Reject / Hide Note" styleClass="danger-btn" onAction="#handleRejectNote"/>
+    </HBox>
+</VBox>

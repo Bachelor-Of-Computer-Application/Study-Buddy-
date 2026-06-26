@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane fx:id="rootPane" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/home.css"
+    xmlns="http://javafx.com/javafx/26"
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.HomeController">
+
+    <!-- LEFT SIDEBAR -->
+    <left>
+        <VBox minWidth="240.0" prefWidth="240.0" spacing="20" styleClass="sidebar">
+            <padding>
+                <Insets bottom="20" left="15" right="15" top="25" />
+            </padding>
+
+            <!-- Brand Logo & Title -->
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <ImageView fitHeight="35" fitWidth="35" preserveRatio="true">
+                    <image>
+                        <Image url="@../images/Study_buddy_logo.png" />
+                    </image>
+                </ImageView>
+                <Text styleClass="sidebar-title" text="Study Buddy" />
+            </HBox>
+
+            <Label fx:id="emailLabel" styleClass="sidebar-email" text="user@example.com" />
+            <Separator />
+
+            <!-- Navigation Buttons -->
+            <VBox spacing="10" VBox.vgrow="ALWAYS">
+                <!-- Dashboard -->
+                <Button onAction="#goToDashboard" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="📊" style="-fx-font-size: 16px;" />
+                            <Text text="Dashboard" styleClass="nav-text" />
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <!-- Notes -->
+                <Button onAction="#goToNotes" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="📝" style="-fx-font-size: 16px;" />
+                            <Text text="Notes" styleClass="nav-text" />
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <!-- Ask Questions -->
+                <Button onAction="#goToQuestions" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="🙋" style="-fx-font-size: 16px;" />
+                            <Text text="Ask Questions" styleClass="nav-text" />
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <!-- Resources -->
+                <Button onAction="#goToResources" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="📂" style="-fx-font-size: 16px;" />
+                            <Text text="Resources" styleClass="nav-text" />
+                        </HBox>
+                    </graphic>
+                </Button>
+
+                <!-- Profile -->
+                <Button onAction="#goToProfile" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="👤" style="-fx-font-size: 16px;" />
+                            <Text text="Profile" styleClass="nav-text" />
+                        </HBox>
+                    </graphic>
+                </Button>
+            </VBox>
+
+            <!-- Logout -->
+            <Button onAction="#onLogoutClick" styleClass="logout-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                <graphic>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="🚪" style="-fx-font-size: 16px;" />
+                        <Text text="Logout" styleClass="nav-text" />
+                    </HBox>
+                </graphic>
+            </Button>
+        </VBox>
+    </left>
+
+    <!-- CENTER DYNAMIC CONTENT AREA -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="main-content">
+            <!-- Default Landing / Welcome Content -->
+            <VBox alignment="CENTER" spacing="25" styleClass="landing-container">
+                <padding>
+                    <Insets bottom="30" left="40" right="40" top="30" />
+                </padding>
+
+                <HBox alignment="CENTER" spacing="5">
+                    <Text styleClass="welcome-text" text="Welcome, " />
+                    <Text fx:id="usernameLabel" styleClass="user-name" text="User" />
+                </HBox>
+
+                <Text styleClass="hero-title" text="Your Smart Study Companion" textAlignment="CENTER" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
+                <Text styleClass="hero-subtitle" text="Manage your tasks, notes, questions, and resources all in one place." textAlignment="CENTER" style="-fx-font-size: 14px; -fx-text-fill: #64748b;" />
+
+                <ImageView fitHeight="220" fitWidth="220" preserveRatio="true">
+                    <image>
+                        <Image url="@../images/student.png" />
+                    </image>
+                </ImageView>
+
+                <Button onAction="#goToDashboard" text="Get Started 🚀" styleClass="primary-action-button" style="-fx-padding: 12 30; -fx-font-size: 15px; -fx-cursor: hand;" />
+            </VBox>
+        </StackPane>
+    </center>
+
+</BorderPane>
