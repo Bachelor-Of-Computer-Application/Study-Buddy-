@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.Label?>
 
-
-<AnchorPane prefHeight="637.0" prefWidth="882.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.MainController" />
+<!--
+  NOTE: This main.fxml is not used by the application startup flow.
+  The application starts directly from App.java → SceneManager.showLoginPage()
+  which loads LoginView.fxml. This file had a reference to a non-existent
+  class 'com.studybuddy.MainController' which would cause a ClassNotFoundException
+  if ever loaded. The fx:controller has been removed to prevent crashes.
+-->
+<AnchorPane prefHeight="637.0" prefWidth="882.0"
+            xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1">
+    <Label text="Unused layout placeholder" layoutX="20" layoutY="20" />
+</AnchorPane>

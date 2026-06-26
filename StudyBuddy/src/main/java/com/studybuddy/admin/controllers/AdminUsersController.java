@@ -1,7 +1,9 @@
 package com.studybuddy.admin.controllers;
 
-import com.studybuddy.models.User;
 import com.studybuddy.admin.services.AdminService;
+import com.studybuddy.models.User;
+import com.studybuddy.utils.PasswordHasher;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -9,240 +11,320 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Full-featured user management controller.
+ * Features: search, role/dept filter, edit, reset password, suspend/activate,
+ * promote/demote, soft-delete, CSV export. Every action is activity-logged.
+ */
 public class AdminUsersController {
 
-    @FXML private TextField searchField;
-    @FXML private ComboBox<String> roleFilter;
-    @FXML private ComboBox<String> statusFilter;
+    @FXML private TextField         searchField;
+    @FXML private ComboBox<String>  roleFilter;
+    @FXML private ComboBox<String>  departmentFilter;
+    @FXML private ComboBox<String>  statusFilter;
 
-    @FXML private TableView<User> usersTable;
-    @FXML private TableColumn<User, Integer> userIdCol;
-    @FXML private TableColumn<User, String> usernameCol;
-    @FXML private TableColumn<User, String> emailCol;
-    @FXML private TableColumn<User, String> userRoleCol;
-    @FXML private TableColumn<User, String> statusCol;
+    @FXML private TableView<User>             usersTable;
+    @FXML private TableColumn<User, Integer>  colId;
+    @FXML private TableColumn<User, String>   colName;
+    @FXML private TableColumn<User, String>   colEmail;
+    @FXML private TableColumn<User, String>   colDepartment;
+    @FXML private TableColumn<User, String>   colSemester;
+    @FXML private TableColumn<User, String>   colRole;
+    @FXML private TableColumn<User, String>   colStatus;
+    @FXML private TableColumn<User, Integer>  colPoints;
+    @FXML private TableColumn<User, String>   colCreatedAt;
 
-    @FXML private Label lblPageNumber;
+    @FXML private Label  lblPageNumber;
     @FXML private Button btnPrevPage;
     @FXML private Button btnNextPage;
+    @FXML private Label  lblTotalCount;
 
     private final AdminService adminService = AdminService.getInstance();
-    private ObservableList<User> masterUserList = FXCollections.observableArrayList();
+    private final ObservableList<User> masterList = FXCollections.observableArrayList();
     private List<User> filteredList = new ArrayList<>();
-
     private int currentPage = 1;
-    private final int itemsPerPage = 8;
+    private static final int PAGE_SIZE = 10;
 
     @FXML
     public void initialize() {
-        // Setup table column bindings
-        userIdCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-        usernameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-        emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));
-        userRoleCol.setCellValueFactory(new PropertyValueFactory<>("role"));
-        statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-
-        // Setup filter dropdowns
-        roleFilter.setItems(FXCollections.observableArrayList("STUDENT", "ADMIN"));
-        statusFilter.setItems(FXCollections.observableArrayList("Active", "Suspended", "Banned"));
-
-        loadUsersData();
-        setupListeners();
+        setupColumns();
+        setupFilters();
+        loadData();
+        searchField.textProperty().addListener((obs, o, n) -> applyFilters());
     }
 
-    private void loadUsersData() {
-        masterUserList.setAll(adminService.getUsers());
-        filteredList = new ArrayList<>(masterUserList);
-        currentPage = 1;
-        updateTablePage();
+    // ── Data Loading ──────────────────────────────────────────────────────────
+
+    private void loadData() {
+        masterList.setAll(adminService.getUsers());
+        filteredList = new ArrayList<>(masterList);
+        currentPage  = 1;
+        updateTable();
     }
 
-    private void updateTablePage() {
-        int totalItems = filteredList.size();
-        int maxPages = (int) Math.ceil((double) totalItems / itemsPerPage);
-        if (maxPages == 0) maxPages = 1;
+    @FXML public void handleRefresh() { loadData(); }
 
-        if (currentPage > maxPages) currentPage = maxPages;
-        if (currentPage < 1) currentPage = 1;
-
-        int fromIndex = (currentPage - 1) * itemsPerPage;
-        int toIndex = Math.min(fromIndex + itemsPerPage, totalItems);
-
-        List<User> pageItems = new ArrayList<>();
-        if (fromIndex < totalItems) {
-            pageItems = filteredList.subList(fromIndex, toIndex);
-        }
-
-        usersTable.setItems(FXCollections.observableArrayList(pageItems));
-        lblPageNumber.setText(String.format("Page %d of %d", currentPage, maxPages));
-
-        btnPrevPage.setDisable(currentPage == 1);
-        btnNextPage.setDisable(currentPage == maxPages);
-    }
-
-    private void setupListeners() {
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
-    }
+    // ── Filtering ─────────────────────────────────────────────────────────────
 
     @FXML
     public void applyFilters() {
-        String query = searchField.getText().trim().toLowerCase();
-        String role = roleFilter.getValue();
+        String q      = searchField.getText().trim().toLowerCase();
+        String role   = roleFilter.getValue();
+        String dept   = departmentFilter.getValue();
         String status = statusFilter.getValue();
 
-        filteredList = masterUserList.stream()
-                .filter(u -> (query.isEmpty() || u.getName().toLowerCase().contains(query) || u.getEmail().toLowerCase().contains(query)) &&
-                             (role == null || u.getRole().equalsIgnoreCase(role)) &&
-                             (status == null || u.getStatus().equalsIgnoreCase(status)))
-                .collect(Collectors.toList());
+        filteredList = masterList.stream()
+            .filter(u -> q.isEmpty()
+                    || nullSafe(u.getName()).toLowerCase().contains(q)
+                    || nullSafe(u.getEmail()).toLowerCase().contains(q))
+            .filter(u -> role   == null || role.isEmpty()   || nullSafe(u.getRole()).equalsIgnoreCase(role))
+            .filter(u -> dept   == null || dept.isEmpty()   || nullSafe(u.getDepartment()).equalsIgnoreCase(dept))
+            .filter(u -> status == null || status.isEmpty() || nullSafe(u.getStatus()).equalsIgnoreCase(status))
+            .collect(Collectors.toList());
 
         currentPage = 1;
-        updateTablePage();
+        updateTable();
     }
 
     @FXML
     public void clearFilters() {
         searchField.clear();
         roleFilter.getSelectionModel().clearSelection();
+        departmentFilter.getSelectionModel().clearSelection();
         statusFilter.getSelectionModel().clearSelection();
-        filteredList = new ArrayList<>(masterUserList);
-        currentPage = 1;
-        updateTablePage();
+        filteredList = new ArrayList<>(masterList);
+        currentPage  = 1;
+        updateTable();
+    }
+
+    // ── Pagination ────────────────────────────────────────────────────────────
+
+    @FXML public void handlePrevPage() { if (currentPage > 1) { currentPage--; updateTable(); } }
+
+    @FXML public void handleNextPage() {
+        int maxPages = maxPages();
+        if (currentPage < maxPages) { currentPage++; updateTable(); }
+    }
+
+    private void updateTable() {
+        int total    = filteredList.size();
+        int maxPages = maxPages();
+        if (currentPage > maxPages) currentPage = maxPages;
+        if (currentPage < 1)       currentPage = 1;
+
+        int from = (currentPage - 1) * PAGE_SIZE;
+        int to   = Math.min(from + PAGE_SIZE, total);
+        List<User> page = from < total ? filteredList.subList(from, to) : List.of();
+        usersTable.setItems(FXCollections.observableArrayList(page));
+
+        if (lblPageNumber != null) lblPageNumber.setText("Page " + currentPage + " of " + maxPages);
+        if (lblTotalCount != null) lblTotalCount.setText(total + " user" + (total != 1 ? "s" : ""));
+        if (btnPrevPage   != null) btnPrevPage.setDisable(currentPage == 1);
+        if (btnNextPage   != null) btnNextPage.setDisable(currentPage == maxPages);
+    }
+
+    private int maxPages() {
+        int p = (int) Math.ceil((double) filteredList.size() / PAGE_SIZE);
+        return Math.max(p, 1);
+    }
+
+    // ── User Actions ──────────────────────────────────────────────────────────
+
+    @FXML
+    public void handleSuspend() {
+        User u = selectedUser(); if (u == null) return;
+        if (confirm("Suspend user " + u.getName() + "?")) {
+            adminService.suspendUser(u.getId(), u.getName());
+            u.setStatus("Suspended"); usersTable.refresh();
+        }
     }
 
     @FXML
-    public void handlePrevPage() {
-        if (currentPage > 1) {
-            currentPage--;
-            updateTablePage();
+    public void handleActivate() {
+        User u = selectedUser(); if (u == null) return;
+        if (confirm("Activate user " + u.getName() + "?")) {
+            adminService.activateUser(u.getId(), u.getName());
+            u.setStatus("Active"); usersTable.refresh();
         }
     }
 
     @FXML
-    public void handleNextPage() {
-        int maxPages = (int) Math.ceil((double) filteredList.size() / itemsPerPage);
-        if (currentPage < maxPages) {
-            currentPage++;
-            updateTablePage();
+    public void handleBan() {
+        User u = selectedUser(); if (u == null) return;
+        if (confirm("Ban user " + u.getName() + "? This cannot be undone without direct DB access.")) {
+            adminService.banUser(u.getId(), u.getName());
+            u.setStatus("Banned"); usersTable.refresh();
         }
     }
 
     @FXML
-    public void handleToggleUserStatus() {
-        User selected = usersTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No selection", "Please select a user to toggle status.");
-            return;
-        }
-
-        String oldStatus = selected.getStatus();
-        String newStatus = "Active".equalsIgnoreCase(oldStatus) ? "Suspended" : "Active";
-
-        if ("Active".equalsIgnoreCase(newStatus)) {
-            adminService.activateUser(selected.getId());
-        } else {
-            adminService.suspendUser(selected.getId());
-        }
-
-        selected.setStatus(newStatus);
-        usersTable.refresh();
-    }
-
-    @FXML
-    public void handleBanUser() {
-        User selected = usersTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No selection", "Please select a user to ban.");
-            return;
-        }
-
-        adminService.banUser(selected.getId());
-        selected.setStatus("Banned");
-        usersTable.refresh();
-    }
-
-    @FXML
-    public void handleEditUserInfo() {
-        User selected = usersTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No selection", "Please select a user to edit.");
-            return;
-        }
+    public void handleEdit() {
+        User u = selectedUser(); if (u == null) return;
 
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Edit User Info");
-        dialog.setHeaderText("Modify details for: " + selected.getName());
-
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+        dialog.setTitle("Edit User");
+        dialog.setHeaderText("Edit: " + u.getName());
+        ButtonType saveBtn = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
 
         GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
+        grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
-        TextField name = new TextField(selected.getName());
-        TextField email = new TextField(selected.getEmail());
-        ComboBox<String> role = new ComboBox<>(FXCollections.observableArrayList("STUDENT", "ADMIN"));
-        role.setValue(selected.getRole());
+        TextField nameF  = new TextField(nullSafe(u.getName()));
+        TextField emailF = new TextField(nullSafe(u.getEmail()));
+        TextField deptF  = new TextField(nullSafe(u.getDepartment()));
+        TextField semF   = new TextField(nullSafe(u.getSemester()));
+        ComboBox<String> roleC = new ComboBox<>(FXCollections.observableArrayList("STUDENT", "ADMIN"));
+        roleC.setValue(u.getRole());
 
-        grid.add(new Label("Name:"), 0, 0);
-        grid.add(name, 1, 0);
-        grid.add(new Label("Email:"), 0, 1);
-        grid.add(email, 1, 1);
-        grid.add(new Label("Role:"), 0, 2);
-        grid.add(role, 1, 2);
-
+        grid.addRow(0, new Label("Name:"),       nameF);
+        grid.addRow(1, new Label("Email:"),      emailF);
+        grid.addRow(2, new Label("Role:"),       roleC);
+        grid.addRow(3, new Label("Department:"), deptF);
+        grid.addRow(4, new Label("Semester:"),   semF);
         dialog.getDialogPane().setContent(grid);
 
-        dialog.showAndWait().ifPresent(response -> {
-            if (response == saveButtonType) {
-                String updatedName = name.getText().trim();
-                String updatedEmail = email.getText().trim();
-                String updatedRole = role.getValue();
-
-                if (updatedName.isEmpty() || updatedEmail.isEmpty()) {
-                    showAlert("Error", "Name and email cannot be empty.");
-                    return;
+        dialog.showAndWait().ifPresent(res -> {
+            if (res == saveBtn) {
+                if (nameF.getText().isBlank() || emailF.getText().isBlank()) {
+                    showAlert(Alert.AlertType.WARNING, "Name and email are required."); return;
                 }
-
-                adminService.editUserInfo(selected.getId(), updatedName, updatedEmail, updatedRole);
-                selected.setName(updatedName);
-                selected.setEmail(updatedEmail);
-                selected.setRole(updatedRole);
-                usersTable.refresh();
+                boolean ok = adminService.editUserInfo(u.getId(),
+                        nameF.getText().trim(), emailF.getText().trim(),
+                        roleC.getValue(), deptF.getText().trim(), semF.getText().trim());
+                if (ok) {
+                    u.setName(nameF.getText().trim()); u.setEmail(emailF.getText().trim());
+                    u.setRole(roleC.getValue()); u.setDepartment(deptF.getText().trim());
+                    u.setSemester(semF.getText().trim()); usersTable.refresh();
+                    showAlert(Alert.AlertType.INFORMATION, "User updated successfully.");
+                }
             }
         });
     }
 
     @FXML
-    public void handleDeleteUser() {
-        User selected = usersTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showAlert("No selection", "Please select a user to delete.");
-            return;
-        }
+    public void handleResetPassword() {
+        User u = selectedUser(); if (u == null) return;
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete user " + selected.getName() + " permanently?", ButtonType.YES, ButtonType.NO);
-        confirm.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES) {
-                adminService.deleteUser(selected.getId());
-                masterUserList.remove(selected);
-                loadUsersData();
+        TextInputDialog dlg = new TextInputDialog();
+        dlg.setTitle("Reset Password");
+        dlg.setHeaderText("Reset password for: " + u.getName());
+        dlg.setContentText("New password:");
+        dlg.showAndWait().ifPresent(pw -> {
+            if (pw.trim().length() < 6) {
+                showAlert(Alert.AlertType.WARNING, "Password must be at least 6 characters."); return;
             }
+            boolean ok = adminService.resetPassword(u.getId(), u.getEmail(), pw.trim());
+            showAlert(ok ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
+                    ok ? "Password reset successfully." : "Failed to reset password.");
         });
     }
 
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+    @FXML
+    public void handlePromote() {
+        User u = selectedUser(); if (u == null) return;
+        if (confirm("Promote " + u.getName() + " to Admin?")) {
+            boolean ok = adminService.promoteToAdmin(u.getId(), u.getName());
+            if (ok) { u.setRole("ADMIN"); usersTable.refresh(); }
+        }
     }
+
+    @FXML
+    public void handleDemote() {
+        User u = selectedUser(); if (u == null) return;
+        if (confirm("Demote " + u.getName() + " to Student?")) {
+            boolean ok = adminService.demoteToUser(u.getId(), u.getName());
+            if (ok) { u.setRole("STUDENT"); usersTable.refresh(); }
+        }
+    }
+
+    @FXML
+    public void handleDelete() {
+        User u = selectedUser(); if (u == null) return;
+        if (confirm("Soft-delete user " + u.getName() + "? Status will be set to Deleted.")) {
+            boolean ok = adminService.softDeleteUser(u.getId(), u.getName());
+            if (ok) { masterList.remove(u); filteredList.remove(u); updateTable(); }
+        }
+    }
+
+    // ── Export ────────────────────────────────────────────────────────────────
+
+    @FXML
+    public void handleExport() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Export Users to CSV");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        chooser.setInitialFileName("users_export.csv");
+        var file = chooser.showSaveDialog(usersTable.getScene().getWindow());
+        if (file == null) return;
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+            pw.println("ID,Name,Email,Role,Department,Semester,Status,Points,Created At");
+            for (User u : filteredList) {
+                pw.printf("%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%d,\"%s\"%n",
+                        u.getId(), esc(u.getName()), esc(u.getEmail()), esc(u.getRole()),
+                        esc(u.getDepartment()), esc(u.getSemester()), esc(u.getStatus()),
+                        u.getPoints(),
+                        u.getCreatedAt() != null ? u.getCreatedAt().toString() : "");
+            }
+            showAlert(Alert.AlertType.INFORMATION, "Exported " + filteredList.size() + " users to:\n" + file.getAbsolutePath());
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Export failed: " + e.getMessage());
+        }
+    }
+
+    // ── Setup ─────────────────────────────────────────────────────────────────
+
+    private void setupColumns() {
+        if (colId         != null) colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        if (colName       != null) colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        if (colEmail      != null) colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
+        if (colDepartment != null) colDepartment.setCellValueFactory(new PropertyValueFactory<>("department"));
+        if (colSemester   != null) colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
+        if (colRole       != null) colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
+        if (colStatus     != null) colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        if (colPoints     != null) colPoints.setCellValueFactory(new PropertyValueFactory<>("points"));
+        if (colCreatedAt  != null) colCreatedAt.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getCreatedAt() != null
+                        ? cellData.getValue().getCreatedAt().toString().substring(0, 10) : ""));
+    }
+
+    private void setupFilters() {
+        if (roleFilter       != null) roleFilter.setItems(FXCollections.observableArrayList("", "STUDENT", "ADMIN"));
+        if (statusFilter     != null) statusFilter.setItems(FXCollections.observableArrayList("", "Active", "Suspended", "Banned", "Deleted"));
+        if (departmentFilter != null) departmentFilter.setItems(FXCollections.observableArrayList(
+                "", "Computer Science", "Information Technology", "Business Administration",
+                "Mathematics", "Physics", "Engineering", "Other"));
+    }
+
+    // ── Utilities ─────────────────────────────────────────────────────────────
+
+    private User selectedUser() {
+        User u = usersTable.getSelectionModel().getSelectedItem();
+        if (u == null) showAlert(Alert.AlertType.WARNING, "Please select a user first.");
+        return u;
+    }
+
+    private boolean confirm(String msg) {
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION, msg, ButtonType.YES, ButtonType.NO);
+        a.setHeaderText(null);
+        return a.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
+    }
+
+    private void showAlert(Alert.AlertType type, String msg) {
+        Alert a = new Alert(type, msg); a.setHeaderText(null); a.showAndWait();
+    }
+
+    private String nullSafe(String s) { return s != null ? s : ""; }
+    private String esc(String s)      { return s != null ? s.replace("\"", "\"\"") : ""; }
 }

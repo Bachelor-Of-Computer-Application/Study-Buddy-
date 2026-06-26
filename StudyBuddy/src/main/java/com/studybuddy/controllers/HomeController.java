@@ -152,7 +152,13 @@ public class HomeController {
     @FXML
     public void onLogoutClick() {
         AuthService.logout();
-        SceneManager.showLoginPage(getStage());
+        try {
+            SceneManager.showLoginPage(getStage());
+        } catch (java.io.IOException e) {
+            System.err.println("[HomeController] ❌ Could not navigate back to LoginView.fxml");
+            e.printStackTrace();
+            showAlert("Navigation Error", "Could not return to login: " + e.getMessage());
+        }
     }
 
     private void loadCenterView(String fxmlPath) {

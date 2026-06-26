@@ -3,12 +3,13 @@ package com.studybuddy.dao;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.PasswordHasher;
 import java.sql.*;
-import java.time.LocalDate;
 
 /**
  * Data Access Object for User operations.
  * Extended with methods for Edit Profile functionality including
  * personal information, study preferences, email settings, and security.
+ *
+ * All SQL column names match the actual Users table schema exactly.
  */
 public class UserDAO {
 
@@ -127,7 +128,7 @@ public class UserDAO {
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPassword());
             ps.setString(4, user.getRole());
-            ps.setInt(5, user.getId());
+            ps.setInt(5,    user.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -143,33 +144,34 @@ public class UserDAO {
 
     /**
      * Update user's personal information.
+     * FIXED: Parameter indices 1-8 now map correctly (index 4 was previously missing,
+     * causing profileImagePath to be skipped).
+     * SQL columns: fullName, username, bio, profileImagePath, phoneNumber, department, semester
      * @param user User object with updated personal details
      * @return true if update successful, false otherwise
      */
     public boolean updatePersonalInformation(User user) {
-
-        String sql =
-                "UPDATE Users SET " +
-                        "fullName=?, " +
-                        "username=?, " +
-                        "bio=?, " +
-                        "profileImagePath=?, " +
-                        "phoneNumber=?, " +
-                        "department=?, " +
-                        "semester=? " +
-                        "WHERE id=?";
+        String sql = "UPDATE Users SET " +
+                "fullName=?, " +          // param 1 → SQL column: fullName
+                "username=?, " +          // param 2 → SQL column: username
+                "bio=?, " +               // param 3 → SQL column: bio
+                "profileImagePath=?, " +  // param 4 → SQL column: profileImagePath (was missing!)
+                "phoneNumber=?, " +       // param 5 → SQL column: phoneNumber
+                "department=?, " +        // param 6 → SQL column: department
+                "semester=? " +           // param 7 → SQL column: semester
+                "WHERE id=?";             // param 8 → Users.id
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, user.getFullName());
-            ps.setString(2, user.getUsername());
-            ps.setString(3, user.getBio());
-            ps.setString(5, user.getProfileImagePath());
-            ps.setString(6, user.getPhoneNumber());
-            ps.setString(7, user.getDepartment());
-            ps.setString(8, user.getSemester());
-            ps.setInt(9, user.getId());
+            ps.setString(1, user.getFullName());          // fullName
+            ps.setString(2, user.getUsername());          // username
+            ps.setString(3, user.getBio());               // bio
+            ps.setString(4, user.getProfileImagePath());  // profileImagePath (FIXED — was setString(5,...))
+            ps.setString(5, user.getPhoneNumber());        // phoneNumber      (FIXED — was setString(6,...))
+            ps.setString(6, user.getDepartment());         // department       (FIXED — was setString(7,...))
+            ps.setString(7, user.getSemester());           // semester         (FIXED — was setString(8,...))
+            ps.setInt(8,    user.getId());                 // WHERE id=?       (FIXED — was setInt(9,...))
 
             return ps.executeUpdate() > 0;
 
@@ -248,7 +250,6 @@ public class UserDAO {
         }
     }
 
-
     /**
      * Update user's profile image path.
      * @param userId User's ID
@@ -278,6 +279,7 @@ public class UserDAO {
 
     /**
      * Update user's study preferences.
+     * SQL columns: preferredSubjects, studyGoals, learningInterests, notificationsEnabled
      * @param user User object with updated study preferences
      * @return true if update successful, false otherwise
      */
@@ -287,11 +289,11 @@ public class UserDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, user.getPreferredSubjects());
-            ps.setString(2, user.getStudyGoals());
-            ps.setString(3, user.getLearningInterests());
+            ps.setString(1,  user.getPreferredSubjects());
+            ps.setString(2,  user.getStudyGoals());
+            ps.setString(3,  user.getLearningInterests());
             ps.setBoolean(4, user.isNotificationsEnabled());
-            ps.setInt(5, user.getId());
+            ps.setInt(5,     user.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -422,6 +424,7 @@ public class UserDAO {
 
     /**
      * Update user's email notification settings.
+     * SQL columns: email, emailNotificationsEnabled, resourceUpdateNotifications, systemNotifications
      * @param user User object with updated email settings
      * @return true if update successful, false otherwise
      */
@@ -431,11 +434,11 @@ public class UserDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, user.getEmail());
+            ps.setString(1,  user.getEmail());
             ps.setBoolean(2, user.isEmailNotificationsEnabled());
             ps.setBoolean(3, user.isResourceUpdateNotifications());
             ps.setBoolean(4, user.isSystemNotifications());
-            ps.setInt(5, user.getId());
+            ps.setInt(5,     user.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -521,11 +524,10 @@ public class UserDAO {
     /**
      * Update user's password.
      * @param userId User's ID
-     * @param newPassword New password (should be encrypted)
+     * @param newPassword New password (should be hashed before calling)
      * @return true if update successful, false otherwise
      */
     public boolean updatePassword(int userId, String newPassword) {
-
         String sql = "UPDATE Users SET password=? WHERE id=?";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -549,7 +551,6 @@ public class UserDAO {
      * @return true if password matches, false otherwise
      */
     public boolean verifyPassword(int userId, String currentPassword) {
-
         String sql = "SELECT password FROM Users WHERE id=?";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -560,13 +561,8 @@ public class UserDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-
                 String storedHash = rs.getString("password");
-
-                return PasswordHasher.verifyPassword(
-                        currentPassword,
-                        storedHash
-                );
+                return PasswordHasher.verifyPassword(currentPassword, storedHash);
             }
 
         } catch (SQLException e) {
@@ -582,6 +578,7 @@ public class UserDAO {
 
     /**
      * Get user statistics.
+     * SQL columns: answersCount, questionsCount, achievements, points
      * @param userId User's ID
      * @return User object with statistics data
      */
@@ -666,6 +663,7 @@ public class UserDAO {
 
     /**
      * Map ResultSet to User object.
+     * All column names match the actual Users table schema.
      * @param rs ResultSet containing user data
      * @return User object
      * @throws SQLException if mapping fails
@@ -678,12 +676,10 @@ public class UserDAO {
         user.setPassword(rs.getString("password"));
         user.setRole(rs.getString("role"));
 
-        // Profile information
+        // Profile information — all SQL column names are camelCase
         user.setFullName(rs.getString("fullName"));
         user.setUsername(rs.getString("username"));
         user.setBio(rs.getString("bio"));
-
-
         user.setProfileImagePath(rs.getString("profileImagePath"));
         user.setPhoneNumber(rs.getString("phoneNumber"));
         user.setDepartment(rs.getString("department"));

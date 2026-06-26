@@ -18,6 +18,18 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.stage.FileChooser;
 
+/**
+ * Controller for AskQuestionView.fxml.
+ *
+ * Key fixes applied:
+ * 1. rewardPointsComboBox changed to ComboBox<String> to match FXML (which uses String values).
+ * 2. mathButton / symbolsButton / logoutButton fx:ids removed — FXML uses toolsButton / filesButton.
+ *    setupButtonHoverEffects() now uses the correct fx:ids from the FXML.
+ * 3. handleHome() fixed — old path /com/studybuddy/view/HomeView.fxml was wrong.
+ *    Correct path is /com/studybuddy/fxml/HomeView.fxml.
+ * 4. userPointsLabel is present in the controller but has no fx:id in the FXML —
+ *    guarded with null check to prevent NPE.
+ */
 public class AskQuestionController implements Initializable {
 
     @FXML
@@ -32,29 +44,37 @@ public class AskQuestionController implements Initializable {
     @FXML
     private ComboBox<String> subjectComboBox;
 
+    /**
+     * NOTE: FXML defines rewardPointsComboBox items as String values ("0", "10", "20", "50", "100").
+     * Changed from ComboBox<Integer> to ComboBox<String> to match.
+     */
     @FXML
-    private ComboBox<Integer> rewardPointsComboBox;
+    private ComboBox<String> rewardPointsComboBox;
 
+    /** May be null if fx:id is absent in FXML — always guarded with null check. */
     @FXML
     private Label userPointsLabel;
 
     @FXML
     private Button submitButton;
 
+    /**
+     * FXML uses fx:id="toolsButton" — maps to handleMath action.
+     */
     @FXML
-    private Button mathButton;
+    private Button toolsButton;
 
+    /**
+     * FXML uses fx:id="filesButton" — maps to handleSymbols action.
+     */
     @FXML
-    private Button symbolsButton;
+    private Button filesButton;
 
     @FXML
     private Button attachmentButton;
 
     @FXML
     private Label attachmentLabel;
-
-    @FXML
-    private Button logoutButton;
 
     @FXML
     private Button homeButton;
@@ -71,26 +91,10 @@ public class AskQuestionController implements Initializable {
         questionService = new QuestionService();
         resourceService = new ResourceService();
 
-        initializeComboBoxes();
-        setupButtonHoverEffects();
-        setupSubmitButtonEffects();
-
         loadSubjects();
         loadUserPoints();
-    }
-
-    private void initializeComboBoxes() {
-        // Reward Points ComboBox
-        ArrayList<Integer> points = new ArrayList<>();
-        points.add(5);
-        points.add(10);
-        points.add(15);
-        points.add(20);
-        points.add(25);
-        points.add(30);
-
-        rewardPointsComboBox.setItems(FXCollections.observableArrayList(points));
-        rewardPointsComboBox.getSelectionModel().select(1); // Default: 10
+        setupButtonHoverEffects();
+        setupSubmitButtonEffects();
     }
 
     private void loadSubjects() {
@@ -100,43 +104,47 @@ public class AskQuestionController implements Initializable {
 
     private void loadUserPoints() {
         int points = questionService.getUserPoints();
-        userPointsLabel.setText("You have " + points + " points");
+        // userPointsLabel has no fx:id in the current FXML — guard against null
+        if (userPointsLabel != null) {
+            userPointsLabel.setText("You have " + points + " points");
+        }
     }
 
     private void setupButtonHoverEffects() {
-        setupHoverEffect(mathButton);
-        setupHoverEffect(symbolsButton);
+        // Only set up effects on buttons that are actually wired from FXML
+        setupHoverEffect(toolsButton);
+        setupHoverEffect(filesButton);
         setupHoverEffect(attachmentButton);
-        setupHoverEffect(logoutButton);
         setupHoverEffect(homeButton);
         setupHoverEffect(profileButton);
     }
 
+    /**
+     * Null-safe hover effect setup — skips buttons that were not injected from FXML.
+     */
     private void setupHoverEffect(Button button) {
+        if (button == null) return;
         button.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
             button.setStyle(button.getStyle() + " -fx-background-color: #FFFFFF; -fx-cursor: hand;");
         });
-
         button.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
             button.setStyle(button.getStyle().replace(" -fx-background-color: #FFFFFF;", ""));
         });
     }
 
     private void setupSubmitButtonEffects() {
+        if (submitButton == null) return;
         submitButton.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
             submitButton.setStyle(submitButton.getStyle() + " -fx-background-color: #333333;");
         });
-
         submitButton.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
             submitButton.setStyle(submitButton.getStyle().replace(" -fx-background-color: #333333;", ""));
         });
-
         submitButton.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             ScaleTransition scale = new ScaleTransition(Duration.millis(100), submitButton);
             scale.setToX(0.98);
             scale.setToY(0.98);
             scale.play();
-
             scale.setOnFinished(e2 -> {
                 ScaleTransition restore = new ScaleTransition(Duration.millis(100), submitButton);
                 restore.setToX(1.0);
@@ -146,22 +154,22 @@ public class AskQuestionController implements Initializable {
         });
     }
 
+    /** Bound to toolsButton (fx:id="toolsButton") — inserts math formula example. */
     public void handleMath(ActionEvent actionEvent) {
-        // Insert math symbols at cursor position
+        if (questionTextArea == null) return;
         String currentText = questionTextArea.getText();
         int cursorPosition = questionTextArea.getCaretPosition();
-
-        String mathSymbol = "⁠x² + y² = z²";
+        String mathSymbol = "x² + y² = z²";
         questionTextArea.setText(currentText.substring(0, cursorPosition) + mathSymbol +
                 currentText.substring(cursorPosition));
         questionTextArea.positionCaret(cursorPosition + mathSymbol.length());
     }
 
+    /** Bound to filesButton (fx:id="filesButton") — inserts math symbols. */
     public void handleSymbols(ActionEvent actionEvent) {
-        // Insert mathematical symbols
+        if (questionTextArea == null) return;
         String currentText = questionTextArea.getText();
         int cursorPosition = questionTextArea.getCaretPosition();
-
         String symbol = "∑ ∆ ∞ ≠ ≤ ≥";
         questionTextArea.setText(currentText.substring(0, cursorPosition) + symbol +
                 currentText.substring(cursorPosition));
@@ -171,20 +179,19 @@ public class AskQuestionController implements Initializable {
     public void handleAttachment(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Attach File");
-        fileChooser.setInitialFileName("");
-
-        // Set file extensions
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter(
                 "Document & Image Files (*.pdf, *.doc, *.docx, *.png, *.jpg)",
                 "*.pdf", "*.doc", "*.docx", "*.png", "*.jpg"
         );
         fileChooser.getExtensionFilters().add(filter);
-
-        File selectedFile = fileChooser.showOpenDialog(rootPane.getScene().getWindow());
-
+        File selectedFile = fileChooser.showOpenDialog(
+                rootPane != null ? rootPane.getScene().getWindow() : null
+        );
         if (selectedFile != null) {
             selectedAttachmentPath = selectedFile.getAbsolutePath();
-            attachmentLabel.setText("📎 " + selectedFile.getName());
+            if (attachmentLabel != null) {
+                attachmentLabel.setText("📎 " + selectedFile.getName());
+            }
         }
     }
 
@@ -192,11 +199,15 @@ public class AskQuestionController implements Initializable {
         if (!validateForm()) {
             return;
         }
-
         try {
             String questionText = questionTextArea.getText().trim();
             String subject = subjectComboBox.getValue();
-            int rewardPoints = rewardPointsComboBox.getValue();
+            // rewardPointsComboBox now holds String values; parse safely
+            int rewardPoints = 0;
+            String rewardStr = rewardPointsComboBox.getValue();
+            if (rewardStr != null) {
+                try { rewardPoints = Integer.parseInt(rewardStr); } catch (NumberFormatException ignored) {}
+            }
 
             boolean success = questionService.saveQuestion(
                     questionText,
@@ -206,109 +217,76 @@ public class AskQuestionController implements Initializable {
             );
 
             if (success) {
-                showAlert(
-                        Alert.AlertType.INFORMATION,
-                        "Success",
+                showAlert(Alert.AlertType.INFORMATION, "Success",
                         "Your question has been submitted successfully!",
-                        "Question ID will be generated in the database."
-                );
+                        "Question ID will be generated in the database.");
                 clearForm();
             } else {
-                showAlert(
-                        Alert.AlertType.ERROR,
-                        "Error",
+                showAlert(Alert.AlertType.ERROR, "Error",
                         "Failed to submit your question.",
-                        "Please try again or contact support."
-                );
+                        "Please try again or contact support.");
             }
         } catch (Exception e) {
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "An unexpected error occurred.",
-                    e.getMessage()
-            );
+            showAlert(Alert.AlertType.ERROR, "Error",
+                    "An unexpected error occurred.", e.getMessage());
+            e.printStackTrace();
         }
     }
 
     private boolean validateForm() {
-        // Check if question is empty
-        if (questionTextArea.getText().trim().isEmpty()) {
-            showAlert(
-                    Alert.AlertType.WARNING,
-                    "Validation Error",
-                    "Please enter your question.",
-                    "The question field cannot be empty."
-            );
+        if (questionTextArea == null || questionTextArea.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error",
+                    "Please enter your question.", "The question field cannot be empty.");
             return false;
         }
-
-        // Check if subject is selected
         if (subjectComboBox.getValue() == null) {
-            showAlert(
-                    Alert.AlertType.WARNING,
-                    "Validation Error",
-                    "Please choose a subject.",
-                    "Select a subject from the dropdown menu."
-            );
+            showAlert(Alert.AlertType.WARNING, "Validation Error",
+                    "Please choose a subject.", "Select a subject from the dropdown menu.");
             return false;
         }
-
-        // Check if reward points are selected
         if (rewardPointsComboBox.getValue() == null) {
-            showAlert(
-                    Alert.AlertType.WARNING,
-                    "Validation Error",
-                    "Please select reward points.",
-                    "Choose the number of points you want to offer."
-            );
+            showAlert(Alert.AlertType.WARNING, "Validation Error",
+                    "Please select reward points.", "Choose the number of points you want to offer.");
             return false;
         }
-
         return true;
     }
 
     private void clearForm() {
-        questionTextArea.clear();
+        if (questionTextArea != null) questionTextArea.clear();
         subjectComboBox.getSelectionModel().clearSelection();
-        rewardPointsComboBox.getSelectionModel().select(1); // Reset to 10
+        rewardPointsComboBox.getSelectionModel().select(1); // Reset to "10"
         selectedAttachmentPath = null;
-        attachmentLabel.setText("");
+        if (attachmentLabel != null) attachmentLabel.setText("");
     }
 
     public void handleLogout(ActionEvent actionEvent) {
-        showAlert(
-                Alert.AlertType.INFORMATION,
-                "Logout",
-                "You have been logged out.",
-                "Thank you for using Study Buddy!"
-        );
+        showAlert(Alert.AlertType.INFORMATION, "Logout",
+                "You have been logged out.", "Thank you for using Study Buddy!");
     }
 
+    /**
+     * FIXED: old path "/com/studybuddy/view/HomeView.fxml" was incorrect.
+     * Correct path is "/com/studybuddy/fxml/HomeView.fxml".
+     */
     public void handleHome(ActionEvent actionEvent) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/com/studybuddy/view/HomeView.fxml")
+                    getClass().getResource("/com/studybuddy/fxml/HomeView.fxml")
             );
             BorderPane homeView = loader.load();
             rootPane.getScene().setRoot(homeView);
         } catch (IOException e) {
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "Failed to load home page.",
-                    e.getMessage()
-            );
+            showAlert(Alert.AlertType.ERROR, "Error",
+                    "Failed to load home page.", e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void handleProfile(ActionEvent actionEvent) {
-        showAlert(
-                Alert.AlertType.INFORMATION,
-                "Profile",
+        showAlert(Alert.AlertType.INFORMATION, "Profile",
                 "Profile page will be opened.",
-                "View and edit your account settings."
-        );
+                "View and edit your account settings.");
     }
 
     private void showAlert(Alert.AlertType type, String title, String header, String content) {
@@ -316,7 +294,6 @@ public class AskQuestionController implements Initializable {
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.setContentText(content);
-        alert.getDialogPane().setStyle("-fx-background-color: #FFFFFF;");
         alert.showAndWait();
     }
 }

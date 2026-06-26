@@ -20,15 +20,20 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, getCurrentUserId());
-            stmt.setString(2, subject);
-            stmt.setString(3, text);
-            stmt.setString(4, attachment);
-            stmt.setInt(5, points);
+            int userId = getCurrentUserId();
+            stmt.setInt(1, userId);                                      // user_id
+            stmt.setString(2, "User " + userId);                        // author_name
+            stmt.setString(3, subject);                                  // subject
+            stmt.setString(4, text);                                     // question_text
+            stmt.setString(5, "");                                       // tags (empty for now)
+            stmt.setString(6, attachment != null ? attachment : "");     // attachment_path
+            stmt.setInt(7, points);                                      // reward_points
 
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
+            System.err.println("[QuestionService] ❌ Failed to save question: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

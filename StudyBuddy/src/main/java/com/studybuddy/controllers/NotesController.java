@@ -69,54 +69,13 @@ public class NotesController implements Initializable {
 
     private void loadNotes() {
         try {
+            // Load real notes from SQL Server via NoteService → NoteDAO
+            // SQL: SELECT * FROM Notes WHERE userId = ? ORDER BY uploadDate DESC
             allNotes = noteService.getNotesByUserId(currentUserId);
             if (allNotes == null) {
                 allNotes = new ArrayList<>();
             }
-            // Add some mock community notes if the database list is small
-            if (allNotes.size() < 3) {
-                allNotes.add(new Note(
-                        1,
-                        "Calculus I Limits Guide",
-                        "Mathematics",
-                        "Lecture",
-                        "2026-06-10",
-                        "PDF",
-                        "calculus_limits.pdf",
-                        "", // filePath placeholder
-                        "Limits and continuity guide",
-                        1,
-                        true
-                ));
-
-                allNotes.add(new Note(
-                        2,
-                        "Data Structures Trees",
-                        "Computer Science",
-                        "Textbook",
-                        "2026-06-11",
-                        "PDF",
-                        "ds_trees.pdf",
-                        "", // filePath placeholder
-                        "Binary trees guide",
-                        1,
-                        false
-                ));
-
-                allNotes.add(new Note(
-                        3,
-                        "Chemistry Elements CheatSheet",
-                        "Chemistry",
-                        "Online Course",
-                        "2026-06-12",
-                        "PDF",
-                        "chem_cheat.pdf",
-                        "", // filePath placeholder
-                        "Periodic table cheat sheet",
-                        1,
-                        false
-                ));
-            }
+            // FIXED: Removed mock note injection — display only real DB data
             displayNotes(allNotes);
         } catch (Exception e) {
             showError("Failed to load notes: " + e.getMessage());
@@ -186,7 +145,7 @@ public class NotesController implements Initializable {
         card.setMaxWidth(Double.MAX_VALUE);
 
         // Status Badge
-        Label statusBadge = new Label("Approved");
+        Label statusBadge = new Label("Shared");
         statusBadge.setStyle(
                 "-fx-background-color: #dcfce7;" +
                         "-fx-text-fill: #16a34a;" +
@@ -237,7 +196,7 @@ public class NotesController implements Initializable {
             dialog.setResizable(false);
             dialog.showAndWait();
             
-            loadNotes(); // Refresh
+            loadNotes(); // Refresh after creation
         } catch (IOException e) {
             showError("Failed to open create note dialog: " + e.getMessage());
         }
@@ -255,6 +214,7 @@ public class NotesController implements Initializable {
 
         if (alert.showAndWait().orElse(no) == yes) {
             try {
+                // Delegates to NoteDAO.deleteNote() → DELETE FROM Notes WHERE id = ?
                 noteService.deleteNote(note.getId());
                 loadNotes();
                 showSuccess("Note deleted successfully!");

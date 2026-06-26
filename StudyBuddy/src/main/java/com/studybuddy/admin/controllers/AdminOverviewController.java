@@ -1,101 +1,135 @@
 package com.studybuddy.admin.controllers;
 
-import com.studybuddy.models.Resource;
 import com.studybuddy.admin.services.AdminService;
+import com.studybuddy.models.Note;
+import com.studybuddy.models.Question;
+import com.studybuddy.models.User;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.chart.PieChart;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * Controller for the AdminDashboardOverview.fxml panel.
+ * Shows stat cards driven by real DB queries and recent-item tables.
+ */
 public class AdminOverviewController {
 
+    // ── Stat card labels ──────────────────────────────────────────────────────
+    @FXML private Label lblTotalUsers;
+    @FXML private Label lblTotalNotes;
+    @FXML private Label lblTotalResources;
+    @FXML private Label lblTotalQuestions;
+    @FXML private Label lblTotalAnswers;
+    @FXML private Label lblTotalTasks;
+    @FXML private Label lblNewUsersToday;
+    @FXML private Label lblUploadsToday;
     @FXML private Label lblPendingNotes;
     @FXML private Label lblPendingResources;
-    @FXML private Label lblPendingQuestions;
-    @FXML private Label lblTotalUsers;
 
-    @FXML private PieChart resourcePieChart;
-    @FXML private ProgressBar approvedBar;
-    @FXML private ProgressBar pendingBar;
-    @FXML private ProgressBar rejectedBar;
-    @FXML private ListView<String> moderationLogsList;
+    // ── Chart ─────────────────────────────────────────────────────────────────
+    @FXML private PieChart subjectPieChart;
+
+    // ── Recent Users table ────────────────────────────────────────────────────
+    @FXML private TableView<User>              recentUsersTable;
+    @FXML private TableColumn<User, String>    recentUserName;
+    @FXML private TableColumn<User, String>    recentUserEmail;
+    @FXML private TableColumn<User, String>    recentUserRole;
+
+    // ── Recent Uploads table ──────────────────────────────────────────────────
+    @FXML private TableView<Note>              recentUploadsTable;
+    @FXML private TableColumn<Note, String>    recentNoteTitle;
+    @FXML private TableColumn<Note, String>    recentNoteSubject;
+    @FXML private TableColumn<Note, String>    recentNoteStatus;
+
+    // ── Recent Questions table ────────────────────────────────────────────────
+    @FXML private TableView<Question>          recentQuestionsTable;
+    @FXML private TableColumn<Question, String> recentQText;
+    @FXML private TableColumn<Question, String> recentQSubject;
+    @FXML private TableColumn<Question, Integer> recentQVotes;
 
     private final AdminService adminService = AdminService.getInstance();
 
     @FXML
     public void initialize() {
-        loadOverviewStats();
-        setupPieChart();
-        setupProgressBars();
-        setupLogs();
+        setupTableColumns();
+        loadStats();
+        loadRecentData();
+        loadSubjectChart();
     }
 
-    private void loadOverviewStats() {
-        int usersCount = adminService.getUsers().size();
-        lblTotalUsers.setText(String.valueOf(usersCount));
+    // ── Stats ─────────────────────────────────────────────────────────────────
 
-        // Mock counts for pending items
-        lblPendingNotes.setText("1");
-        lblPendingResources.setText("1");
-        lblPendingQuestions.setText("0");
+    private void loadStats() {
+        Map<String, Integer> stats = adminService.getDashboardStats();
+        setText(lblTotalUsers,      stats.get("totalUsers"));
+        setText(lblTotalNotes,      stats.get("totalNotes"));
+        setText(lblTotalResources,  stats.get("totalResources"));
+        setText(lblTotalQuestions,  stats.get("totalQuestions"));
+        setText(lblTotalAnswers,    stats.get("totalAnswers"));
+        setText(lblTotalTasks,      stats.get("totalTasks"));
+        setText(lblNewUsersToday,   stats.get("newUsersToday"));
+        setText(lblUploadsToday,    stats.get("uploadsToday"));
+        setText(lblPendingNotes,    stats.get("pendingNotes"));
+        setText(lblPendingResources, stats.get("pendingResources"));
     }
 
-    private void setupPieChart() {
-        List<Resource> resources = adminService.getResources();
-        int mathCount = 0;
-        int csCount = 0;
-        int physicsCount = 0;
-        int otherCount = 0;
-
-        for (Resource r : resources) {
-            String sub = r.getSubject().toLowerCase();
-            if (sub.contains("math")) mathCount++;
-            else if (sub.contains("computer") || sub.contains("cs")) csCount++;
-            else if (sub.contains("physics")) physicsCount++;
-            else otherCount++;
-        }
-
-        ObservableList<PieChart.Data> data = FXCollections.observableArrayList(
-                new PieChart.Data("Math (" + mathCount + ")", mathCount),
-                new PieChart.Data("Computer Science (" + csCount + ")", csCount),
-                new PieChart.Data("Physics (" + physicsCount + ")", physicsCount),
-                new PieChart.Data("Others (" + otherCount + ")", otherCount)
-        );
-        resourcePieChart.setData(data);
+    private void setText(Label lbl, Integer val) {
+        if (lbl != null) lbl.setText(val != null ? String.valueOf(val) : "0");
     }
 
-    private void setupProgressBars() {
-        List<Resource> resources = adminService.getResources();
-        long total = resources.size();
-        if (total == 0) {
-            approvedBar.setProgress(0.0);
-            pendingBar.setProgress(0.0);
-            rejectedBar.setProgress(0.0);
+    // ── Recent data ───────────────────────────────────────────────────────────
+
+    private void loadRecentData() {
+        List<User>     users     = adminService.getRecentUsers(5);
+        List<Note>     uploads   = adminService.getRecentUploads(5);
+        List<Question> questions = adminService.getRecentQuestions(5);
+
+        if (recentUsersTable != null)     recentUsersTable.setItems(FXCollections.observableArrayList(users));
+        if (recentUploadsTable != null)   recentUploadsTable.setItems(FXCollections.observableArrayList(uploads));
+        if (recentQuestionsTable != null) recentQuestionsTable.setItems(FXCollections.observableArrayList(questions));
+    }
+
+    // ── Chart ─────────────────────────────────────────────────────────────────
+
+    private void loadSubjectChart() {
+        if (subjectPieChart == null) return;
+        Map<String, Integer> bySubject = adminService.getNotesBySubject();
+        if (bySubject.isEmpty()) {
+            subjectPieChart.setData(FXCollections.observableArrayList(
+                    new PieChart.Data("No Data", 1)));
             return;
         }
-
-        long approved = resources.stream().filter(Resource::isActive).count();
-        long pending = total - approved;
-        long rejected = 0;
-
-        approvedBar.setProgress((double) approved / total);
-        pendingBar.setProgress((double) pending / total);
-        rejectedBar.setProgress((double) rejected / total);
+        var data = FXCollections.<PieChart.Data>observableArrayList();
+        bySubject.forEach((subject, count) -> data.add(new PieChart.Data(subject + " (" + count + ")", count)));
+        subjectPieChart.setData(data);
     }
 
-    private void setupLogs() {
-        ObservableList<String> logs = FXCollections.observableArrayList();
-        String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        logs.add("[" + ts + "] Admin session established.");
-        logs.add("[" + ts + "] Synced statistics from database.");
-        logs.add("[" + ts + "] Resource Moderation check: 1 item pending.");
-        moderationLogsList.setItems(logs);
+    // ── Table column setup ────────────────────────────────────────────────────
+
+    private void setupTableColumns() {
+        if (recentUserName    != null) recentUserName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        if (recentUserEmail   != null) recentUserEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
+        if (recentUserRole    != null) recentUserRole.setCellValueFactory(new PropertyValueFactory<>("role"));
+
+        if (recentNoteTitle   != null) recentNoteTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
+        if (recentNoteSubject != null) recentNoteSubject.setCellValueFactory(new PropertyValueFactory<>("subject"));
+        if (recentNoteStatus  != null) recentNoteStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        if (recentQText    != null) recentQText.setCellValueFactory(new PropertyValueFactory<>("questionText"));
+        if (recentQSubject != null) recentQSubject.setCellValueFactory(new PropertyValueFactory<>("subject"));
+        if (recentQVotes   != null) recentQVotes.setCellValueFactory(new PropertyValueFactory<>("votes"));
+    }
+
+    // ── Quick Actions ─────────────────────────────────────────────────────────
+
+    @FXML public void refreshStats() {
+        loadStats();
+        loadRecentData();
+        loadSubjectChart();
     }
 }

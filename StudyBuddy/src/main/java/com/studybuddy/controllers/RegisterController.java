@@ -76,7 +76,12 @@ public class RegisterController implements Initializable {
                     new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent e) {
-                            SceneManager.showLoginPage(getStage());
+                            try {
+                                SceneManager.showLoginPage(getStage());
+                            } catch (java.io.IOException ex) {
+                                System.err.println("[RegisterController] ❌ Could not load LoginView.fxml");
+                                ex.printStackTrace();
+                            }
                         }
                     })
             );
@@ -91,7 +96,13 @@ public class RegisterController implements Initializable {
      */
     @FXML
     public void onGoToRegistrationClick() {
-        SceneManager.showLoginPage(getStage());
+        try {
+            SceneManager.showLoginPage(getStage());
+        } catch (java.io.IOException e) {
+            System.err.println("[RegisterController] ❌ Could not load LoginView.fxml");
+            e.printStackTrace();
+            showError("Navigation error: " + e.getMessage());
+        }
     }
 
     private Stage getStage() {

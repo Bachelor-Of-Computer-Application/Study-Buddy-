@@ -4,48 +4,99 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="15" stylesheets="@../css/admin-dashboard.css" styleClass="content-wrap"
+<VBox spacing="16" stylesheets="@../css/admin-dashboard.css"
       xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.studybuddy.admin.controllers.AdminQuestionsController">
-    <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
-    </padding>
+      fx:controller="com.studybuddy.admin.controllers.AdminQuestionsController"
+      style="-fx-background-color: #f1f5f9;">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
 
     <!-- Header -->
-    <Label text="Q&amp;A Forum Moderation Console" styleClass="page-title" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <VBox spacing="3" HBox.hgrow="ALWAYS">
+            <Label text="Question Moderation" styleClass="section-title"/>
+            <Label text="Review, lock, and manage all questions" styleClass="section-subtitle"/>
+        </VBox>
+        <Button text="↻ Refresh" styleClass="secondary-btn" onAction="#handleRefresh"/>
+    </HBox>
 
-    <!-- Split Pane -->
-    <SplitPane dividerPositions="0.45" VBox.vgrow="ALWAYS" styleClass="moderation-splitpane" style="-fx-background-color: transparent;">
-        <items>
-            <!-- Left side: Questions list & Filters -->
-            <VBox spacing="12">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="Questions List" styleClass="panel-title" style="-fx-font-size: 15px;"/>
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <TextField fx:id="searchField" promptText="Filter questions..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
-                </HBox>
-                <ListView fx:id="questionsListView" VBox.vgrow="ALWAYS"/>
-                <HBox spacing="10">
-                    <Button text="Delete Question" styleClass="danger-btn" onAction="#handleDeleteQuestion"/>
-                    <Button text="Lock/Unlock discussion" styleClass="primary-btn" onAction="#handleToggleLockDiscussion"/>
-                </HBox>
+    <!-- Filter Bar -->
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
+        <TextField fx:id="searchField" promptText="🔍  Search question or author…"
+                   styleClass="search-field" prefWidth="260"/>
+        <ComboBox fx:id="subjectFilter" promptText="Subject" styleClass="combo-box" prefWidth="160"/>
+        <Button text="Filter" styleClass="primary-btn" onAction="#applyFilters"/>
+        <Button text="Clear"  styleClass="secondary-btn" onAction="#clearFilters"/>
+    </HBox>
+
+    <!-- Main split: questions (top) + detail (bottom) -->
+    <VBox spacing="14" VBox.vgrow="ALWAYS">
+
+        <!-- Questions Table -->
+        <VBox styleClass="panel-card" spacing="12" VBox.vgrow="ALWAYS">
+            <Label text="All Questions" styleClass="panel-title"/>
+            <TableView fx:id="questionsTable" VBox.vgrow="ALWAYS" prefHeight="280" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colQuestion" text="Question"     prefWidth="300" minWidth="150"/>
+                    <TableColumn fx:id="colSubject"  text="Subject"      prefWidth="130" minWidth="80"/>
+                    <TableColumn fx:id="colAuthor"   text="Author"       prefWidth="130" minWidth="80"/>
+                    <TableColumn fx:id="colVotes"    text="👍 Votes"     prefWidth="75"  minWidth="50"/>
+                    <TableColumn fx:id="colAnswers"  text="💬 Answers"   prefWidth="80"  minWidth="55"/>
+                    <TableColumn fx:id="colViews"    text="👁 Views"     prefWidth="75"  minWidth="50"/>
+                    <TableColumn fx:id="colDate"     text="Date"         prefWidth="130" minWidth="80"/>
+                    <TableColumn fx:id="colStatus"   text="Status"       prefWidth="90"  minWidth="65"/>
+                </columns>
+                <placeholder><Label text="No questions found." style="-fx-text-fill:#94a3b8;"/></placeholder>
+            </TableView>
+
+            <!-- Pagination -->
+            <HBox alignment="CENTER" spacing="14">
+                <Button fx:id="btnPrevPage" text="◀ Prev" styleClass="secondary-btn" onAction="#handlePrevPage"/>
+                <Label fx:id="lblPageNumber" text="Page 1 of 1"
+                       style="-fx-font-weight:bold; -fx-font-size:13px; -fx-text-fill:#374151;"/>
+                <Button fx:id="btnNextPage" text="Next ▶" styleClass="secondary-btn" onAction="#handleNextPage"/>
+            </HBox>
+
+            <!-- Question actions -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button text="🔒 Lock"             styleClass="warning-btn"  onAction="#handleLock"/>
+                <Button text="🔓 Unlock"           styleClass="success-btn"  onAction="#handleUnlock"/>
+                <Button text="🗑 Delete Question"   styleClass="danger-btn"   onAction="#handleDeleteQuestion"/>
+            </HBox>
+        </VBox>
+
+        <!-- Bottom: Question detail + Answers -->
+        <GridPane hgap="16">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="40"/>
+                <ColumnConstraints percentWidth="60"/>
+            </columnConstraints>
+
+            <!-- Question detail -->
+            <VBox styleClass="panel-card" spacing="10" GridPane.columnIndex="0">
+                <Label text="Question Details" styleClass="panel-title"/>
+                <TextArea fx:id="questionDetailArea"
+                          editable="false"
+                          wrapText="true"
+                          prefHeight="180"
+                          style="-fx-font-size:13px; -fx-text-fill:#334155;"
+                          VBox.vgrow="ALWAYS"/>
             </VBox>
 
-            <!-- Right side: Selected details and answers -->
-            <VBox spacing="12">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-                <Label text="Discussion Thread Details" styleClass="panel-title" style="-fx-font-size: 15px;"/>
-                <TextArea fx:id="questionDetailsArea" editable="false" prefHeight="100" wrapText="true" styleClass="question-detail-area" style="-fx-background-color: #f8fafc;"/>
-
-                <Label text="Nested Answers List" styleClass="panel-title" style="-fx-font-size: 13px;"/>
-                <ListView fx:id="answersListView" VBox.vgrow="ALWAYS"/>
-                
-                <Button text="Delete Selected Answer" styleClass="danger-btn" onAction="#handleDeleteAnswer"/>
+            <!-- Answers table -->
+            <VBox styleClass="panel-card" spacing="10" GridPane.columnIndex="1">
+                <Label text="Answers for Selected Question" styleClass="panel-title"/>
+                <TableView fx:id="answersTable" prefHeight="180" VBox.vgrow="ALWAYS" styleClass="table-view">
+                    <columns>
+                        <TableColumn fx:id="colAnswerAuthor" text="Author" prefWidth="130" minWidth="80"/>
+                        <TableColumn fx:id="colAnswerText"   text="Answer" prefWidth="260" minWidth="120"/>
+                        <TableColumn fx:id="colAnswerVotes"  text="Votes"  prefWidth="70"  minWidth="50"/>
+                        <TableColumn fx:id="colAnswerDate"   text="Date"   prefWidth="130" minWidth="80"/>
+                    </columns>
+                    <placeholder><Label text="Select a question to see answers." style="-fx-text-fill:#94a3b8;"/></placeholder>
+                </TableView>
+                <Button text="🗑 Delete Selected Answer" styleClass="danger-btn" onAction="#handleDeleteAnswer"/>
             </VBox>
-        </items>
-    </SplitPane>
+        </GridPane>
+    </VBox>
+
 </VBox>

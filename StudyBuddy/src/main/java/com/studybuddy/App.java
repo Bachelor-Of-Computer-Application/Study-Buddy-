@@ -32,14 +32,23 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
-        // Initialize database connection (placeholder for MSSQL)
-        DatabaseConnection.initialize();
+        // Attempt database connection — failure must NOT prevent the UI from showing
+        try {
+            DatabaseConnection.initialize();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Register stage in SceneManager
         SceneManager.setPrimaryStage(stage);
 
-        // Show Login Page by default
-        SceneManager.showLoginPage(stage);
+        // Show Login Page — this MUST succeed; any exception here is fatal and rethrown
+        try {
+            SceneManager.showLoginPage(stage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to launch Login screen", e);
+        }
     }
 
     public static void main(String[] args) {

@@ -50,7 +50,13 @@ public class LoginController implements Initializable {
         if (user != null) {
             showSuccess("Login successful! Welcome, " + user.getName());
             // Redirect to Home Page
-            SceneManager.showHomePage(getStage(), user);
+            try {
+                SceneManager.showHomePage(getStage(), user);
+            } catch (java.io.IOException e) {
+                System.err.println("[LoginController] ❌ Could not load HomeView.fxml");
+                e.printStackTrace();
+                showError("Navigation error: " + e.getMessage());
+            }
         } else {
             showError("Invalid email or password.");
         }
@@ -61,7 +67,13 @@ public class LoginController implements Initializable {
      */
     @FXML
     public void onGoToRegistrationClick() {
-        SceneManager.showRegistrationPage(getStage());
+        try {
+            SceneManager.showRegistrationPage(getStage());
+        } catch (java.io.IOException e) {
+            System.err.println("[LoginController] ❌ Could not load RegisterView.fxml");
+            e.printStackTrace();
+            showError("Navigation error: " + e.getMessage());
+        }
     }
 
     private Stage getStage() {

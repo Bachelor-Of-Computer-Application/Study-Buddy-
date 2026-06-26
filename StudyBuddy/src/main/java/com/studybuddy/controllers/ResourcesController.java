@@ -59,7 +59,7 @@ public class ResourcesController {
         subjectCol.setCellValueFactory(new PropertyValueFactory<>("subject"));
         fileNameCol.setCellValueFactory(new PropertyValueFactory<>("fileType")); // represents file name/type
         dateCol.setCellValueFactory(new PropertyValueFactory<>("uploadDate"));
-        
+
         statusCol.setCellValueFactory(cellData -> {
             boolean active = cellData.getValue().isActive();
             return new SimpleStringProperty(active ? "Approved" : "Pending");
@@ -214,7 +214,7 @@ public class ResourcesController {
 
         List<Resource> filtered = activeResources.stream()
                 .filter(r -> (query.isEmpty() || r.getTitle().toLowerCase().contains(query)) &&
-                             (subject == null || r.getSubject().equalsIgnoreCase(subject)))
+                        (subject == null || r.getSubject().equalsIgnoreCase(subject)))
                 .collect(Collectors.toList());
 
         displayResources(filtered);
@@ -339,9 +339,9 @@ public class ResourcesController {
         alert.setTitle("Resource Preview");
         alert.setHeaderText(r.getTitle());
         alert.setContentText("Subject: " + r.getSubject() + "\n" +
-                              "Source: " + r.getSource() + "\n" +
-                              "Description: " + r.getDescription() + "\n" +
-                              "File Path: " + r.getFilePath());
+                "Source: " + r.getSource() + "\n" +
+                "Description: " + r.getDescription() + "\n" +
+                "File Path: " + r.getFilePath());
         alert.showAndWait();
     }
 

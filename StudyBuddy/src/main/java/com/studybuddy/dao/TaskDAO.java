@@ -6,20 +6,31 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Data Access Object for Task operations.
+ *
+ * Key SQL schema fix:
+ *   Tasks table uses column name: user_id  (NOT userId)
+ *   All SQL strings have been updated to use user_id.
+ */
 public class TaskDAO {
 
     // =========================
     // CREATE TASK
     // =========================
-    public boolean createTask(Task task) {
 
-        String sql =
-                "INSERT INTO Tasks(userId,title,description,status) VALUES(?,?,?,?)";
+    /**
+     * Inserts a new task into the Tasks table.
+     * FIXED: Column name is user_id (not userId) to match SQL schema.
+     */
+    public boolean createTask(Task task) {
+        // SQL column name: user_id — matches Tasks table definition
+        String sql = "INSERT INTO Tasks (user_id, title, description, status) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, task.getUserId());
+            ps.setInt(1,    task.getUserId());
             ps.setString(2, task.getTitle());
             ps.setString(3, task.getDescription());
             ps.setString(4, task.getStatus());
@@ -34,13 +45,18 @@ public class TaskDAO {
     }
 
     // =========================
-    // READ TASKS
+    // READ TASKS BY USER
     // =========================
-    public List<Task> getTasksByUserId(int userId) {
 
+    /**
+     * Returns all tasks for a given user.
+     * FIXED: WHERE clause uses user_id (not userId) to match SQL schema.
+     */
+    public List<Task> getTasksByUserId(int userId) {
         List<Task> tasks = new ArrayList<>();
 
-        String sql = "SELECT * FROM Tasks WHERE userId=?";
+        // SQL column name: user_id — matches Tasks table definition
+        String sql = "SELECT * FROM Tasks WHERE user_id = ? ORDER BY created_at DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -50,15 +66,12 @@ public class TaskDAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
                 Task task = new Task();
-
                 task.setId(rs.getInt("id"));
-                task.setUserId(rs.getInt("userId"));
+                task.setUserId(rs.getInt("user_id")); // SQL column: user_id
                 task.setTitle(rs.getString("title"));
                 task.setDescription(rs.getString("description"));
                 task.setStatus(rs.getString("status"));
-
                 tasks.add(task);
             }
 
@@ -72,10 +85,12 @@ public class TaskDAO {
     // =========================
     // UPDATE TASK
     // =========================
-    public boolean updateTask(Task task) {
 
-        String sql =
-                "UPDATE Tasks SET title=?, description=?, status=? WHERE id=?";
+    /**
+     * Updates an existing task's title, description, and status.
+     */
+    public boolean updateTask(Task task) {
+        String sql = "UPDATE Tasks SET title = ?, description = ?, status = ? WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -83,7 +98,7 @@ public class TaskDAO {
             ps.setString(1, task.getTitle());
             ps.setString(2, task.getDescription());
             ps.setString(3, task.getStatus());
-            ps.setInt(4, task.getId());
+            ps.setInt(4,    task.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -97,9 +112,12 @@ public class TaskDAO {
     // =========================
     // DELETE TASK
     // =========================
-    public boolean deleteTask(int taskId) {
 
-        String sql = "DELETE FROM Tasks WHERE id=?";
+    /**
+     * Deletes a task by its ID.
+     */
+    public boolean deleteTask(int taskId) {
+        String sql = "DELETE FROM Tasks WHERE id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -118,10 +136,14 @@ public class TaskDAO {
     // =========================
     // TOTAL TASK COUNT
     // =========================
-    public int getTaskCount(int userId) {
 
-        String sql =
-                "SELECT COUNT(*) FROM Tasks WHERE userId=?";
+    /**
+     * Returns total task count for a user.
+     * FIXED: WHERE clause uses user_id (not userId).
+     */
+    public int getTaskCount(int userId) {
+        // SQL column name: user_id — matches Tasks table definition
+        String sql = "SELECT COUNT(*) FROM Tasks WHERE user_id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -144,10 +166,14 @@ public class TaskDAO {
     // =========================
     // COMPLETED TASK COUNT
     // =========================
-    public int getCompletedTaskCount(int userId) {
 
-        String sql =
-                "SELECT COUNT(*) FROM Tasks WHERE userId=? AND status='completed'";
+    /**
+     * Returns the number of completed tasks for a user.
+     * FIXED: WHERE clause uses user_id (not userId).
+     */
+    public int getCompletedTaskCount(int userId) {
+        // SQL column name: user_id — matches Tasks table definition
+        String sql = "SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND status = 'completed'";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -167,11 +193,14 @@ public class TaskDAO {
         return 0;
     }
 
+    // =========================
+    // COMPLETION PERCENTAGE
+    // =========================
 
-    // COMPLETION %
-
+    /**
+     * Calculates the completion percentage of tasks for a user.
+     */
     public int getCompletedPercentage(int userId) {
-
         int total = getTaskCount(userId);
 
         if (total == 0) {
@@ -183,12 +212,15 @@ public class TaskDAO {
         return (completed * 100) / total;
     }
 
+    // =========================
+    // STUDY HOURS (DERIVED)
+    // =========================
 
-    // STUDY HOURS
-
+    /**
+     * Returns an estimated study hours value based on completed tasks.
+     * Each completed task counts as 2 hours of study.
+     */
     public double getStudyHours(int userId) {
-
-        // Dummy value for presentation
         return getCompletedTaskCount(userId) * 2.0;
     }
 }

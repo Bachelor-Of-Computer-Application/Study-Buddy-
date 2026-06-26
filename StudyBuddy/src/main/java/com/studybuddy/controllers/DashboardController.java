@@ -1,7 +1,9 @@
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
+import com.studybuddy.dao.QuestionDAO;
 import com.studybuddy.models.Note;
+import com.studybuddy.models.Resource;
 import com.studybuddy.models.User;
 import com.studybuddy.services.DashboardService;
 import com.studybuddy.services.NoteService;
@@ -28,6 +30,8 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -63,6 +67,7 @@ public class DashboardController implements Initializable {
     private final NoteService noteService = new NoteService();
     private final ResourceService resourceService = new ResourceService();
     private final TaskService taskService = new TaskService();
+    private final QuestionDAO questionDAO = new QuestionDAO(); // FIXED: for real question count
     private final ImageLoader imageLoader = ImageLoader.getInstance();
 
     private List<Note> approvedNotes;
@@ -110,38 +115,39 @@ public class DashboardController implements Initializable {
     private void loadDashboardStats() {
         int userId = (currentUser != null) ? currentUser.getId() : 1;
 
-        // Total Notes
+        // Total Notes — from SQL Server via NoteService → NoteDAO
+        // SQL: SELECT COUNT(*) FROM Notes WHERE userId = ?
         try {
-            List<Note> notes = noteService.getNotesByUserId(userId);
-            lblTotalNotes.setText(String.valueOf(notes != null ? notes.size() : 4));
+            int noteCount = noteService.countNotesByUser(userId);
+            lblTotalNotes.setText(String.valueOf(noteCount));
         } catch (Exception e) {
-            lblTotalNotes.setText("4");
+            lblTotalNotes.setText("0");
         }
 
-        // Shared Resources
+        // Shared Resources — from SQL Server via ResourceService → ResourceDAO
+        // SQL: SELECT COUNT(*) FROM Resources WHERE isActive = 1
         try {
             int shared = resourceService.countActiveResources();
-            lblSharedResources.setText(String.valueOf(shared > 0 ? shared : 3));
+            lblSharedResources.setText(String.valueOf(shared));
         } catch (Exception e) {
-            lblSharedResources.setText("3");
+            lblSharedResources.setText("0");
         }
 
-        // Questions Count (Mocked)
-        lblTotalQuestions.setText("5");
+        // Questions Count — FIXED: from SQL Server via QuestionDAO
+        // SQL: SELECT COUNT(*) FROM Questions
+        try {
+            int questionCount = questionDAO.countAllQuestions();
+            lblTotalQuestions.setText(String.valueOf(questionCount));
+        } catch (Exception e) {
+            lblTotalQuestions.setText("0");
+        }
 
-        // Tasks Statistics
+        // Tasks Statistics — from SQL Server via TaskService → TaskDAO
+        // SQL: SELECT COUNT(*) FROM Tasks WHERE user_id = ?
         int totalTasks = taskService.getTotalTaskCount(userId);
         int completedTasks = taskService.getCompletedTaskCount(userId);
         int pendingTasks = totalTasks - completedTasks;
         int progress = taskService.getCompletedPercentage(userId);
-
-        // Fallbacks if DB has no mock tasks loaded
-        if (totalTasks == 0) {
-            totalTasks = 8;
-            completedTasks = 6;
-            pendingTasks = 2;
-            progress = 75;
-        }
 
         lblTotalTasks.setText(String.valueOf(pendingTasks));
         lblProgressPercentageStat.setText(progress + "%");
@@ -164,6 +170,8 @@ public class DashboardController implements Initializable {
     }
 
     public void loadApprovedNotes() {
+        // FIXED: DashboardService.getApprovedNotes() now fetches from SQL Server
+        // SQL: SELECT * FROM Notes WHERE isPrivate = 0 ORDER BY uploadDate DESC
         approvedNotes = dashboardService.getApprovedNotes();
         if (approvedNotes == null || approvedNotes.isEmpty()) {
             displayNotes(FXCollections.emptyObservableList());
@@ -176,7 +184,8 @@ public class DashboardController implements Initializable {
         recentNotesContainer.getChildren().clear();
         recentResourcesContainer.getChildren().clear();
 
-        // Recent shared notes
+        // FIXED: Recent shared notes now come from SQL Server via DashboardService → NoteDAO
+        // SQL: SELECT TOP 5 * FROM Notes WHERE isPrivate = 0 ORDER BY uploadDate DESC
         List<Note> recent = dashboardService.getRecentNotes();
         if (recent != null) {
             for (Note note : recent.stream().limit(2).collect(Collectors.toList())) {
@@ -194,21 +203,28 @@ public class DashboardController implements Initializable {
             }
         }
 
-        // Recent shared resources (Mocked)
-        String[] resTitles = {"Calculus II Study Guide", "OS Scheduling CheatSheet"};
-        String[] resDates = {"2026-06-18", "2026-06-19"};
-        for (int i = 0; i < resTitles.length; i++) {
-            VBox card = new VBox(5);
-            card.setPadding(new Insets(10));
-            card.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 8;");
-            Label label = new Label(resTitles[i]);
-            label.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #16a34a;");
-            label.setWrapText(true);
-            label.setMaxWidth(160);
-            Label date = new Label("📅 " + resDates[i]);
-            date.setStyle("-fx-font-size: 10px; -fx-text-fill: #64748b;");
-            card.getChildren().addAll(label, date);
-            recentResourcesContainer.getChildren().add(card);
+        // FIXED: Recent resources now come from SQL Server via ResourceService → ResourceDAO
+        // SQL: SELECT * FROM Resources WHERE isActive = 1 ORDER BY uploadDate DESC
+        try {
+            List<Resource> recentResources = resourceService.getAllActiveResources();
+            if (recentResources != null) {
+                for (Resource res : recentResources.stream().limit(2).collect(Collectors.toList())) {
+                    VBox card = new VBox(5);
+                    card.setPadding(new Insets(10));
+                    card.setStyle("-fx-background-color: #f0fdf4; -fx-background-radius: 8;");
+                    Label label = new Label(res.getTitle());
+                    label.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #16a34a;");
+                    label.setWrapText(true);
+                    label.setMaxWidth(160);
+                    Label date = new Label("📅 " + res.getUploadDate());
+                    date.setStyle("-fx-font-size: 10px; -fx-text-fill: #64748b;");
+                    card.getChildren().addAll(label, date);
+                    recentResourcesContainer.getChildren().add(card);
+                }
+            }
+        } catch (Exception e) {
+            // Resources section fails gracefully
+            System.err.println("Could not load recent resources: " + e.getMessage());
         }
     }
 
