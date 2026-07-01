@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16" stylesheets="@../css/admin-dashboard.css"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.studybuddy.admin.controllers.AdminActivityLogsController"
+      style="-fx-background-color: #f1f5f9;">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <VBox spacing="3" HBox.hgrow="ALWAYS">
+            <Label text="Activity Logs" styleClass="section-title"/>
+            <Label fx:id="lblTotalCount" text="" styleClass="section-subtitle"/>
+        </VBox>
+        <Button text="📤 Export CSV" styleClass="secondary-btn" onAction="#handleExport"/>
+        <Button text="↻ Refresh"    styleClass="secondary-btn" onAction="#handleRefresh"/>
+    </HBox>
+
+    <!-- Filter Bar -->
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
+        <!-- Full-text search -->
+        <TextField fx:id="searchField"
+                   promptText="🔍  Search admin, action, target…"
+                   styleClass="search-field"
+                   prefWidth="280"/>
+        <Button text="Search" styleClass="primary-btn" onAction="#handleSearch"/>
+
+        <Separator orientation="VERTICAL" style="-fx-padding: 0 4;"/>
+
+        <!-- Date range filter -->
+        <Label text="From:" styleClass="input-label"/>
+        <DatePicker fx:id="fromDatePicker" promptText="Start date" prefWidth="140"/>
+
+        <Label text="To:" styleClass="input-label"/>
+        <DatePicker fx:id="toDatePicker" promptText="End date" prefWidth="140"/>
+
+        <Button text="Filter by Date" styleClass="primary-btn"   onAction="#handleDateFilter"/>
+        <Button text="Clear Filters"  styleClass="secondary-btn" onAction="#handleClearFilters"/>
+    </HBox>
+
+    <!-- Logs Table -->
+    <TableView fx:id="logsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+        <columns>
+            <TableColumn fx:id="colId"         text="ID"          prefWidth="60"  minWidth="45"/>
+            <TableColumn fx:id="colAdmin"      text="Admin"       prefWidth="140" minWidth="90"/>
+            <TableColumn fx:id="colAction"     text="Action"      prefWidth="200" minWidth="120"/>
+            <TableColumn fx:id="colTargetType" text="Target Type" prefWidth="120" minWidth="80"/>
+            <TableColumn fx:id="colTargetName" text="Target"      prefWidth="200" minWidth="100"/>
+            <TableColumn fx:id="colStatus"     text="Status"      prefWidth="90"  minWidth="60"/>
+            <TableColumn fx:id="colTimestamp"  text="Timestamp"   prefWidth="160" minWidth="120"/>
+        </columns>
+        <placeholder>
+            <Label text="No activity logs found. Actions you perform are recorded here automatically."
+                   style="-fx-text-fill:#94a3b8; -fx-font-size:13px;" wrapText="true"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Info note -->
+    <Label text="ℹ  Every admin action (user edits, approvals, deletions, logins) is automatically logged here. Requires the ActivityLogs table in your database."
+           wrapText="true"
+           style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+
+</VBox>
