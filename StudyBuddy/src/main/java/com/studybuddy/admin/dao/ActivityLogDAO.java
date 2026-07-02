@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-/**+
+/**
  * DAO for the ActivityLogs table.
  * Every admin action is persisted here via insertLog().
  */

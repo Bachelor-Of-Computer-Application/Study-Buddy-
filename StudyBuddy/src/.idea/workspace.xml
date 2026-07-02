@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="9fcbdc75-bc40-44d4-922a-298aa160efde" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/AdminApp.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/AdminMain.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminDashboardController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminLoginController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminNotesController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminOverviewController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminQuestionsController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminReportsController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminResourcesController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminSettingsController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/controllers/AdminUsersController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/css/admin-dashboard.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/css/login.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/dao/AdminDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminDashboardOverview.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminDashboardView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminLoginView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminNotesModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminQuestionsModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminReports.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminResourcesModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminSettings.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/fxml/AdminUsersModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/models/Answer.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/models/Note.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/models/Question.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/models/Resource.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/models/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/services/AdminService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/out/production/StudyBuddyAdmin/com/studybuddy/admin/utils/AdminSceneManager.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/AdminApp.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/AdminMain.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminDashboardController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminLoginController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminNotesController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminOverviewController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminQuestionsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminReportsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminResourcesController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminSettingsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/admin_controllers/AdminUsersController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/css/admin-dashboard.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/css/login.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/dao/AdminDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminDashboardOverview.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminDashboardView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminLoginView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminNotesModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminQuestionsModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminReports.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminResourcesModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminSettings.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/fxml/AdminUsersModeration.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/models/Answer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/models/Note.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/models/Question.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/models/Resource.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/models/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/services/AdminService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyAdmin/src/com/studybuddy/admin/utils/AdminSceneManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/App.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/Main.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/AskQuestionController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/CreateNoteController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/DashboardController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/HomeController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/LoginController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/NotesController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/ProfileController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/QuestionsController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/RegisterController$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/RegisterController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/controllers/ResourcesController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/admin-dashboard.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/ask-question.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/auth.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/dashboard.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/edit-profile.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/home.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/login.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/notes.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/profile.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/css/register.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/DatabaseConnection$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/DatabaseConnection$2.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/DatabaseConnection$3.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/DatabaseConnection.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/NoteDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/QuestionDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/ResourceDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/TaskDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/dao/UserDAO.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/AskQuestionView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/CreateNoteDialog.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/DashboardView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/HomeView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/LoginView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/NotesView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/ProfileView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/QuestionsView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/RegisterView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/fxml/ResourcesView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/Study_buddy_logo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/home_icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/log_out.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/main_logo_study_buddyy.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/man_on_lapto.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/round-account-button.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/student.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/images/upload.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/main.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/Answer.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/Category.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/Note.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/Question.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/RegisterInput.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/Resource.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/StudySession.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/Task.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/models/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/services/AuthService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/services/DashboardService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/services/NoteService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/services/QuestionService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/services/ResourceService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/services/TaskService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/services/UserService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/utils/DatabaseUtil.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/utils/ImageLoader.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/utils/PasswordHasher.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/utils/SceneManager.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/utils/SessionManager.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/out/production/StudyBuddyapp/com/studybuddy/utils/ValidationUtil.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/App.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/AskQuestionController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/CreateNoteController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/DashboardController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/HomeController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/LoginController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/NotesController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/ProfileController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/QuestionsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/RegisterController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/controllers/ResourcesController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/dao/DatabaseConnection.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/dao/NoteDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/dao/QuestionDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/dao/ResourceDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/dao/TaskDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/dao/UserDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/Answer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/Category.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/Note.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/Question.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/RegisterInput.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/Resource.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/StudySession.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/Task.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/models/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/services/AuthService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/services/DashboardService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/services/NoteService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/services/QuestionService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/services/ResourceService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/services/TaskService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/services/UserService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/utils/DatabaseUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/utils/ImageLoader.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/utils/PasswordHasher.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/utils/SceneManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/utils/SessionManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/java/com/studybuddy/utils/ValidationUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/admin-dashboard.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/ask-question.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/auth.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/dashboard.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/edit-profile.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/home.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/login.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/notes.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/profile.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/css/register.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/AskQuestionView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/CreateNoteDialog.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/DashboardView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/HomeView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/LoginView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/NotesView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/ProfileView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/QuestionsView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/RegisterView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/fxml/ResourcesView.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/Study_buddy_logo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/home_icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/log_out.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/main_logo_study_buddyy.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/man_on_lapto.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/round-account-button.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/student.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/images/upload.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../StudyBuddyapp/src/main/resources/com/studybuddy/main.fxml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../javafx-sdk-26.0.1/legal/jfx.incubator.richtext/unicode-fx.md" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "GautamPrasid"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Bachelor-Of-Computer-Application/Study-Buddy-.git",
+    "accountId": "619ce80d-3b8e-44b1-8949-4984714d9ea5"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3FfI3L4PQqAR3zBG5eVI1gMYX7R" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.25134.95" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.25134.95" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9fcbdc75-bc40-44d4-922a-298aa160efde" name="Changes" comment="" />
+      <created>1782459499192</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1782459499192</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
