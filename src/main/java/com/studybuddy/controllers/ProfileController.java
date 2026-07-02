@@ -21,61 +21,100 @@ import java.util.List;
 
 public class ProfileController {
 
-    @FXML private BorderPane rootPane;
-    @FXML private ImageView profileImageView;
-    @FXML private Label displayNameLabel;
-    @FXML private Label usernameSubLabel;
-    @FXML private Label pointsBadgeLabel;
-    @FXML private Label joinedDateLabel;
-    @FXML private Label userRoleLabel;
+    @FXML
+    private BorderPane rootPane;
+    @FXML
+    private ImageView profileImageView;
+    @FXML
+    private Label displayNameLabel;
+    @FXML
+    private Label usernameSubLabel;
+    @FXML
+    private Label pointsBadgeLabel;
+    @FXML
+    private Label joinedDateLabel;
+    @FXML
+    private Label userRoleLabel;
 
     // Overview Tab
-    @FXML private Label ovFullName;
-    @FXML private Label ovUsername;
-    @FXML private Label ovEmail;
-    @FXML private Label ovPhone;
-    @FXML private Label ovBio;
-    @FXML private Label ovDept;
-    @FXML private Label ovSemester;
-    @FXML private Label ovInterests;
+    @FXML
+    private Label ovFullName;
+    @FXML
+    private Label ovUsername;
+    @FXML
+    private Label ovEmail;
+    @FXML
+    private Label ovPhone;
+    @FXML
+    private Label ovBio;
+    @FXML
+    private Label ovDept;
+    @FXML
+    private Label ovSemester;
+    @FXML
+    private Label ovInterests;
 
     // Activity Stats
-    @FXML private Label statNotesCreated;
-    @FXML private Label statResourcesUploaded;
-    @FXML private Label statQuestionsAsked;
-    @FXML private Label statAnswersPosted;
-    @FXML private Label statStudyHours;
-    @FXML private Label statAchievements;
+    @FXML
+    private Label statNotesCreated;
+    @FXML
+    private Label statResourcesUploaded;
+    @FXML
+    private Label statQuestionsAsked;
+    @FXML
+    private Label statAnswersPosted;
+    @FXML
+    private Label statStudyHours;
+    @FXML
+    private Label statAchievements;
 
     // Edit Profile Tab
-    @FXML private TextField fullNameField;
-    @FXML private TextField usernameField;
-    @FXML private TextField phoneNumberField;
-    @FXML private TextArea bioField;
-    @FXML private TextField departmentField;
-    @FXML private ComboBox<String> semesterCombo;
-    @FXML private Label avatarPathLabel;
+    @FXML
+    private TextField fullNameField;
+    @FXML
+    private TextField usernameField;
+    @FXML
+    private TextField phoneNumberField;
+    @FXML
+    private TextArea bioField;
+    @FXML
+    private TextField departmentField;
+    @FXML
+    private ComboBox<String> semesterCombo;
+    @FXML
+    private Label avatarPathLabel;
 
     // Study Interests Tab
-    @FXML private TextField preferredSubjectsField;
-    @FXML private TextArea studyGoalsField;
-    @FXML private TextField learningInterestsField;
+    @FXML
+    private TextField preferredSubjectsField;
+    @FXML
+    private TextArea studyGoalsField;
+    @FXML
+    private TextField learningInterestsField;
 
     // Account Settings Tab
-    @FXML private TextField emailField;
+    @FXML
+    private TextField emailField;
 
     // Password Tab
-    @FXML private PasswordField currentPasswordField;
-    @FXML private PasswordField newPasswordField;
-    @FXML private PasswordField confirmPasswordField;
+    @FXML
+    private PasswordField currentPasswordField;
+    @FXML
+    private PasswordField newPasswordField;
+    @FXML
+    private PasswordField confirmPasswordField;
 
     // Notifications Tab
-    @FXML private CheckBox emailNotificationsCheck;
-    @FXML private CheckBox resourceNotificationsCheck;
-    @FXML private CheckBox systemNotificationsCheck;
+    @FXML
+    private CheckBox emailNotificationsCheck;
+    @FXML
+    private CheckBox resourceNotificationsCheck;
+    @FXML
+    private CheckBox systemNotificationsCheck;
 
     // Activity Tab
-    @FXML private ListView<String> activityListView;
+    @FXML
+    private ListView<String> activityListView;
 
     private final UserService userService = new UserService();
     private User currentUser;
@@ -130,7 +169,7 @@ public class ProfileController {
 
         // Stats Labels
         statNotesCreated.setText("4"); // Mock stats for display
-        statResourcesUploaded.setText(String.valueOf(currentUser.getAchievements())); 
+        statResourcesUploaded.setText(String.valueOf(currentUser.getAchievements()));
         statQuestionsAsked.setText(String.valueOf(currentUser.getQuestionsCount()));
         statAnswersPosted.setText(String.valueOf(currentUser.getAnswersCount()));
         statStudyHours.setText("12.5h");
@@ -262,13 +301,22 @@ public class ProfileController {
 
     @FXML
     public void handleSaveStudyPreferences() {
-        currentUser.setPreferredSubjects(preferredSubjectsField.getText().trim());
-        currentUser.setStudyGoals(studyGoalsField.getText().trim());
-        currentUser.setLearningInterests(learningInterestsField.getText().trim());
+
+        currentUser.setPreferredSubjects(
+                java.util.Objects.toString(preferredSubjectsField.getText(), "").trim());
+
+        currentUser.setStudyGoals(
+                java.util.Objects.toString(studyGoalsField.getText(), "").trim());
+
+        currentUser.setLearningInterests(
+                java.util.Objects.toString(learningInterestsField.getText(), "").trim());
 
         userService.updateStudyPreferences(currentUser);
 
-        showAlert(Alert.AlertType.INFORMATION, "Success", "Study preferences updated successfully.");
+        showAlert(Alert.AlertType.INFORMATION,
+                "Success",
+                "Study preferences updated successfully.");
+
         loadProfileData();
     }
 

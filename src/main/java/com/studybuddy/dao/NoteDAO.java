@@ -35,7 +35,15 @@ public class NoteDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    notes.add(mapNote(rs));
+                    Note note = mapNote(rs);
+
+                    System.out.println(
+                            "Loaded Note: " +
+                                    note.getTitle() +
+                                    " | UserID=" + note.getUserId()
+                    );
+
+                    notes.add(note);
                 }
             }
         }

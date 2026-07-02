@@ -35,7 +35,8 @@ public class NotesController implements Initializable {
 
     private NoteService noteService;
     private ResourceService resourceService;
-    private List<Note> allNotes = new ArrayList<>();
+    private List<Note> myNotes = new ArrayList<>();
+    private List<Note> communityNotes = new ArrayList<>();
     private int currentUserId = 1;
 
     @Override
@@ -69,36 +70,53 @@ public class NotesController implements Initializable {
 
     private void loadNotes() {
         try {
-            // Load real notes from SQL Server via NoteService → NoteDAO
-            // SQL: SELECT * FROM Notes WHERE userId = ? ORDER BY uploadDate DESC
-            allNotes = noteService.getNotesByUserId(currentUserId);
-            if (allNotes == null) {
-                allNotes = new ArrayList<>();
+
+            System.out.println("Current User ID = " + currentUserId);
+
+            myNotes = noteService.getNotesByUserId(currentUserId);
+            communityNotes = noteService.getAllPublicNotes();
+
+            if (myNotes == null) {
+                myNotes = new ArrayList<>();
             }
-            // FIXED: Removed mock note injection — display only real DB data
-            displayNotes(allNotes);
+
+            if (communityNotes == null) {
+                communityNotes = new ArrayList<>();
+            }
+
+            displayNotes(myNotes, communityNotes);
+
         } catch (Exception e) {
+            e.printStackTrace();
             showError("Failed to load notes: " + e.getMessage());
         }
     }
 
-    private void displayNotes(List<Note> notes) {
+    private void displayNotes(List<Note> myNotes,
+                              List<Note> communityNotes) {
+
         myNotesContainer.getChildren().clear();
         communityNotesContainer.getChildren().clear();
 
         boolean hasPersonal = false;
         boolean hasCommunity = false;
 
-        for (Note note : notes) {
-            if (note.isPrivate()) {
-                VBox card = createPersonalNoteCard(note);
-                myNotesContainer.getChildren().add(card);
-                hasPersonal = true;
-            } else {
-                VBox card = createCommunityNoteCard(note);
-                communityNotesContainer.getChildren().add(card);
-                hasCommunity = true;
-            }
+        // My Notes
+        for (Note note : myNotes) {
+
+            myNotesContainer.getChildren()
+                    .add(createPersonalNoteCard(note));
+
+            hasPersonal = true;
+        }
+
+        // Community Notes
+        for (Note note : communityNotes) {
+
+            communityNotesContainer.getChildren()
+                    .add(createCommunityNoteCard(note));
+
+            hasCommunity = true;
         }
 
         emptyState.setVisible(!hasPersonal && !hasCommunity);
@@ -233,22 +251,46 @@ public class NotesController implements Initializable {
     }
 
     public void applyFilters() {
+
         String subject = subjectFilter.getValue();
         String source = sourceFilter.getValue();
 
-        List<Note> filtered = new ArrayList<>();
-        for (Note note : allNotes) {
-            if (subject != null && !note.getSubject().equalsIgnoreCase(subject)) continue;
-            if (source != null && !note.getSource().equalsIgnoreCase(source)) continue;
-            filtered.add(note);
+        List<Note> filteredMyNotes = new ArrayList<>();
+        List<Note> filteredCommunityNotes = new ArrayList<>();
+
+        for (Note note : myNotes) {
+
+            if (subject != null &&
+                    !note.getSubject().equalsIgnoreCase(subject))
+                continue;
+
+            if (source != null &&
+                    !note.getSource().equalsIgnoreCase(source))
+                continue;
+
+            filteredMyNotes.add(note);
         }
-        displayNotes(filtered);
+
+        for (Note note : communityNotes) {
+
+            if (subject != null &&
+                    !note.getSubject().equalsIgnoreCase(subject))
+                continue;
+
+            if (source != null &&
+                    !note.getSource().equalsIgnoreCase(source))
+                continue;
+
+            filteredCommunityNotes.add(note);
+        }
+
+        displayNotes(filteredMyNotes, filteredCommunityNotes);
     }
 
     public void clearFilters() {
         subjectFilter.getSelectionModel().clearSelection();
         sourceFilter.getSelectionModel().clearSelection();
-        displayNotes(allNotes);
+        displayNotes(myNotes, communityNotes);
     }
 
     private void showError(String message) {

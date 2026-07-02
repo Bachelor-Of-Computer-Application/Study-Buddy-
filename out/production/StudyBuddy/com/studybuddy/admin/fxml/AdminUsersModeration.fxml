@@ -58,7 +58,7 @@
     <!-- Action Buttons -->
     <VBox styleClass="panel-card" spacing="12">
         <Label text="Selected User Actions" styleClass="panel-title"/>
-        <HBox spacing="10" alignment="CENTER_LEFT" wrap="true">
+        <HBox spacing="10" alignment="CENTER_LEFT">
             <Button text="✏️ Edit"           styleClass="primary-btn"  onAction="#handleEdit"/>
             <Button text="🔑 Reset Password" styleClass="warning-btn"  onAction="#handleResetPassword"/>
             <Button text="⏸ Suspend"         styleClass="warning-btn"  onAction="#handleSuspend"/>
