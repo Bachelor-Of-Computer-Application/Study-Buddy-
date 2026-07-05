@@ -51,6 +51,7 @@ public class LoginController implements Initializable {
             showSuccess("Login successful! Welcome, " + user.getName());
             // Redirect to Home Page
             try {
+                App.setCurrentUser(user);
                 SceneManager.showHomePage(getStage(), user);
             } catch (java.io.IOException e) {
                 System.err.println("[LoginController] ❌ Could not load HomeView.fxml");
