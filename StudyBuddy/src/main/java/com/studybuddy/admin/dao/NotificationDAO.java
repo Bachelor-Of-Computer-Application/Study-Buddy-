@@ -23,6 +23,37 @@ public class NotificationDAO {
         return instance;
     }
 
+    private List<Integer> resolveUserIds(String recipientType, String recipientValue) {
+        List<Integer> ids = new ArrayList<>();
+        String sql = "";
+        if ("ALL".equalsIgnoreCase(recipientType)) {
+            sql = "SELECT id FROM Users";
+        } else if ("DEPARTMENT".equalsIgnoreCase(recipientType)) {
+            sql = "SELECT id FROM Users WHERE department = ?";
+        } else if ("SEMESTER".equalsIgnoreCase(recipientType)) {
+            sql = "SELECT id FROM Users WHERE semester = ?";
+        } else if ("USER".equalsIgnoreCase(recipientType)) {
+            sql = "SELECT id FROM Users WHERE email = ?";
+        } else {
+            return ids;
+        }
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (!"ALL".equalsIgnoreCase(recipientType)) {
+                ps.setString(1, recipientValue);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("id"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("resolveUserIds failed: " + e.getMessage());
+        }
+        return ids;
+    }
+
     // ── Write ─────────────────────────────────────────────────────────────────
 
     /**
@@ -31,22 +62,31 @@ public class NotificationDAO {
      * @return true on success
      */
     public boolean sendNotification(Notification n) {
-        String sql = """
-                INSERT INTO Notifications
-                    (title, message, recipient_type, recipient_value, priority, sent_by)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """;
+        List<Integer> userIds = resolveUserIds(n.getRecipientType(), n.getRecipientValue());
+        if (userIds.isEmpty()) {
+            return false;
+        }
+        String sql = "INSERT INTO Notifications (userId, title, message, type, isRead, created_at) VALUES (?, ?, ?, ?, 0, GETDATE())";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, n.getTitle());
-            ps.setString(2, n.getMessage());
-            ps.setString(3, n.getRecipientType());
-            ps.setString(4, n.getRecipientValue());
-            ps.setString(5, n.getPriority() != null ? n.getPriority() : "NORMAL");
-            ps.setInt(6, n.getSentBy());
-            return ps.executeUpdate() > 0;
-
+            conn.setAutoCommit(false);
+            try {
+                for (int userId : userIds) {
+                    ps.setInt(1, userId);
+                    ps.setString(2, n.getTitle());
+                    ps.setString(3, n.getMessage());
+                    ps.setString(4, n.getRecipientType());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             logger.warning("Failed to send notification: " + e.getMessage());
             return false;
@@ -68,7 +108,7 @@ public class NotificationDAO {
 
     /** Mark a single notification as read. */
     public boolean markAsRead(int id) {
-        String sql = "UPDATE Notifications SET is_read = 1 WHERE id = ?";
+        String sql = "UPDATE Notifications SET isRead = 1 WHERE id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -84,7 +124,7 @@ public class NotificationDAO {
     /** All notifications, newest first. */
     public List<Notification> getAllNotifications() {
         List<Notification> list = new ArrayList<>();
-        String sql = "SELECT * FROM Notifications ORDER BY sent_at DESC";
+        String sql = "SELECT * FROM Notifications ORDER BY created_at DESC";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -100,7 +140,7 @@ public class NotificationDAO {
 
     /** Count of unread notifications. */
     public int getUnreadCount() {
-        String sql = "SELECT COUNT(*) FROM Notifications WHERE is_read = 0";
+        String sql = "SELECT COUNT(*) FROM Notifications WHERE isRead = 0";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -111,20 +151,52 @@ public class NotificationDAO {
         return 0;
     }
 
+    public List<Notification> getNotificationsByUserId(int userId) {
+        List<Notification> list = new ArrayList<>();
+        String sql = "SELECT * FROM Notifications WHERE userId = ? ORDER BY created_at DESC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("Failed to fetch notifications by user: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public int getUnreadCountByUserId(int userId) {
+        String sql = "SELECT COUNT(*) FROM Notifications WHERE userId = ? AND isRead = 0";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.warning("Failed to count unread notifications by user: " + e.getMessage());
+        }
+        return 0;
+    }
+
     // ── Helper ────────────────────────────────────────────────────────────────
 
     private Notification mapRow(ResultSet rs) throws SQLException {
         Notification n = new Notification();
         n.setId(rs.getInt("id"));
+        n.setUserId(rs.getInt("userId"));
         n.setTitle(rs.getString("title"));
         n.setMessage(rs.getString("message"));
-        n.setRecipientType(rs.getString("recipient_type"));
-        n.setRecipientValue(rs.getString("recipient_value"));
-        n.setPriority(rs.getString("priority"));
-        n.setSentBy(rs.getInt("sent_by"));
-        Timestamp ts = rs.getTimestamp("sent_at");
+        n.setRecipientType(rs.getString("type"));
+        n.setRecipientValue(null);
+        n.setPriority("NORMAL");
+        n.setSentBy(0);
+        Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) n.setSentAt(ts.toLocalDateTime());
-        n.setRead(rs.getBoolean("is_read"));
+        n.setRead(rs.getBoolean("isRead"));
         return n;
     }
 }

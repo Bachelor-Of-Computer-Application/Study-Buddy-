@@ -46,9 +46,22 @@ public class UserDAO {
     // =========================
 
     /**
-     * Get user by email address.
+     * Get fully-populated user by email address.
+     *
+     * FIXED: Previously only mapped 6 core fields (id, name, email, password, role,
+     * created_at), leaving all profile columns null after login — causing the UI to
+     * always show empty/stale profile data after restart.
+     *
+     * Now delegates to mapResultSetToUser() (the same helper used by getUserById())
+     * so that the User object stored in App.currentUser after login is complete:
+     *   fullName, username, bio, profileImagePath, phoneNumber, department, semester,
+     *   preferredSubjects, studyGoals, learningInterests, notification settings,
+     *   points, achievements.
+     *
+     * SQL: SELECT * FROM Users WHERE email = ?
+     *
      * @param email User's email address
-     * @return User object or null if not found
+     * @return Fully-populated User object or null if not found
      */
     public User getUserByEmail(String email) {
         String sql = "SELECT * FROM Users WHERE email = ?";
@@ -58,18 +71,12 @@ public class UserDAO {
 
             ps.setString(1, email);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setPassword(rs.getString("password"));
-                user.setRole(rs.getString("role"));
-                user.setCreatedAt(rs.getTimestamp("created_at") != null ?
-                        rs.getTimestamp("created_at").toLocalDateTime() : null);
-                return user;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // FIXED: was mapping only 6 fields inline;
+                    // now uses mapResultSetToUser() to populate ALL columns.
+                    return mapResultSetToUser(rs);
+                }
             }
 
         } catch (SQLException e) {
@@ -96,10 +103,10 @@ public class UserDAO {
 
             ps.setInt(1, userId);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return mapResultSetToUser(rs);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
             }
 
         } catch (SQLException e) {

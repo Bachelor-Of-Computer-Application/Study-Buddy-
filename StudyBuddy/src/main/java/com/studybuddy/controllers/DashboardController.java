@@ -143,7 +143,7 @@ public class DashboardController implements Initializable {
         }
 
         // Tasks Statistics — from SQL Server via TaskService → TaskDAO
-        // SQL: SELECT COUNT(*) FROM Tasks WHERE user_id = ?
+        // SQL: SELECT COUNT(*) FROM Tasks WHERE userId = ?
         int totalTasks = taskService.getTotalTaskCount(userId);
         int completedTasks = taskService.getCompletedTaskCount(userId);
         int pendingTasks = totalTasks - completedTasks;

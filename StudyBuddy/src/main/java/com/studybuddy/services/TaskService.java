@@ -5,24 +5,45 @@ import com.studybuddy.models.Task;
 import java.util.List;
 
 /**
- * Service layer for handling Task related operations.
- * Delegates all calls to TaskDAO.
+ * Service layer for Task-related operations.
+ * Delegates all database calls to TaskDAO.
  *
  * Architecture: Controller → TaskService → TaskDAO → DatabaseConnection → SQL Server
+ *
+ * Tasks table SQL column names:
+ *   userId      (NOT user_id)
+ *   created_at
+ *   status
  */
 public class TaskService {
     private final TaskDAO taskDAO = new TaskDAO();
 
     // =========================
-    // GET TASKS FOR USER
+    // GET ALL TASKS FOR USER
     // =========================
 
     /**
-     * Returns all tasks for the given user.
-     * SQL: SELECT * FROM Tasks WHERE user_id = ?
+     * Returns all tasks for the given user, newest first.
+     * SQL: SELECT * FROM Tasks WHERE userId = ? ORDER BY created_at DESC
      */
     public List<Task> getTasksForUser(int userId) {
         return taskDAO.getTasksByUserId(userId);
+    }
+
+    // =========================
+    // GET RECENT TASKS FOR USER
+    // =========================
+
+    /**
+     * Returns the 10 most recent tasks for a user.
+     *
+     * SQL:
+     *   SELECT TOP (10) id, userId, title, description, status, created_at
+     *   FROM Tasks WHERE userId = ?
+     *   ORDER BY created_at DESC
+     */
+    public List<Task> getRecentTasksForUser(int userId) {
+        return taskDAO.getRecentTasksByUserId(userId);
     }
 
     // =========================
@@ -31,7 +52,7 @@ public class TaskService {
 
     /**
      * Creates a new task in the database.
-     * SQL: INSERT INTO Tasks (user_id, title, description, status)
+     * SQL: INSERT INTO Tasks (userId, title, description, status) VALUES (?, ?, ?, ?)
      */
     public boolean addTask(Task task) {
         return taskDAO.createTask(task);
@@ -65,7 +86,7 @@ public class TaskService {
 
     /**
      * Returns total task count for a user.
-     * SQL: SELECT COUNT(*) FROM Tasks WHERE user_id = ?
+     * SQL: SELECT COUNT(*) FROM Tasks WHERE userId = ?
      */
     public int getTotalTaskCount(int userId) {
         return taskDAO.getTaskCount(userId);
@@ -73,14 +94,30 @@ public class TaskService {
 
     /**
      * Returns completed task count for a user.
-     * SQL: SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND status = 'completed'
+     * SQL: SELECT COUNT(*) FROM Tasks WHERE userId = ? AND status = 'completed'
      */
     public int getCompletedTaskCount(int userId) {
         return taskDAO.getCompletedTaskCount(userId);
     }
 
     /**
+     * Returns the study progress percentage for a user using a single SQL aggregate query.
+     *
+     * SQL:
+     *   SELECT
+     *       COUNT(*) AS TotalTasks,
+     *       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS CompletedTasks
+     *   FROM Tasks WHERE userId = ?
+     *
+     * Returns 0 when there are no tasks.
+     */
+    public int getStudyProgress(int userId) {
+        return taskDAO.getStudyProgress(userId);
+    }
+
+    /**
      * Returns completion percentage for a user.
+     * Delegates to the efficient single-query getStudyProgress().
      */
     public int getCompletedPercentage(int userId) {
         return taskDAO.getCompletedPercentage(userId);
@@ -88,6 +125,7 @@ public class TaskService {
 
     /**
      * Returns estimated study hours based on completed task count.
+     * Each completed task is estimated as 2 hours of study.
      */
     public double getStudyHours(int userId) {
         return taskDAO.getStudyHours(userId);

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class Notification {
 
     private int id;
+    private int userId;
     private String title;
     private String message;
     /** 'ALL', 'DEPARTMENT', 'SEMESTER', 'USER' */
@@ -35,6 +36,7 @@ public class Notification {
     // ── Getters ──────────────────────────────────────────────────────────────
 
     public int getId() { return id; }
+    public int getUserId() { return userId; }
     public String getTitle() { return title; }
     public String getMessage() { return message; }
     public String getRecipientType() { return recipientType; }
@@ -47,6 +49,7 @@ public class Notification {
     // ── Setters ──────────────────────────────────────────────────────────────
 
     public void setId(int id) { this.id = id; }
+    public void setUserId(int userId) { this.userId = userId; }
     public void setTitle(String title) { this.title = title; }
     public void setMessage(String message) { this.message = message; }
     public void setRecipientType(String recipientType) { this.recipientType = recipientType; }

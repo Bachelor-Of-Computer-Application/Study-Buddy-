@@ -93,6 +93,10 @@ public class AskQuestionController implements Initializable {
 
         loadSubjects();
         loadUserPoints();
+        if (rewardPointsComboBox != null) {
+            rewardPointsComboBox.setItems(FXCollections.observableArrayList("0", "10", "20", "50", "100"));
+            rewardPointsComboBox.setValue("0");
+        }
         setupButtonHoverEffects();
         setupSubmitButtonEffects();
     }

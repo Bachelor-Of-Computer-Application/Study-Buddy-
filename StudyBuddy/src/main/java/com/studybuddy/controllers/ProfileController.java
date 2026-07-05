@@ -83,26 +83,25 @@ public class ProfileController {
 
     @FXML
     public void initialize() {
-        currentUser = App.getCurrentUser();
+        // Always re-fetch the fully-populated user from SQL Server so that
+        // the profile page always reflects the latest data — never stale data
+        // from the in-memory session or a previous app run.
+        User sessionUser = App.getCurrentUser();
 
-        // If no user is logged in, create a mock user for testing/UI representation
-        if (currentUser == null) {
-            currentUser = new User(1, "Guest Student", "student@studybuddy.com", "Password123", "Student");
-            currentUser.setFullName("Guest Student");
-            currentUser.setUsername("guest_student");
-            currentUser.setBio("This is a guest profile. You can edit this information.");
-            currentUser.setPoints(110);
-            currentUser.setAchievements(3);
-            currentUser.setPhoneNumber("+977-9876543210");
-            currentUser.setDepartment("Computer Engineering");
-            currentUser.setSemester("Semester 5");
-            currentUser.setPreferredSubjects("Software Engineering, Databases");
-            currentUser.setStudyGoals("Learn full-stack app development and pass exams.");
-            currentUser.setLearningInterests("Artificial Intelligence, Compiler Design");
-            currentUser.setEmailNotificationsEnabled(true);
-            currentUser.setResourceUpdateNotifications(true);
-            currentUser.setSystemNotifications(true);
-            App.setCurrentUser(currentUser);
+        if (sessionUser != null && sessionUser.getId() > 0) {
+            // Re-fetch from DB by ID to guarantee all columns are current
+            User freshUser = userService.getUserProfileById(sessionUser.getId());
+            if (freshUser != null) {
+                currentUser = freshUser;
+                App.setCurrentUser(freshUser);   // keep App session in sync
+            } else {
+                // DB fetch failed — fall back to whatever is in the session
+                currentUser = sessionUser;
+            }
+        } else {
+            // No user is logged in; show empty profile rather than hardcoded mock.
+            // The UI will display "-" placeholders via loadProfileData() null-checks.
+            currentUser = null;
         }
 
         // Initialize Semester Combo Box
@@ -230,32 +229,20 @@ public class ProfileController {
             );
         }
 
-        // DEBUG OUTPUT
-        System.out.println("ID = " + currentUser.getId());
-        System.out.println("Phone = " + currentUser.getPhoneNumber());
-        System.out.println("Department = " + currentUser.getDepartment());
-        System.out.println("Semester = " + currentUser.getSemester());
-
-        boolean success =
-                userService.updatePersonalInformation(currentUser);
-
-        System.out.println("Update Result = " + success);
-
+        boolean success = userService.updatePersonalInformation(currentUser);
         userService.updateFullName(currentUser.getId(), name);
         userService.updateUsername(currentUser.getId(), uname);
 
         if (success) {
-
+            // Re-fetch from DB so App.currentUser always reflects the latest SQL data
+            refreshCurrentUserFromDB();
             showAlert(
                     Alert.AlertType.INFORMATION,
                     "Success",
                     "Personal information updated successfully."
             );
-
             loadProfileData();
-
         } else {
-
             showAlert(
                     Alert.AlertType.ERROR,
                     "Error",
@@ -277,7 +264,12 @@ public class ProfileController {
         currentUser.setStudyGoals(studyGoalsField.getText().trim());
         currentUser.setLearningInterests(learningInterestsField.getText().trim());
 
-        userService.updateStudyPreferences(currentUser);
+        boolean success = userService.updateStudyPreferences(currentUser);
+
+        if (success) {
+            // Re-fetch from DB so App.currentUser always reflects the latest SQL data
+            refreshCurrentUserFromDB();
+        }
 
         showAlert(Alert.AlertType.INFORMATION, "Success", "Study preferences updated successfully.");
         loadProfileData();
@@ -293,7 +285,12 @@ public class ProfileController {
         }
 
         currentUser.setEmail(email);
-        userService.updateEmail(currentUser.getId(), email);
+        boolean success = userService.updateEmail(currentUser.getId(), email);
+
+        if (success) {
+            // Re-fetch from DB so App.currentUser always reflects the latest SQL data
+            refreshCurrentUserFromDB();
+        }
 
         showAlert(Alert.AlertType.INFORMATION, "Success", "Account email updated successfully.");
         loadProfileData();
@@ -345,10 +342,34 @@ public class ProfileController {
         currentUser.setResourceUpdateNotifications(resourceNotificationsCheck.isSelected());
         currentUser.setSystemNotifications(systemNotificationsCheck.isSelected());
 
-        userService.updateEmailSettings(currentUser);
+        boolean success = userService.updateEmailSettings(currentUser);
+
+        if (success) {
+            // Re-fetch from DB so App.currentUser always reflects the latest SQL data
+            refreshCurrentUserFromDB();
+        }
 
         showAlert(Alert.AlertType.INFORMATION, "Success", "Notification preferences saved.");
         loadProfileData();
+    }
+
+    /**
+     * Re-fetches the current user's full profile from SQL Server and stores it
+     * in both {@code currentUser} and {@code App.currentUser}.
+     *
+     * Called after every successful profile save so the in-memory session is
+     * never stale — subsequent page navigation will always see updated data.
+     *
+     * SQL: SELECT * FROM Users WHERE id = ?  (via UserService → UserDAO.getUserById)
+     */
+    private void refreshCurrentUserFromDB() {
+        if (currentUser == null || currentUser.getId() <= 0) return;
+
+        User fresh = userService.getUserProfileById(currentUser.getId());
+        if (fresh != null) {
+            currentUser = fresh;
+            App.setCurrentUser(fresh);   // keep App session in sync with SQL Server
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

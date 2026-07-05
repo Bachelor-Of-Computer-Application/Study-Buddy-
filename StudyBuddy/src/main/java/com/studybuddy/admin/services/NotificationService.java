@@ -56,4 +56,12 @@ public class NotificationService {
     public boolean markAsRead(int id) {
         return notificationDAO.markAsRead(id);
     }
+
+    public List<Notification> getNotificationsByUserId(int userId) {
+        return notificationDAO.getNotificationsByUserId(userId);
+    }
+
+    public int getUnreadCountByUserId(int userId) {
+        return notificationDAO.getUnreadCountByUserId(userId);
+    }
 }

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="rootPane" prefHeight="650.0" prefWidth="1000.0" styleClass="root-pane" stylesheets="@../css/notes.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.QuestionsController">
+
+    <!-- Main Content Area Enclosed in a StackPane -->
+    <center>
+        <StackPane fx:id="stackContainer">
+            <children>
+                
+                <!-- 1. FEED PANE (List & Filters) -->
+                <VBox fx:id="feedPane" spacing="15.0" style="-fx-background-color: transparent;">
+                    <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                    </padding>
+                    
+                    <!-- Hero Header -->
+                    <VBox style="-fx-background-color: #f8fafc; -fx-padding: 20; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px;" styleClass="hero-section">
+                        <HBox alignment="CENTER_LEFT" spacing="40">
+                            <padding>
+                                <Insets bottom="25" left="25" right="25" top="25" />
+                            </padding>
+                            <VBox spacing="10" HBox.hgrow="ALWAYS">
+                                <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" styleClass="hero-title" text="Q&amp;A Discussion Forum" />
+                                <Label style="-fx-font-size: 13px; -fx-text-fill: #64748b;" styleClass="hero-subtitle" text="Ask questions, upvote best replies, and discuss academic topics with peers." wrapText="true" />
+                            </VBox>
+                            <Label prefHeight="167.0" prefWidth="159.0" style="-fx-font-size: 80px;" text="🙋" />
+                        </HBox>
+                    </VBox>
+
+                    <!-- Filter / Search Section -->
+                    <HBox alignment="CENTER_LEFT" spacing="12.0" style="-fx-padding: 10; -fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px;" styleClass="filter-section">
+                        <TextField fx:id="searchField" prefWidth="250.0" promptText="Search questions or tags..." styleClass="form-input" />
+                        <ComboBox fx:id="subjectFilter" prefWidth="180.0" promptText="Choose Subject" styleClass="combo-box" />
+                        <Button onAction="#applyFilters" style="-fx-background-color: #4f46e5; -fx-text-fill: white;" styleClass="save-button" text="🔍 Search" />
+                        <Button onAction="#clearFilters" styleClass="cancel-button" text="Reset" />
+                        <Button onAction="#handleAskQuestion" styleClass="create-button" text="➕ Ask Question" />
+                        <HBox.hgrow>ALWAYS</HBox.hgrow>
+                    </HBox>
+
+                    <!-- Questions ListView -->
+                    <VBox spacing="10.0" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px;" VBox.vgrow="ALWAYS">
+                        <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" text="Active Discussion Threads" />
+                        <ListView fx:id="questionsListView" styleClass="activity-list" VBox.vgrow="ALWAYS" />
+                    </VBox>
+                </VBox>
+
+                <!-- 2. DETAIL PANE (Question Details, Answers, Post Reply & Related Questions) -->
+                <ScrollPane fx:id="detailPane" fitToWidth="true" managed="false" style="-fx-background-color: transparent;" styleClass="scroll-pane" visible="false">
+                    <content>
+                        <VBox spacing="20.0" style="-fx-padding: 20;">
+                            
+                            <!-- Back Button & Header -->
+                            <HBox alignment="CENTER_LEFT" spacing="15.0">
+                                <Button onAction="#handleBackToFeed" style="-fx-cursor: hand;" styleClass="cancel-button" text="⬅️ Back to Forum Feed" />
+                                <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="Discussion Thread Details" />
+                            </HBox>
+
+                            <!-- Selected Question Details Card -->
+                            <VBox spacing="15.0" style="-fx-padding: 20; -fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.02), 5, 0, 0, 2);">
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <Label fx:id="qSubject" style="-fx-background-color: #e0e7ff; -fx-text-fill: #4f46e5; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 4 8; -fx-background-radius: 6;" text="MATHEMATICS" />
+                                    <Label fx:id="qTags" style="-fx-font-size: 11px; -fx-text-fill: #475569;" text="[algebra] [calculus]" />
+                                    <Label fx:id="qDate" style="-fx-font-size: 11px; -fx-text-fill: #64748b;" text="June 20, 2026" />
+                                    <HBox.hgrow>ALWAYS</HBox.hgrow>
+                                </HBox>
+                                
+                                <Label fx:id="qText" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="Question text will be placed here." wrapText="true" />
+                                
+                                <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-padding: 5 0 0 0; -fx-border-color: #f1f5f9; -fx-border-width: 1 0 0 0; -fx-padding: 10 0 0 0;">
+                                    <Label fx:id="qAuthor" style="-fx-font-size: 12px; -fx-text-fill: #475569;" text="Asked by: -" />
+                                    <Label fx:id="qVotes" style="-fx-font-size: 12px; -fx-text-fill: #475569;" text="👍 0 votes" />
+                                    <Label fx:id="qViews" style="-fx-font-size: 12px; -fx-text-fill: #475569;" text="👁️ 0 views" />
+                                    <Button fx:id="btnUpvoteQuestion" onAction="#handleUpvoteQuestion" style="-fx-padding: 5 15; -fx-background-color: #f1f5f9; -fx-text-fill: #4f46e5; -fx-cursor: hand;" styleClass="save-button" text="👍 Upvote Thread" />
+                                    <HBox.hgrow>ALWAYS</HBox.hgrow>
+                                </HBox>
+                            </VBox>
+
+                            <!-- Answers Listing -->
+                            <VBox spacing="10.0" style="-fx-padding: 10 0;">
+                                <Label style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="Classmate Solutions &amp; Answers" />
+                                <VBox fx:id="answersContainer" spacing="12.0" />
+                            </VBox>
+
+                            <!-- Post Answer Box -->
+                            <VBox spacing="10.0" style="-fx-padding: 15; -fx-background-color: #f8fafc; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px;">
+                                <Label style="-fx-font-weight: bold; -fx-font-size: 13px;" styleClass="field-title" text="Post Your Solution" />
+                                <TextArea fx:id="answerInput" prefHeight="100.0" promptText="Provide a clear, step-by-step helpful solution..." styleClass="text-area" wrapText="true" />
+                                <Button onAction="#handleSubmitAnswer" style="-fx-background-color: #10b981; -fx-text-fill: white;" styleClass="save-button" text="Submit Answer" />
+                            </VBox>
+
+                            <!-- Related Questions Section -->
+                            <VBox spacing="10.0" style="-fx-padding: 10 0 0 0; -fx-border-color: #e2e8f0; -fx-border-width: 1 0 0 0; -fx-padding: 15 0 0 0;">
+                                <Label style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #0f172a;" text="Related Questions" />
+                                <VBox fx:id="relatedQuestionsContainer" spacing="8.0" />
+                            </VBox>
+
+                        </VBox>
+                    </content>
+                </ScrollPane>
+
+            </children>
+        </StackPane>
+    </center>
+
+</BorderPane>
