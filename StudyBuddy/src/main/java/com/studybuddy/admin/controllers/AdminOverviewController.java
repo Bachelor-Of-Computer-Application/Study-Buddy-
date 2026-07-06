@@ -12,12 +12,23 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Controller for the AdminDashboardOverview.fxml panel.
  * Shows stat cards driven by real DB queries and recent-item tables.
  */
 public class AdminOverviewController {
+
+    // ── Instance counter — proves how many times this controller is created ──
+    private static final AtomicInteger INSTANCE_COUNT = new AtomicInteger(0);
+    private final int instanceId;
+
+    public AdminOverviewController() {
+        instanceId = INSTANCE_COUNT.incrementAndGet();
+        System.out.println("[DEBUG] AdminOverviewController CREATED. Total instances so far: " + instanceId);
+        System.out.println("[DEBUG] Constructor identityHashCode: " + System.identityHashCode(this));
+    }
 
     // ── Stat card labels ──────────────────────────────────────────────────────
     @FXML private Label lblTotalUsers;
@@ -56,30 +67,64 @@ public class AdminOverviewController {
 
     @FXML
     public void initialize() {
+        System.out.println("[DEBUG] initialize called on instance #" + instanceId);
+        System.out.println("[DEBUG] AdminOverviewController initialized (instance #" + instanceId + ")");
+        System.out.println("[DEBUG] initialize identityHashCode: " + System.identityHashCode(this));
+        System.out.println("[DEBUG] lblTotalUsers != null: " + (lblTotalUsers != null));
+        System.out.println("[DEBUG] lblTotalNotes != null: " + (lblTotalNotes != null));
+        System.out.println("[DEBUG] lblTotalResources != null: " + (lblTotalResources != null));
+        System.out.println("[DEBUG] lblTotalQuestions != null: " + (lblTotalQuestions != null));
+        System.out.println("[DEBUG] lblTotalAnswers != null: " + (lblTotalAnswers != null));
+        System.out.println("[DEBUG] lblTotalTasks != null: " + (lblTotalTasks != null));
+        System.out.println("[DEBUG] lblNewUsersToday != null: " + (lblNewUsersToday != null));
+        System.out.println("[DEBUG] lblUploadsToday != null: " + (lblUploadsToday != null));
+        System.out.println("[DEBUG] lblPendingNotes != null: " + (lblPendingNotes != null));
+        System.out.println("[DEBUG] lblPendingResources != null: " + (lblPendingResources != null));
         setupTableColumns();
         loadStats();
         loadRecentData();
         loadSubjectChart();
+        // Verify labels were actually set — print text AFTER loadStats() finishes
+        System.out.println("[DEBUG] POST-LOAD VERIFY lblTotalUsers.getText() = '" + (lblTotalUsers != null ? lblTotalUsers.getText() : "NULL_LABEL") + "'");
+        System.out.println("[DEBUG] POST-LOAD VERIFY lblTotalNotes.getText() = '" + (lblTotalNotes != null ? lblTotalNotes.getText() : "NULL_LABEL") + "'");
     }
 
     // ── Stats ─────────────────────────────────────────────────────────────────
 
     private void loadStats() {
+        System.out.println("[DEBUG] loadStats called on instance #" + instanceId);
         Map<String, Integer> stats = adminService.getDashboardStats();
-        setText(lblTotalUsers,      stats.get("totalUsers"));
-        setText(lblTotalNotes,      stats.get("totalNotes"));
-        setText(lblTotalResources,  stats.get("totalResources"));
-        setText(lblTotalQuestions,  stats.get("totalQuestions"));
-        setText(lblTotalAnswers,    stats.get("totalAnswers"));
-        setText(lblTotalTasks,      stats.get("totalTasks"));
-        setText(lblNewUsersToday,   stats.get("newUsersToday"));
-        setText(lblUploadsToday,    stats.get("uploadsToday"));
-        setText(lblPendingNotes,    stats.get("pendingNotes"));
-        setText(lblPendingResources, stats.get("pendingResources"));
+        System.out.println("[DEBUG] Retrieved Stats Map: " + stats);
+        if (stats != null) {
+            System.out.println("[DEBUG] Users = " + stats.get("totalUsers"));
+            System.out.println("[DEBUG] Notes = " + stats.get("totalNotes"));
+            System.out.println("[DEBUG] Resources = " + stats.get("totalResources"));
+            System.out.println("[DEBUG] Questions = " + stats.get("totalQuestions"));
+            System.out.println("[DEBUG] Answers = " + stats.get("totalAnswers"));
+        }
+        setTextAndLog(lblTotalUsers,      "lblTotalUsers",      stats.get("totalUsers"));
+        setTextAndLog(lblTotalNotes,      "lblTotalNotes",      stats.get("totalNotes"));
+        setTextAndLog(lblTotalResources,  "lblTotalResources",  stats.get("totalResources"));
+        setTextAndLog(lblTotalQuestions,  "lblTotalQuestions",  stats.get("totalQuestions"));
+        setTextAndLog(lblTotalAnswers,    "lblTotalAnswers",    stats.get("totalAnswers"));
+        setTextAndLog(lblTotalTasks,      "lblTotalTasks",      stats.get("totalTasks"));
+        setTextAndLog(lblNewUsersToday,   "lblNewUsersToday",   stats.get("newUsersToday"));
+        setTextAndLog(lblUploadsToday,    "lblUploadsToday",    stats.get("uploadsToday"));
+        setTextAndLog(lblPendingNotes,    "lblPendingNotes",    stats.get("pendingNotes"));
+        setTextAndLog(lblPendingResources,"lblPendingResources",stats.get("pendingResources"));
     }
 
-    private void setText(Label lbl, Integer val) {
-        if (lbl != null) lbl.setText(val != null ? String.valueOf(val) : "0");
+    /** Sets label text AND prints proof that setText() was actually executed. */
+    private void setTextAndLog(Label lbl, String name, Integer val) {
+        if (lbl == null) {
+            System.out.println("[DEBUG] SKIP " + name + " — label is NULL (fx:id mismatch)");
+            return;
+        }
+        String text = val != null ? String.valueOf(val) : "0";
+        System.out.println("[DEBUG] " + lbl);
+        System.out.println("[DEBUG] Before " + name + ".getText(): " + lbl.getText());
+        lbl.setText(text);
+        System.out.println("[DEBUG] After " + name + ".getText(): " + lbl.getText());
     }
 
     // ── Recent data ───────────────────────────────────────────────────────────

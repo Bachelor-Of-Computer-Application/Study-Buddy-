@@ -18,15 +18,15 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "StudyBuddy_database.sql - localhost\\SQLEXPRESS.StudyBuddy (DEARPRAA\\dearpraa (72))",
+              "Title": "StudyBuddy_database.sql - not connected",
               "DocumentMoniker": "C:\\Users\\dearpraa\\Documents\\SQL Server Management Studio 22\\StudyBuddy_database.sql",
               "RelativeDocumentMoniker": "..\\..\\SQL Server Management Studio 22\\StudyBuddy_database.sql",
-              "ToolTip": "C:\\Users\\dearpraa\\Documents\\SQL Server Management Studio 22\\StudyBuddy_database.sql - localhost\\SQLEXPRESS.StudyBuddy (DEARPRAA\\dearpraa (72))",
-              "RelativeToolTip": "..\\..\\SQL Server Management Studio 22\\StudyBuddy_database.sql - localhost\\SQLEXPRESS.StudyBuddy (DEARPRAA\\dearpraa (72))",
+              "ToolTip": "C:\\Users\\dearpraa\\Documents\\SQL Server Management Studio 22\\StudyBuddy_database.sql - not connected",
+              "RelativeToolTip": "..\\..\\SQL Server Management Studio 22\\StudyBuddy_database.sql - not connected",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
               "WhenOpened": "2026-07-04T06:20:46.898Z",
               "IsPinned": true,
-              "EditorCaption": " - localhost\\SQLEXPRESS.StudyBuddy (DEARPRAA\\dearpraa (72))"
+              "EditorCaption": " - not connected"
             },
             {
               "$type": "Bookmark",

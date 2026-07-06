@@ -39,7 +39,7 @@ public class AdminService {
         User user = new UserDAO().getUserByEmail(username);
         if (user != null && ("admin".equalsIgnoreCase(user.getRole()) || "ADMIN".equalsIgnoreCase(user.getRole()))) {
             boolean valid = PasswordHasher.verifyPassword(password, user.getPassword())
-                         || password.equals(user.getPassword()); // plain-text fallback for dev
+                    || password.equals(user.getPassword()); // plain-text fallback for dev
             if (valid) {
                 SessionManager.setCurrentAdmin(user);
                 logService.logAction("Admin Login", "Session", username);
@@ -69,6 +69,7 @@ public class AdminService {
     // ══════════════════════════════════════════════════════════════════════════
 
     public Map<String, Integer> getDashboardStats() {
+        System.out.println("[DEBUG] Service called");
         return adminDAO.getDashboardStats();
     }
 
@@ -111,7 +112,7 @@ public class AdminService {
     }
 
     public boolean editUserInfo(int userId, String name, String email, String role,
-                                 String department, String semester) {
+                                String department, String semester) {
         boolean ok = adminDAO.updateUserInfo(userId, name, email, role, department, semester);
         if (ok) logService.logAction("User Info Edited", "User", email);
         return ok;

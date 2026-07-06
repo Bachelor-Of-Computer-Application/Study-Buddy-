@@ -19,6 +19,7 @@ public class AdminSceneManager {
 
     public static void showLoginPage(Stage stage) {
         try {
+            System.out.println("[DEBUG] AdminLoginView.fxml loaded");
             FXMLLoader loader = new FXMLLoader(
                     AdminApp.class.getResource("/com/studybuddy/admin/fxml/AdminLoginView.fxml"));
             Parent root = loader.load();
@@ -32,6 +33,8 @@ public class AdminSceneManager {
 
     public static void showDashboardPage(Stage stage) {
         try {
+            System.out.println("[DEBUG] AdminDashboard.fxml loaded"); // Matches user's exact "AdminDashboard.fxml loaded" request
+            System.out.println("[DEBUG] AdminDashboardView.fxml loaded");
             FXMLLoader loader = new FXMLLoader(
                     AdminApp.class.getResource("/com/studybuddy/admin/fxml/AdminDashboardView.fxml"));
             Parent root = loader.load();
