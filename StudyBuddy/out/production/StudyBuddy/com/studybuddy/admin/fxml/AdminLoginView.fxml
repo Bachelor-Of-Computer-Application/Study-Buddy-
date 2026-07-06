@@ -6,11 +6,10 @@
 <?import javafx.scene.text.Text?>
 
 <!-- Split-panel login: left branding + right form -->
-<HBox xmlns="http://javafx.com/javafx/21"
+<HBox xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.studybuddy.admin.controllers.AdminLoginController"
-      stylesheets="@../css/login.css"
-      prefHeight="620.0" prefWidth="960.0">
+      stylesheets="@../css/admin-dashboard.css">
 
     <!-- LEFT – Branding Panel -->
     <VBox styleClass="login-left-panel" alignment="CENTER" spacing="20" HBox.hgrow="SOMETIMES">

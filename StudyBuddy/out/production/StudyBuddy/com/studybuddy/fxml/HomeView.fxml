@@ -7,124 +7,180 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane fx:id="rootPane" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/home.css"
-    xmlns="http://javafx.com/javafx/26"
-    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.HomeController">
+<BorderPane fx:id="rootPane" styleClass="root-pane"
+    stylesheets="@../css/theme.css, @../css/home.css"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.studybuddy.controllers.HomeController">
 
-    <!-- LEFT SIDEBAR -->
+    <!-- ══ LEFT SIDEBAR ══════════════════════════════════════════════ -->
     <left>
-        <VBox minWidth="240.0" prefWidth="240.0" spacing="20" styleClass="sidebar">
-            <padding>
-                <Insets bottom="20" left="15" right="15" top="25" />
-            </padding>
+        <VBox styleClass="sidebar" spacing="4" minWidth="240" prefWidth="240">
+            <padding><Insets top="20" right="14" bottom="20" left="14"/></padding>
 
-            <!-- Brand Logo & Title -->
-            <HBox alignment="CENTER_LEFT" spacing="12">
-                <ImageView fitHeight="35" fitWidth="35" preserveRatio="true">
-                    <image>
-                        <Image url="@../images/Study_buddy_logo.png" />
-                    </image>
-                </ImageView>
-                <Text styleClass="sidebar-title" text="Study Buddy" />
+            <!-- Brand -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="📚" styleClass="sidebar-brand-icon"/>
+                <VBox spacing="1">
+                    <Text styleClass="sidebar-title" text="Study Buddy"/>
+                    <Label text="Student Platform" styleClass="sidebar-brand-sub"/>
+                </VBox>
             </HBox>
 
-            <Label fx:id="emailLabel" styleClass="sidebar-email" text="user@example.com" />
-            <Separator />
+            <Separator styleClass="sidebar-sep">
+                <VBox.margin><Insets top="8" bottom="4"/></VBox.margin>
+            </Separator>
 
-            <!-- Navigation Buttons -->
-            <VBox spacing="10" VBox.vgrow="ALWAYS">
-                <!-- Dashboard -->
-                <Button onAction="#goToDashboard" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+            <!-- User email (populated by controller) -->
+            <Label fx:id="emailLabel" styleClass="sidebar-email" text="user@example.com">
+                <VBox.margin><Insets left="4"/></VBox.margin>
+            </Label>
+
+            <!-- NAVIGATION section label -->
+            <Label text="NAVIGATION" styleClass="sidebar-section-label"/>
+
+            <!-- Nav buttons – VBox grows to fill available space -->
+            <VBox spacing="2" VBox.vgrow="ALWAYS">
+
+                <Button onAction="#goToDashboard" styleClass="nav-button" maxWidth="Infinity"
+                        alignment="BASELINE_LEFT">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="📊" style="-fx-font-size: 16px;" />
-                            <Text text="Dashboard" styleClass="nav-text" />
+                            <Label text="📊" style="-fx-font-size:15px;"/>
+                            <Text text="Dashboard" styleClass="nav-text"/>
                         </HBox>
                     </graphic>
                 </Button>
 
-                <!-- Notes -->
-                <Button onAction="#goToNotes" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                <Button onAction="#goToNotes" styleClass="nav-button" maxWidth="Infinity"
+                        alignment="BASELINE_LEFT">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="📝" style="-fx-font-size: 16px;" />
-                            <Text text="Notes" styleClass="nav-text" />
+                            <Label text="📝" style="-fx-font-size:15px;"/>
+                            <Text text="Notes" styleClass="nav-text"/>
                         </HBox>
                     </graphic>
                 </Button>
 
-                <!-- Ask Questions -->
-                <Button onAction="#goToQuestions" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                <Button onAction="#goToQuestions" styleClass="nav-button" maxWidth="Infinity"
+                        alignment="BASELINE_LEFT">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="🙋" style="-fx-font-size: 16px;" />
-                            <Text text="Ask Questions" styleClass="nav-text" />
+                            <Label text="🙋" style="-fx-font-size:15px;"/>
+                            <Text text="Ask Questions" styleClass="nav-text"/>
                         </HBox>
                     </graphic>
                 </Button>
 
-                <!-- Resources -->
-                <Button onAction="#goToResources" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                <Button onAction="#goToResources" styleClass="nav-button" maxWidth="Infinity"
+                        alignment="BASELINE_LEFT">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="📂" style="-fx-font-size: 16px;" />
-                            <Text text="Resources" styleClass="nav-text" />
+                            <Label text="📂" style="-fx-font-size:15px;"/>
+                            <Text text="Resources" styleClass="nav-text"/>
                         </HBox>
                     </graphic>
                 </Button>
 
-                <!-- Profile -->
-                <Button onAction="#goToProfile" styleClass="nav-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+                <Button onAction="#goToProfile" styleClass="nav-button" maxWidth="Infinity"
+                        alignment="BASELINE_LEFT">
                     <graphic>
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="👤" style="-fx-font-size: 16px;" />
-                            <Text text="Profile" styleClass="nav-text" />
+                            <Label text="👤" style="-fx-font-size:15px;"/>
+                            <Text text="Profile" styleClass="nav-text"/>
                         </HBox>
                     </graphic>
                 </Button>
             </VBox>
 
+            <!-- STUDY STATS section (optional — null-checked by controller) -->
+            <Label text="YOUR STATS" styleClass="sidebar-section-label">
+                <VBox.margin><Insets top="8"/></VBox.margin>
+            </Label>
+            <GridPane hgap="8" vgap="6">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+                <VBox styleClass="sidebar-stat-chip" spacing="2" GridPane.columnIndex="0">
+                    <Text fx:id="totalTasksCount" styleClass="sidebar-stat-value" text="—"/>
+                    <Label text="Tasks" styleClass="sidebar-stat-label"/>
+                </VBox>
+                <VBox styleClass="sidebar-stat-chip" spacing="2" GridPane.columnIndex="1">
+                    <Text fx:id="completedTasksCount" styleClass="sidebar-stat-value" text="—"/>
+                    <Label text="Progress" styleClass="sidebar-stat-label"/>
+                </VBox>
+            </GridPane>
+            <VBox styleClass="sidebar-stat-chip" spacing="2">
+                <VBox.margin><Insets top="2"/></VBox.margin>
+                <Text fx:id="studyHoursCount" styleClass="sidebar-stat-value" text="—"/>
+                <Label text="Study Hours" styleClass="sidebar-stat-label"/>
+            </VBox>
+
+            <Separator styleClass="sidebar-sep">
+                <VBox.margin><Insets top="8" bottom="4"/></VBox.margin>
+            </Separator>
+
+            <!-- User info box -->
+            <HBox styleClass="sidebar-user-box" spacing="10" alignment="CENTER_LEFT">
+                <VBox styleClass="sidebar-user-avatar" alignment="CENTER">
+                    <Label styleClass="sidebar-avatar-label" text="U"/>
+                </VBox>
+                <VBox spacing="2" HBox.hgrow="ALWAYS">
+                    <Text fx:id="usernameLabel" styleClass="sidebar-user-name" text="User"/>
+                    <Label text="Student" styleClass="sidebar-user-role"/>
+                </VBox>
+            </HBox>
+
             <!-- Logout -->
-            <Button onAction="#onLogoutClick" styleClass="logout-button" maxWidth="Infinity" alignment="BASELINE_LEFT">
+            <Button onAction="#onLogoutClick" styleClass="logout-button" maxWidth="Infinity"
+                    alignment="BASELINE_LEFT">
+                <VBox.margin><Insets top="6"/></VBox.margin>
                 <graphic>
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label text="🚪" style="-fx-font-size: 16px;" />
-                        <Text text="Logout" styleClass="nav-text" />
+                        <Label text="🚪" style="-fx-font-size:15px;"/>
+                        <Text text="Logout" styleClass="nav-text"/>
                     </HBox>
                 </graphic>
             </Button>
         </VBox>
     </left>
 
-    <!-- CENTER DYNAMIC CONTENT AREA -->
+    <!-- ══ CENTER DYNAMIC CONTENT AREA ══════════════════════════════ -->
     <center>
         <StackPane fx:id="contentArea" styleClass="main-content">
-            <!-- Default Landing / Welcome Content -->
-            <VBox alignment="CENTER" spacing="25" styleClass="landing-container">
-                <padding>
-                    <Insets bottom="30" left="40" right="40" top="30" />
-                </padding>
+            <!-- Default welcome landing screen -->
+            <VBox alignment="CENTER" spacing="24" styleClass="landing-container">
+                <padding><Insets top="40" right="60" bottom="40" left="60"/></padding>
 
                 <HBox alignment="CENTER" spacing="5">
-                    <Text styleClass="welcome-text" text="Welcome, " />
-                    <Text fx:id="usernameLabel" styleClass="user-name" text="User" />
+                    <Text styleClass="welcome-text" text="Welcome, "/>
+                    <Text fx:id="usernameWelcome" styleClass="user-name" text="Student"/>
                 </HBox>
 
-                <Text styleClass="hero-title" text="Your Smart Study Companion" textAlignment="CENTER" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-                <Text styleClass="hero-subtitle" text="Manage your tasks, notes, questions, and resources all in one place." textAlignment="CENTER" style="-fx-font-size: 14px; -fx-text-fill: #64748b;" />
+                <Text styleClass="hero-title"
+                      text="Your Smart Study Companion"
+                      textAlignment="CENTER"/>
+                <Text styleClass="hero-subtitle"
+                      text="Manage your notes, questions, and resources — all in one place."
+                      textAlignment="CENTER" wrappingWidth="420"/>
 
-                <ImageView fitHeight="220" fitWidth="220" preserveRatio="true">
+                <ImageView fitHeight="200" fitWidth="200" preserveRatio="true">
                     <image>
-                        <Image url="@../images/student.png" />
+                        <Image url="@../images/student.png"/>
                     </image>
                 </ImageView>
 
-                <Button onAction="#goToDashboard" text="Get Started 🚀" styleClass="primary-action-button" style="-fx-padding: 12 30; -fx-font-size: 15px; -fx-cursor: hand;" />
+                <Button onAction="#goToDashboard" text="Open Dashboard 🚀"
+                        styleClass="primary-action-button"/>
             </VBox>
         </StackPane>
     </center>

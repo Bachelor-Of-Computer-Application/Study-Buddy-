@@ -1,0 +1,246 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Study Buddy – Resources Page  (resources.css)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.root-pane {
+    -fx-background-color: #f8fafc;
+    -fx-font-family: "Segoe UI";
+}
+
+/* ── Page header card ────────────────────────────────────────────────── */
+.page-header-card {
+    -fx-background-color:  linear-gradient(to right, #0284c7, #0ea5e9);
+    -fx-background-radius: 14px;
+    -fx-padding:           22 26 22 26;
+    -fx-effect:            dropshadow(three-pass-box, rgba(2,132,199,0.30), 12, 0, 0, 4);
+}
+.page-title {
+    -fx-font-size:   20px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #ffffff;
+}
+.page-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255,255,255,0.85);
+}
+.upload-btn {
+    -fx-background-color:  #ffffff;
+    -fx-text-fill:         #0284c7;
+    -fx-font-size:         13px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 999px;
+    -fx-border-color:      rgba(255,255,255,0.6);
+    -fx-border-radius:     999px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           9 20 9 20;
+    -fx-cursor:            hand;
+}
+.upload-btn:hover {
+    -fx-background-color: #e0f2fe;
+}
+
+/* ── Filter / Search bar ─────────────────────────────────────────────── */
+.filter-bar {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 12px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     12px;
+    -fx-border-width:      1px;
+    -fx-padding:           12 16 12 16;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.04), 4, 0, 0, 1);
+}
+.search-field {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     20px;
+    -fx-background-radius: 20px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           9 16 9 16;
+    -fx-font-size:         13px;
+    -fx-pref-height:       38px;
+    -fx-prompt-text-fill:  #9ca3af;
+}
+.search-field:focused {
+    -fx-border-color:      #0284c7;
+    -fx-background-color:  #ffffff;
+}
+.form-input {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-background-radius: 8px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           9 14 9 14;
+    -fx-font-size:         13px;
+    -fx-pref-height:       38px;
+    -fx-prompt-text-fill:  #9ca3af;
+}
+.form-input:focused { -fx-border-color: #0284c7; }
+
+.combo-box {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-background-radius: 8px;
+    -fx-border-width:      1.5px;
+    -fx-pref-height:       38px;
+    -fx-cursor:            hand;
+}
+.combo-box:focused, .combo-box:showing { -fx-border-color: #0284c7; }
+.combo-box .list-cell { -fx-font-size: 13px; -fx-padding: 6 10; }
+
+.save-button {
+    -fx-background-color:  #0284c7;
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         13px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-padding:           9 18 9 18;
+    -fx-cursor:            hand;
+    -fx-pref-height:       38px;
+}
+.save-button:hover { -fx-background-color: #0369a1; }
+
+.cancel-button {
+    -fx-background-color:  #ffffff;
+    -fx-text-fill:         #64748b;
+    -fx-font-size:         13px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           9 18 9 18;
+    -fx-cursor:            hand;
+    -fx-pref-height:       38px;
+}
+.cancel-button:hover { -fx-background-color: #f1f5f9; }
+
+.create-button {
+    -fx-background-color:  #10b981;
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         13px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-padding:           9 18 9 18;
+    -fx-cursor:            hand;
+    -fx-pref-height:       38px;
+}
+.create-button:hover { -fx-background-color: #059669; }
+
+/* ── Tab pane ────────────────────────────────────────────────────────── */
+.tab-pane {
+    -fx-background-color: transparent;
+}
+.tab-pane .tab-header-area { -fx-padding: 0; }
+.tab-pane .tab-header-background { -fx-background-color: transparent; }
+.tab-pane .tab {
+    -fx-background-color:  #f1f5f9;
+    -fx-background-radius: 999px;
+    -fx-border-color:      transparent;
+    -fx-border-radius:     999px;
+    -fx-padding:           8 20 8 20;
+    -fx-cursor:            hand;
+}
+.tab-pane .tab:selected {
+    -fx-background-color: #0284c7;
+    -fx-effect:           dropshadow(three-pass-box, rgba(2,132,199,0.3), 6, 0, 0, 2);
+}
+.tab-pane .tab .tab-label { -fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #64748b; }
+.tab-pane .tab:selected .tab-label { -fx-text-fill: #ffffff; }
+.tab-pane .tab:hover:!selected { -fx-background-color: #e2e8f0; }
+.tab-pane .tab-content-area {
+    -fx-background-color: transparent;
+    -fx-border-color:     transparent;
+    -fx-padding:          16 0 0 0;
+}
+
+/* ── Resource card ───────────────────────────────────────────────────── */
+.resource-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 12px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     12px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.05), 6, 0, 0, 2);
+    -fx-padding:           16;
+    -fx-cursor:            hand;
+    -fx-pref-width:        220px;
+}
+.resource-card:hover {
+    -fx-border-color: #bae6fd;
+    -fx-effect:       dropshadow(three-pass-box, rgba(2,132,199,0.2), 12, 0, 0, 4);
+}
+.resource-icon {
+    -fx-font-size:         36px;
+    -fx-background-color:  #e0f2fe;
+    -fx-background-radius: 10px;
+    -fx-padding:           10 14;
+    -fx-alignment:         center;
+}
+.resource-title {
+    -fx-font-size:   13px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+    -fx-wrap-text:   true;
+}
+.resource-subject {
+    -fx-font-size:         10px;
+    -fx-font-weight:       bold;
+    -fx-text-fill:         #0284c7;
+    -fx-background-color:  #e0f2fe;
+    -fx-background-radius: 999px;
+    -fx-padding:           2 8 2 8;
+}
+.resource-meta {
+    -fx-font-size: 11px;
+    -fx-text-fill: #94a3b8;
+}
+
+/* ── Table view (history tab) ────────────────────────────────────────── */
+.table-view {
+    -fx-background-color:  #ffffff;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     12px;
+    -fx-background-radius: 12px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.04), 5, 0, 0, 2);
+}
+.table-view .column-header-background {
+    -fx-background-color:  #f1f5f9;
+    -fx-background-radius: 12px 12px 0 0;
+}
+.table-view .column-header { -fx-background-color: transparent; }
+.table-view .column-header .label {
+    -fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #475569; -fx-padding: 0 8;
+}
+.table-view .table-row-cell { -fx-background-color: #ffffff; -fx-border-color: transparent transparent #f1f5f9 transparent; }
+.table-view .table-row-cell:odd { -fx-background-color: #f8fafc; }
+.table-view .table-row-cell:hover { -fx-background-color: #e0f2fe; }
+.table-view .table-row-cell:selected { -fx-background-color: #bae6fd; }
+.table-view .table-cell { -fx-font-size: 13px; -fx-text-fill: #374151; -fx-padding: 10 12; -fx-border-color: transparent; }
+.table-view:focused { -fx-border-color: #e2e8f0; }
+
+/* ── Scroll pane ─────────────────────────────────────────────────────── */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color:     transparent;
+}
+.scroll-pane > .viewport { -fx-background-color: transparent; }
+.notes-grid { -fx-padding: 4; }
+
+/* ── Tab content wrapper ─────────────────────────────────────────────── */
+.tab-content {
+    -fx-background-color: transparent;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.empty-state {
+    -fx-background-color:  #f8fafc;
+    -fx-background-radius: 12px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     12px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           50 30 50 30;
+    -fx-alignment:         center;
+}
