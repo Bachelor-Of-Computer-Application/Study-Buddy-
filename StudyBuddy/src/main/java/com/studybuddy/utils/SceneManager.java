@@ -13,6 +13,8 @@ import java.io.IOException;
  * Handles view switching and stage loading.
  * All showXxx() methods declare throws IOException so callers
  * are forced to handle or propagate load failures.
+ *
+ * Window policy: resizable, minWidth=1280, minHeight=768, initial 1280x800.
  */
 public class SceneManager {
 
@@ -46,6 +48,7 @@ public class SceneManager {
         Parent root = loader.load();
         stage.setTitle("Study Buddy - Login");
         stage.setScene(new Scene(root));
+        applyWindowDefaults(stage);
         stage.show();
     }
 
@@ -66,6 +69,7 @@ public class SceneManager {
         Parent root = loader.load();
         stage.setTitle("Study Buddy - Register");
         stage.setScene(new Scene(root));
+        applyWindowDefaults(stage);
         stage.show();
     }
 
@@ -88,8 +92,24 @@ public class SceneManager {
         }
         FXMLLoader loader = new FXMLLoader(fxmlUrl);
         Parent root = loader.load();
-        stage.setTitle("Study Buddy - Home");
+        stage.setTitle("Study Buddy");
         stage.setScene(new Scene(root));
+        applyWindowDefaults(stage);
         stage.show();
+    }
+
+    /**
+     * Enforces a consistent, resizable window across all scene transitions.
+     * Resizable: true | minWidth=1280 | minHeight=768 | initial 1280x800.
+     */
+    private static void applyWindowDefaults(Stage stage) {
+        stage.setResizable(true);
+        stage.setMinWidth(1280);
+        stage.setMinHeight(768);
+        // Grow to preferred size only on first use; avoids jarring jumps on scene switches
+        if (!stage.isShowing() || stage.getWidth() < 1280) {
+            stage.setWidth(1280);
+            stage.setHeight(800);
+        }
     }
 }

@@ -6,7 +6,7 @@
 
 <ScrollPane fitToWidth="true" styleClass="content-scroll"
             stylesheets="@../css/admin-dashboard.css"
-            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.studybuddy.admin.controllers.AdminSettingsController">
     <content>
         <VBox spacing="20" style="-fx-background-color: #f1f5f9;">

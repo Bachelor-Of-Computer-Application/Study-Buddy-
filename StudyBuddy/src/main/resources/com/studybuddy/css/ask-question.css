@@ -1,257 +1,225 @@
-/* src/main/resources/css/ask-question.css */
+/* ═══════════════════════════════════════════════════════════════════════
+   Study Buddy – Ask Question Page  (ask-question.css)
+   ═══════════════════════════════════════════════════════════════════════ */
 
-/* Root */
-.root {
-    -fx-background-color: #F5F7FA;
+.root-pane {
+    -fx-background-color: #f8fafc;
     -fx-font-family: "Segoe UI";
 }
 
-/* Header */
-.header {
-    -fx-background-color: #FFFFFF;
-    -fx-padding: 16 32 16 32;
-    -fx-border-color: #E0E4E8;
-    -fx-border-width: 0 0 1 0;
+/* ── Minimal top breadcrumb bar ──────────────────────────────────────── */
+.breadcrumb-bar {
+    -fx-background-color:  #ffffff;
+    -fx-border-color:      transparent transparent #f1f5f9 transparent;
+    -fx-border-width:      0 0 1 0;
+    -fx-padding:           10 20 10 20;
 }
-
-.header-left {
-    -fx-spacing: 12;
-}
-
-.header-right {
-    -fx-spacing: 12;
-}
-
-/* Logo */
-.logo-image {
-    -fx-fit-width: 40;
-    -fx-fit-height: 40;
-}
-
-.header-title {
-    -fx-font-size: 22px;
+.breadcrumb-title {
+    -fx-font-size:   15px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1A1A1A;
+    -fx-text-fill:   #0f172a;
 }
-
-/* Page Title */
-.page-title {
-    -fx-font-size: 28px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #1A1A1A;
-    -fx-padding: 0 0 8 0;
-}
-
-/* Content Container */
-.content-container {
-    -fx-background-color: #FFFFFF;
-    -fx-padding: 32;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
-    -fx-effect: dropshadow(gaussian, #E0E4E8, 15, 0.3, 0, 4);
-}
-
-/* Question TextArea */
-.question-text-area {
-    -fx-background-color: #EEF3F7;
-    -fx-border-color: #D0D5DD;
-    -fx-border-width: 1;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
-    -fx-font-size: 17px;
-    -fx-padding: 16;
-    -fx-wrap-text: true;
-    -fx-prompt-text-fill: #7A7F87;
-}
-
-.question-text-area:focused {
-    -fx-border-color: #4A90E2;
-    -fx-border-width: 2;
-}
-
-/* Toolbar */
-.toolbar {
-    -fx-background-color: #FFFFFF;
-    -fx-padding: 12 16 12 16;
-    -fx-border-color: #E0E4E8;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-}
-
-/* Toolbar Buttons */
-.toolbar-button {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #D0D5DD;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-padding: 8 12 8 12;
-    -fx-cursor: hand;
-    -fx-min-width: 44;
-    -fx-min-height: 44;
-    -fx-effect: dropshadow(gaussian, #E0E4E8, 5, 0.2, 0, 2);
-}
-
-.toolbar-button:hover {
-    -fx-background-color: #F5F7FA;
-    -fx-border-color: #4A90E2;
-}
-
-/* Attachment Label */
-.attachment-label {
-    -fx-font-size: 14px;
-    -fx-text-fill: #4A90E2;
-    -fx-padding: 0 0 0 8;
-}
-
-/* Bottom Controls */
-.bottom-controls {
-    -fx-background-color: #FFFFFF;
-    -fx-padding: 20 24 20 24;
-    -fx-border-color: #E0E4E8;
-    -fx-border-width: 1;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
-}
-
-/* Control Group */
-.control-group {
-    -fx-spacing: 8;
-}
-
-.control-label {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #3A3F47;
-}
-
-/* ComboBox */
-.rounded-combo-box {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #D0D5DD;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-padding: 8;
-    -fx-font-size: 15px;
-    -fx-min-width: 250;
-    -fx-pref-height: 44;
-}
-
-.rounded-combo-box:hover {
-    -fx-border-color: #4A90E2;
-}
-
-.rounded-combo-box:focus {
-    -fx-border-color: #4A90E2;
-    -fx-border-width: 2;
-}
-
-/* Points Display */
-.points-display-group {
-    -fx-spacing: 8;
-}
-
-.points-display {
-    -fx-background-color: #EEF3F7;
-    -fx-padding: 12 16 12 16;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
-    -fx-alignment: CENTER_LEFT;
-}
-
-.points-icon {
-    -fx-font-size: 20px;
-    -fx-text-fill: #4A90E2;
-}
-
-.points-text {
-    -fx-font-size: 15px;
-    -fx-text-fill: #3A3F47;
-    -fx-font-weight: bold;
-}
-
-/* Submit Button */
-.submit-button {
-    -fx-background-color: #1A1A1A;
-    -fx-text-fill: #FFFFFF;
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
-    -fx-padding: 0 40 0 40;
-    -fx-border-radius: 30;
-    -fx-background-radius: 30;
-    -fx-min-height: 55;
-    -fx-pref-width: 400;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, #000000, 8, 0.3, 0, 3);
-}
-
-.submit-button:hover {
-    -fx-background-color: #333333;
-    -fx-effect: dropshadow(gaussian, #000000, 12, 0.4, 0, 4);
-}
-
-.submit-button:pressed {
-    -fx-background-color: #2A2A2A;
-}
-
-/* Icon Buttons */
 .icon-button {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #E0E4E8;
-    -fx-border-width: 1;
-    -fx-border-radius: 24;
-    -fx-background-radius: 24;
-    -fx-padding: 10;
-    -fx-min-width: 48;
-    -fx-min-height: 48;
-    -fx-pref-width: 48;
-    -fx-pref-height: 48;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, #E0E4E8, 5, 0.2, 0, 2);
+    -fx-background-color:  transparent;
+    -fx-text-fill:         #64748b;
+    -fx-font-size:         18px;
+    -fx-background-radius: 50%;
+    -fx-min-width:  36px; -fx-min-height: 36px;
+    -fx-pref-width: 36px; -fx-pref-height:36px;
+    -fx-padding:    0;
+    -fx-cursor:     hand;
 }
-
 .icon-button:hover {
-    -fx-background-color: #F5F7FA;
-    -fx-border-color: #4A90E2;
-    -fx-effect: dropshadow(gaussian, #4A90E2, 8, 0.3, 0, 3);
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill:        #4f46e5;
+}
+.nav-text {
+    -fx-font-size:   9px;
+    -fx-font-weight: bold;
+    -fx-fill:        #94a3b8;
+    -fx-text-fill:   #94a3b8;
 }
 
-/* Labels */
-.label {
-    -fx-font-size: 14px;
-    -fx-text-fill: #3A3F47;
+/* ── Page title ──────────────────────────────────────────────────────── */
+.page-title {
+    -fx-font-size:   24px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+}
+.page-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
 }
 
-/* Rounded Panels */
-.rounded-panel {
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
-    -fx-effect: dropshadow(gaussian, #E0E4E8, 10, 0.2, 0, 3);
+/* ── Question editor card ────────────────────────────────────────────── */
+.editor-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 14px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     14px;
+    -fx-border-width:      1.5px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.06), 10, 0, 0, 3);
+    -fx-padding:           22 24 22 24;
+}
+.editor-card:focused-within {
+    -fx-border-color: #7c3aed;
+}
+.editor-heading {
+    -fx-font-size:   15px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+}
+.editor-subheading {
+    -fx-font-size:  12px;
+    -fx-text-fill:  #64748b;
+}
+.question-text-area {
+    -fx-background-color:  transparent;
+    -fx-border-color:      transparent;
+    -fx-font-size:         15px;
+    -fx-text-fill:         #0f172a;
+    -fx-prompt-text-fill:  #9ca3af;
+    -fx-pref-height:       180px;
+}
+.question-text-area:focused {
+    -fx-border-color: transparent;
+}
+.question-text-area .content {
+    -fx-background-color: transparent;
+}
+.question-text-area .scroll-bar:vertical { -fx-pref-width: 6px; -fx-background-color: #f8fafc; }
+.question-text-area .scroll-bar .thumb { -fx-background-color: #cbd5e1; -fx-background-radius: 4px; }
+.question-text-area .scroll-bar .track,
+.question-text-area .scroll-bar .track-background,
+.question-text-area .scroll-bar .increment-button,
+.question-text-area .scroll-bar .decrement-button {
+    -fx-background-color: transparent; -fx-border-color: transparent;
 }
 
-/* Smooth Transitions */
-.button {
-    -fx-transition: all 0.2s ease;
+/* ── Toolbar (attachment buttons) ────────────────────────────────────── */
+.toolbar {
+    -fx-background-color:  #f8fafc;
+    -fx-background-radius: 10px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     10px;
+    -fx-border-width:      1px;
+    -fx-padding:           10 14 10 14;
+}
+.toolbar-button {
+    -fx-background-color:  #ffffff;
+    -fx-text-fill:         #475569;
+    -fx-font-size:         12px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-border-width:      1px;
+    -fx-padding:           8 14 8 14;
+    -fx-cursor:            hand;
+}
+.toolbar-button:hover {
+    -fx-background-color: #eef2ff;
+    -fx-border-color:     #7c3aed;
+    -fx-text-fill:        #5b21b6;
 }
 
-/* ScrollBar Styling for TextArea */
-.text-area .scroll-bar:vertical {
-    -fx-background-color: #F5F7FA;
-    -fx-border-color: #D0D5DD;
+/* ── Bottom controls card ────────────────────────────────────────────── */
+.bottom-controls {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 14px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     14px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.04), 6, 0, 0, 2);
+    -fx-padding:           20 24 20 24;
+}
+.control-label {
+    -fx-font-size:   12px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #374151;
 }
 
-.text-area .scroll-bar:horizontal {
-    -fx-background-color: #F5F7FA;
-    -fx-border-color: #D0D5DD;
+/* ComboBoxes */
+.rounded-combo-box {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-background-radius: 8px;
+    -fx-border-width:      1.5px;
+    -fx-pref-height:       40px;
+    -fx-cursor:            hand;
+}
+.rounded-combo-box:focused, .rounded-combo-box:showing {
+    -fx-border-color: #7c3aed;
+    -fx-border-width: 2px;
+}
+.rounded-combo-box .list-cell { -fx-font-size: 13px; -fx-text-fill: #0f172a; -fx-padding: 6 10; }
+
+/* Points display */
+.points-display {
+    -fx-background-color:  #f8fafc;
+    -fx-background-radius: 8px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     8px;
+    -fx-border-width:      1px;
+    -fx-padding:           10 14 10 14;
+}
+.points-value {
+    -fx-font-size:   18px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+}
+.points-unit {
+    -fx-font-size:   14px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #7c3aed;
+}
+.points-info {
+    -fx-font-size:         11px;
+    -fx-font-weight:       bold;
+    -fx-text-fill:         #64748b;
+    -fx-background-color:  #f1f5f9;
+    -fx-background-radius: 999px;
+    -fx-padding:           2 7 2 7;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     999px;
+    -fx-border-width:      1px;
 }
 
-.text-area .scroll-bar .thumb {
-    -fx-background-color: #C0C5CE;
-    -fx-background-radius: 4;
+/* ── Submit button ───────────────────────────────────────────────────── */
+.submit-button {
+    -fx-background-color:  linear-gradient(to right, #7c3aed, #4f46e5);
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         15px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 999px;
+    -fx-min-height:        52px;
+    -fx-pref-width:        360px;
+    -fx-cursor:            hand;
+    -fx-effect:            dropshadow(three-pass-box, rgba(124,58,237,0.40), 12, 0, 0, 4);
+}
+.submit-button:hover {
+    -fx-background-color: linear-gradient(to right, #6d28d9, #3730a3);
+    -fx-effect:           dropshadow(three-pass-box, rgba(124,58,237,0.60), 16, 0, 0, 5);
+}
+.submit-button:pressed {
+    -fx-background-color: #4c1d95;
+    -fx-effect:           dropshadow(three-pass-box, rgba(124,58,237,0.20), 6, 0, 0, 2);
 }
 
-.text-area .scroll-bar .thumb:hover {
-    -fx-background-color: #4A90E2;
+/* ── Header (compatibility) ──────────────────────────────────────────── */
+.header {
+    -fx-background-color: #ffffff;
+    -fx-border-color:     transparent transparent #f1f5f9 transparent;
+    -fx-border-width:     0 0 1 0;
+    -fx-padding:          12 20 12 20;
+}
+.header-title { -fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #0f172a; }
+.header-left { -fx-spacing: 12; }
+.header-right { -fx-spacing: 12; }
+.logo-image { -fx-fit-width: 36; -fx-fit-height: 36; }
+
+/* Content container */
+.content-container {
+    -fx-background-color: transparent;
 }

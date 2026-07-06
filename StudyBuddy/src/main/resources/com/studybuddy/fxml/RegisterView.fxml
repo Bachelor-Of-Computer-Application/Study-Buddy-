@@ -1,48 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="rootPane" styleClass="border-pane" stylesheets="@../css/login.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.RegisterController">
-    
-    <top>
-        <HBox alignment="CENTER" prefHeight="50.0" prefWidth="265.0" spacing="15" styleClass="logo-bar">
-            <padding>
-                <Insets bottom="20" left="20" right="20" top="20" />
-            </padding>
-            <ImageView fitHeight="65.0" fitWidth="170.0" preserveRatio="true" smooth="true">
-                <image>
-                    <Image url="@../images/main_logo_study_buddyy.png" />
-                </image>
-            </ImageView>
-        </HBox>
-    </top>
-    
-    <center>
-        <VBox alignment="CENTER" maxWidth="400.0" spacing="20">
-            <!-- Header -->
+<BorderPane fx:id="rootPane" styleClass="root-pane"
+    stylesheets="@../css/theme.css, @../css/auth.css"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.studybuddy.controllers.RegisterController">
+
+    <!-- LEFT – Branding panel (same as Login for consistency) -->
+    <left>
+        <VBox alignment="CENTER" spacing="24" styleClass="auth-left-panel">
+            <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
+
+            <Label text="📚" styleClass="auth-brand-icon"/>
+
             <VBox alignment="CENTER" spacing="10">
-                <Text styleClass="app-title" text="Study Buddy" />
-                <Text styleClass="app-subtitle" text="Learn Together, Grow Together" />
+                <Label text="Study Buddy" styleClass="auth-brand-title"/>
+                <Label styleClass="auth-brand-sub"
+                       text="Join thousands of students learning smarter together."
+                       wrapText="true"/>
             </VBox>
-            
-            <Text styleClass="section-title" text="Register New Account" />
-            
-            <!-- Form -->
-            <TextField id="nameInput" fx:id="nameInput" promptText="Full Name" styleClass="text-field" />
-            <TextField id="emailInput" fx:id="emailInput" promptText="Email Address" styleClass="text-field" />
-            <PasswordField id="passwordInput" fx:id="passwordInput" promptText="Password" styleClass="password-field" />
-            <PasswordField id="confirmPasswordInput" fx:id="confirmPasswordInput" promptText="Confirm Password" styleClass="password-field" />
-            
-            <!-- Buttons -->
-            <Button onAction="#onRegisterButtonClick" styleClass="primary-button" text="Register" />
-            <Button onAction="#onGoToRegistrationClick" styleClass="secondary-button" text="Already have account? Login" />
-            
-            <!-- Database placeholder note -->
-            <Text styleClass="placeholder-note" text="⚠️ Database integration pending" />
+
+            <VBox spacing="12">
+                <Label text="✓  Organize your notes &amp; resources" styleClass="auth-feature-item"/>
+                <Label text="✓  Ask &amp; answer questions" styleClass="auth-feature-item"/>
+                <Label text="✓  Earn achievement points" styleClass="auth-feature-item"/>
+                <Label text="✓  Track your study progress" styleClass="auth-feature-item"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- RIGHT – Registration form -->
+    <center>
+        <VBox alignment="CENTER" styleClass="auth-right-panel" HBox.hgrow="ALWAYS">
+            <VBox styleClass="auth-form-card" spacing="16" maxWidth="420">
+                <padding><Insets top="36" right="40" bottom="36" left="40"/></padding>
+
+                <!-- Heading -->
+                <VBox spacing="6">
+                    <Label text="Create your account 🚀" styleClass="auth-page-title"/>
+                    <Label text="Free forever. No credit card required." styleClass="auth-page-subtitle"/>
+                </VBox>
+
+                <!-- Full Name -->
+                <VBox spacing="6">
+                    <Label text="Full Name" styleClass="auth-field-label"/>
+                    <TextField fx:id="nameInput" promptText="Jane Doe"
+                               styleClass="auth-text-field" maxWidth="Infinity"/>
+                </VBox>
+
+                <!-- Email -->
+                <VBox spacing="6">
+                    <Label text="Email Address" styleClass="auth-field-label"/>
+                    <TextField fx:id="emailInput" promptText="you@example.com"
+                               styleClass="auth-text-field" maxWidth="Infinity"/>
+                </VBox>
+
+                <!-- Password -->
+                <VBox spacing="6">
+                    <Label text="Password" styleClass="auth-field-label"/>
+                    <PasswordField fx:id="passwordInput" promptText="Create a strong password"
+                                  styleClass="auth-text-field" maxWidth="Infinity"/>
+                </VBox>
+
+                <!-- Confirm Password -->
+                <VBox spacing="6">
+                    <Label text="Confirm Password" styleClass="auth-field-label"/>
+                    <PasswordField fx:id="confirmPasswordInput" promptText="Repeat your password"
+                                  styleClass="auth-text-field" maxWidth="Infinity"/>
+                </VBox>
+
+                <Region prefHeight="4"/>
+
+                <!-- Register button -->
+                <Button text="Create Account" onAction="#onRegisterButtonClick"
+                        styleClass="auth-primary-btn" maxWidth="Infinity"/>
+
+                <!-- Divider -->
+                <HBox alignment="CENTER">
+                    <Label text="Already have an account?" styleClass="auth-divider-label"/>
+                </HBox>
+
+                <!-- Login link -->
+                <Button text="Sign in instead" onAction="#onGoToRegistrationClick"
+                        styleClass="auth-secondary-btn" maxWidth="Infinity"/>
+
+                <Label text="⚠  Database integration required for registration."
+                       styleClass="auth-note" wrapText="true"/>
+            </VBox>
         </VBox>
     </center>
+
 </BorderPane>

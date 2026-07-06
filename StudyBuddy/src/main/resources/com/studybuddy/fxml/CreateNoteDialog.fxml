@@ -1,77 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.studybuddy.controllers.CreateNoteController"
-      styleClass="dialog"
-      spacing="20">
+      stylesheets="@../css/theme.css, @../css/notes.css"
+      spacing="18">
+    <padding><Insets top="28" right="32" bottom="28" left="32"/></padding>
 
-    <padding>
-        <Insets top="30" right="30" bottom="30" left="30"/>
-    </padding>
-
-    <Label text="Create New Note" styleClass="dialog-title"/>
+    <!-- Dialog Title -->
+    <Label text="✏️  Create New Note" styleClass="dialog-title"/>
+    <Label text="Fill in the details below to create and optionally share your note."
+           styleClass="page-subtitle" wrapText="true"/>
 
     <!-- Note Title -->
-    <VBox spacing="8">
-        <Label text="Note Title"/>
-        <TextField fx:id="titleField" promptText="Enter note title" styleClass="form-input"/>
+    <VBox spacing="6">
+        <Label text="Note Title *" styleClass="field-label"/>
+        <TextField fx:id="titleField" promptText="Enter a descriptive title…"
+                   styleClass="form-input" maxWidth="Infinity"/>
     </VBox>
 
-    <!-- Subject -->
-    <VBox spacing="8">
-        <Label text="Subject"/>
-        <ComboBox fx:id="subjectField" promptText="Select subject" styleClass="combo-box"/>
-    </VBox>
-
-    <!-- Source -->
-    <VBox spacing="8">
-        <Label text="Source"/>
-        <ComboBox fx:id="sourceField" promptText="Select source" styleClass="combo-box"/>
-    </VBox>
+    <!-- Subject + Source (side by side) -->
+    <HBox spacing="16">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Subject *" styleClass="field-label"/>
+            <ComboBox fx:id="subjectField" promptText="Select subject"
+                      styleClass="combo-box" maxWidth="Infinity"/>
+        </VBox>
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Source" styleClass="field-label"/>
+            <ComboBox fx:id="sourceField" promptText="Select source"
+                      styleClass="combo-box" maxWidth="Infinity"/>
+        </VBox>
+    </HBox>
 
     <!-- Date -->
-    <VBox spacing="8">
-        <Label text="Date"/>
-        <DatePicker fx:id="dateField" styleClass="date-picker"/>
+    <VBox spacing="6">
+        <Label text="Date" styleClass="field-label"/>
+        <DatePicker fx:id="dateField" styleClass="date-picker" maxWidth="Infinity"/>
     </VBox>
 
-    <!-- Description -->
-    <VBox spacing="8">
-        <Label text="Description/Content"/>
-        <TextArea fx:id="descriptionField" promptText="Enter your note content"
+    <!-- Description / Content -->
+    <VBox spacing="6" VBox.vgrow="ALWAYS">
+        <Label text="Description / Content" styleClass="field-label"/>
+        <TextArea fx:id="descriptionField" prefHeight="110"
+                  promptText="Write your note content here…"
                   styleClass="text-area" wrapText="true"/>
     </VBox>
 
     <!-- File Upload -->
-    <VBox spacing="8">
-        <Label text="Upload File (PDF, DOCX, PPTX, Images, Text)"/>
-        <HBox spacing="10">
+    <VBox spacing="6">
+        <Label text="Attach File  (PDF, DOCX, PPTX, Images, Text)" styleClass="field-label"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
             <TextField fx:id="fileTextField" promptText="No file selected"
-                       styleClass="form-input" editable="false"/>
-            <Button text="📁 Upload" styleClass="upload-button" onAction="#selectFile"/>
+                       styleClass="form-input" editable="false" HBox.hgrow="ALWAYS"/>
+            <Button text="📁  Browse" styleClass="btn-secondary" onAction="#selectFile"/>
         </HBox>
     </VBox>
 
-    <!-- Visibility Options -->
+    <!-- Visibility -->
     <VBox spacing="8">
-        <Label text="Visibility"/>
-        <HBox spacing="15">
-            <RadioButton fx:id="privateRadio" text="Private Note" selected="true"/>
-            <RadioButton fx:id="shareRadio" text="Share as Resource"/>
+        <Label text="Visibility" styleClass="field-label"/>
+        <HBox spacing="20">
+            <RadioButton fx:id="privateRadio" text="🔒  Private Note" selected="true"/>
+            <RadioButton fx:id="shareRadio"   text="👥  Share with Community"/>
         </HBox>
     </VBox>
 
-    <!-- Buttons -->
+    <!-- Buttons row -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button text="💾 Save Note" styleClass="save-button" onAction="#saveNote"/>
-        <Button text="📤 Upload Resource" styleClass="upload-resource-button"
-                onAction="#uploadResource" visible="false" fx:id="uploadResourceBtn"/>
-        <Button text="Cancel" styleClass="cancel-button" onAction="#cancel"/>
+        <VBox fx:id="uploadResourceBtn" visible="false" managed="false">
+            <!-- Wrapper so controller can show/hide uploadResourceBtn -->
+            <Button text="📤  Upload Resource" styleClass="btn-success"
+                    onAction="#uploadResource"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Cancel" styleClass="btn-secondary" onAction="#cancel"/>
+        <Button text="💾  Save Note" styleClass="btn-primary" onAction="#saveNote"/>
     </HBox>
 
 </VBox>
