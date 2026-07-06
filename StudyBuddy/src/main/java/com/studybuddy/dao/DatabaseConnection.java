@@ -26,7 +26,8 @@ public class DatabaseConnection {
      * Initialize database connection
      */
     public static synchronized void initialize() {
-
+        System.out.println("[DEBUG] Database Connection URL: " + DB_URL);
+        System.out.println("[DEBUG] Database Connection User: " + DB_USER);
         try {
 
             if (connection == null

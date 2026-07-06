@@ -18,23 +18,14 @@
             <content>
                 <VBox fillWidth="true" prefWidth="526.0" spacing="18" styleClass="page-wrap">
 
-                    <VBox prefHeight="238.0" prefWidth="406.0" spacing="0" styleClass="screen-shell">
+                    <VBox prefHeight="510.0" prefWidth="582.0" spacing="0" styleClass="screen-shell">
                         <VBox spacing="0" styleClass="hero-area">
                             <HBox alignment="TOP_LEFT" spacing="20" styleClass="hero-top-row">
                                 <VBox spacing="10" VBox.vgrow="ALWAYS">
                                     <HBox alignment="CENTER_LEFT" spacing="14">
                                         <Label styleClass="brand-title" text="Study Buddy" />
-                                        <Label styleClass="brand-icon" text="📘" />
-                                        <Label styleClass="brand-title" text="Library" />
                                     </HBox>
                                     <Label styleClass="brand-subtitle" text="Create personal notebooks, study guides, and review materials, or share them with the community." wrapText="true" />
-                                </VBox>
-
-                                <VBox alignment="CENTER" spacing="12" styleClass="hero-badge">
-                                    <Label styleClass="top-action-icon" text="👤" />
-                                    <Label styleClass="top-action-text" text="Profile" />
-                                    <Label styleClass="top-action-icon" text="🏠" />
-                                    <Label styleClass="top-action-text" text="Home" />
                                 </VBox>
 
                                 <Region HBox.hgrow="ALWAYS" />

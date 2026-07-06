@@ -6,7 +6,7 @@
 /* ── Root & Typography ──────────────────────────────────────────────────── */
 .root-pane {
     -fx-background-color: #f1f5f9;
-    -fx-font-family: "Segoe UI", "Inter", -apple-system, sans-serif;
+    -fx-font-family: "Segoe UI";
 }
 
 /* ── Sidebar ────────────────────────────────────────────────────────────── */
