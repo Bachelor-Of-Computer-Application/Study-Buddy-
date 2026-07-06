@@ -9,14 +9,14 @@
     xmlns="http://javafx.com/javafx/21"
     xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.admin.controllers.AdminOverviewController">
     <content>
-        <VBox spacing="20" styleClass="content-wrap">
+        <VBox spacing="24" styleClass="content-wrap">
             <padding>
                 <Insets top="24" right="24" bottom="24" left="24"/>
             </padding>
 
             <!-- Header -->
             <HBox alignment="CENTER_LEFT" spacing="16">
-                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
                     <Label text="Dashboard Overview" styleClass="section-title"/>
                     <Label text="Real-time statistics and activity summary" styleClass="section-subtitle"/>
                 </VBox>
@@ -24,75 +24,91 @@
             </HBox>
 
             <!-- ── Stat Cards Row 1 ── -->
-            <HBox spacing="14">
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+            <GridPane hgap="16" vgap="16">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                </columnConstraints>
+
+                <VBox styleClass="stat-card" GridPane.columnIndex="0" spacing="8">
                     <Label text="👥" styleClass="stat-icon"/>
                     <Label text="TOTAL USERS" styleClass="stat-title"/>
-                    <Label fx:id="lblTotalUsers" text="0" styleClass="stat-value stat-blue"/>
+                    <Label fx:id="lblTotalUsers" text="0" styleClass="stat-value-blue"/>
                     <Label text="Registered accounts" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="1" spacing="8">
                     <Label text="📝" styleClass="stat-icon"/>
                     <Label text="TOTAL NOTES" styleClass="stat-title"/>
-                    <Label fx:id="lblTotalNotes" text="0" styleClass="stat-value stat-green"/>
+                    <Label fx:id="lblTotalNotes" text="0" styleClass="stat-value-green"/>
                     <Label text="Non-deleted notes" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="2" spacing="8">
                     <Label text="📂" styleClass="stat-icon"/>
                     <Label text="RESOURCES" styleClass="stat-title"/>
-                    <Label fx:id="lblTotalResources" text="0" styleClass="stat-value stat-purple"/>
+                    <Label fx:id="lblTotalResources" text="0" styleClass="stat-value-purple"/>
                     <Label text="Active resources" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="3" spacing="8">
                     <Label text="❓" styleClass="stat-icon"/>
                     <Label text="QUESTIONS" styleClass="stat-title"/>
-                    <Label fx:id="lblTotalQuestions" text="0" styleClass="stat-value stat-yellow"/>
+                    <Label fx:id="lblTotalQuestions" text="0" styleClass="stat-value-yellow"/>
                     <Label text="All-time questions" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="4" spacing="8">
                     <Label text="💬" styleClass="stat-icon"/>
                     <Label text="ANSWERS" styleClass="stat-title"/>
-                    <Label fx:id="lblTotalAnswers" text="0" styleClass="stat-value stat-blue"/>
+                    <Label fx:id="lblTotalAnswers" text="0" styleClass="stat-value-blue"/>
                     <Label text="All-time answers" styleClass="stat-desc"/>
                 </VBox>
-            </HBox>
+            </GridPane>
 
             <!-- ── Stat Cards Row 2 ── -->
-            <HBox spacing="14">
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+            <GridPane hgap="16" vgap="16">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                </columnConstraints>
+
+                <VBox styleClass="stat-card" GridPane.columnIndex="0" spacing="8">
                     <Label text="✅" styleClass="stat-icon"/>
                     <Label text="TASKS" styleClass="stat-title"/>
-                    <Label fx:id="lblTotalTasks" text="0" styleClass="stat-value"/>
+                    <Label fx:id="lblTotalTasks" text="0" styleClass="stat-value-default"/>
                     <Label text="All user tasks" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="1" spacing="8">
                     <Label text="🆕" styleClass="stat-icon"/>
                     <Label text="NEW USERS TODAY" styleClass="stat-title"/>
-                    <Label fx:id="lblNewUsersToday" text="0" styleClass="stat-value stat-green"/>
+                    <Label fx:id="lblNewUsersToday" text="0" styleClass="stat-value-green"/>
                     <Label text="Registered today" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="2" spacing="8">
                     <Label text="📤" styleClass="stat-icon"/>
                     <Label text="UPLOADS TODAY" styleClass="stat-title"/>
-                    <Label fx:id="lblUploadsToday" text="0" styleClass="stat-value stat-blue"/>
-                    <Label text="Notes uploaded today" styleClass="stat-desc"/>
+                    <Label fx:id="lblUploadsToday" text="0" styleClass="stat-value-blue"/>
+                    <Label text="Uploaded today" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="3" spacing="8">
                     <Label text="⏳" styleClass="stat-icon"/>
                     <Label text="PENDING NOTES" styleClass="stat-title"/>
-                    <Label fx:id="lblPendingNotes" text="0" styleClass="stat-value stat-yellow"/>
+                    <Label fx:id="lblPendingNotes" text="0" styleClass="stat-value-yellow"/>
                     <Label text="Awaiting review" styleClass="stat-desc"/>
                 </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" spacing="6">
+                <VBox styleClass="stat-card" GridPane.columnIndex="4" spacing="8">
                     <Label text="⚠️" styleClass="stat-icon"/>
                     <Label text="PENDING RESOURCES" styleClass="stat-title"/>
-                    <Label fx:id="lblPendingResources" text="0" styleClass="stat-value stat-red"/>
+                    <Label fx:id="lblPendingResources" text="0" styleClass="stat-value-red"/>
                     <Label text="Inactive resources" styleClass="stat-desc"/>
                 </VBox>
-            </HBox>
+            </GridPane>
 
             <!-- ── Chart + Recent Users ── -->
-            <GridPane hgap="16" vgap="16">
+            <GridPane hgap="20" vgap="20">
                 <columnConstraints>
                     <ColumnConstraints percentWidth="45"/>
                     <ColumnConstraints percentWidth="55"/>
@@ -121,7 +137,7 @@
             </GridPane>
 
             <!-- ── Recent Uploads + Recent Questions ── -->
-            <GridPane hgap="16" vgap="16">
+            <GridPane hgap="20" vgap="20">
                 <columnConstraints>
                     <ColumnConstraints percentWidth="50"/>
                     <ColumnConstraints percentWidth="50"/>
