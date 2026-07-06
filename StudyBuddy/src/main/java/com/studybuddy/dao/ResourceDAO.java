@@ -16,7 +16,7 @@ public class ResourceDAO {
         String sql = """
                 INSERT INTO Resources
                 (noteId, uploadedBy, title, subject, source, description, uploadDate, filePath, fileType, downloads, isActive)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
                 """;
 
         try (Connection conn = DatabaseConnection.getConnection();

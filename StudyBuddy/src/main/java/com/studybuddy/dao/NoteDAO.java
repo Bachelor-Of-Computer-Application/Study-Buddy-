@@ -54,7 +54,7 @@ public class NoteDAO {
      */
     public List<Note> getAllPublicNotes() throws SQLException {
         // Uses actual SQL column name: isPrivate (not is_private)
-        String sql = "SELECT * FROM Notes WHERE isPrivate = 0 ORDER BY uploadDate DESC";
+        String sql = "SELECT * FROM Notes WHERE isPrivate = 0 AND status = 'Approved' ORDER BY uploadDate DESC";
         List<Note> notes = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -78,7 +78,7 @@ public class NoteDAO {
      */
     public List<Note> getRecentNotes(int limit) throws SQLException {
         // Uses actual SQL column names: isPrivate, uploadDate
-        String sql = "SELECT TOP (?) * FROM Notes WHERE isPrivate = 0 ORDER BY uploadDate DESC";
+        String sql = "SELECT TOP (?) * FROM Notes WHERE isPrivate = 0 AND status = 'Approved' ORDER BY uploadDate DESC";
         List<Note> notes = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -105,7 +105,7 @@ public class NoteDAO {
     public List<Note> searchPublicNotes(String query, String subject) throws SQLException {
         // Uses actual SQL column names: isPrivate, uploadDate
         String sql = "SELECT * FROM Notes " +
-                "WHERE isPrivate = 0 " +
+                "WHERE isPrivate = 0 AND status = 'Approved' " +
                 "  AND (? IS NULL OR title LIKE ? OR subject LIKE ? OR source LIKE ?) " +
                 "  AND (? IS NULL OR subject = ?) " +
                 "ORDER BY uploadDate DESC";
@@ -145,10 +145,10 @@ public class NoteDAO {
      */
     public void createNote(Note note) throws SQLException {
         // id is excluded — SQL Server auto-generates it via IDENTITY(1,1)
-        // All column names match exact SQL schema
+        // status always defaults to 'Pending' — admin must approve before it shows publicly
         String sql = "INSERT INTO Notes " +
-                "(title, subject, source, uploadDate, fileType, fileName, filePath, description, userId, isPrivate) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "(title, subject, source, uploadDate, fileType, fileName, filePath, description, userId, isPrivate, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -226,6 +226,8 @@ public class NoteDAO {
         note.setDescription(rs.getString("description"));
         note.setUserId(rs.getInt("userId"));               // SQL column: userId
         note.setPrivate(rs.getBoolean("isPrivate"));       // SQL column: isPrivate
+        // Safely read status — column may not exist in older DB versions
+        try { note.setStatus(rs.getString("status")); } catch (SQLException ignored) { note.setStatus("Pending"); }
         return note;
     }
 }

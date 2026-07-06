@@ -228,6 +228,69 @@ public class QuestionDAO {
     }
 
     // =========================
+    // SUBMIT ANSWER (with author_name)
+    // =========================
+
+    /**
+     * Inserts a new answer including the author’s display name.
+     * SQL: INSERT INTO Answers (question_id, user_id, author_name, answer_text, votes, created_at)
+     *      VALUES (?, ?, ?, ?, 0, GETDATE())
+     */
+    public boolean submitAnswer(int questionId, int userId, String authorName, String answerText) throws SQLException {
+        String sql = "INSERT INTO Answers (question_id, user_id, author_name, answer_text, votes, created_at) "
+                   + "VALUES (?, ?, ?, ?, 0, GETDATE())";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, questionId);
+            stmt.setInt(2, userId);
+            stmt.setString(3, authorName);
+            stmt.setString(4, answerText);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    // =========================
+    // UPDATE ANSWER TEXT
+    // =========================
+
+    /**
+     * Updates the answer_text of an existing answer.
+     * Only the original author should be allowed to call this.
+     * SQL: UPDATE Answers SET answer_text = ? WHERE answer_id = ? AND user_id = ?
+     */
+    public boolean updateAnswerText(int answerId, int userId, String newText) throws SQLException {
+        String sql = "UPDATE Answers SET answer_text = ? WHERE answer_id = ? AND user_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newText);
+            stmt.setInt(2, answerId);
+            stmt.setInt(3, userId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    // =========================
+    // DELETE ANSWER
+    // =========================
+
+    /**
+     * Deletes an answer by answer_id, restricted to the owning user_id.
+     * SQL: DELETE FROM Answers WHERE answer_id = ? AND user_id = ?
+     */
+    public boolean deleteAnswer(int answerId, int userId) throws SQLException {
+        String sql = "DELETE FROM Answers WHERE answer_id = ? AND user_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, answerId);
+            stmt.setInt(2, userId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    // =========================
     // UPDATE VOTES
     // =========================
 
