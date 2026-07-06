@@ -53,6 +53,7 @@ public class QuestionsController {
     @FXML private VBox relatedQuestionsContainer;
 
     private final QuestionService questionService = new QuestionService();
+    private final com.studybuddy.dao.QuestionDAO questionDAO = new com.studybuddy.dao.QuestionDAO();
     private List<Question> allQuestions = new ArrayList<>();
     private Question selectedQuestion;
 
@@ -140,6 +141,20 @@ public class QuestionsController {
         loadRelatedQuestions(q);
     }
 
+    /**
+     * Reloads answers for the given question from the database and refreshes the UI.
+     */
+    private void reloadAnswersFromDb(Question q) {
+        try {
+            List<Answer> fresh = questionDAO.getAnswersByQuestionId(q.getId());
+            q.getAnswers().clear();
+            q.getAnswers().addAll(fresh);
+        } catch (Exception e) {
+            System.err.println("[QuestionsController] Failed to reload answers: " + e.getMessage());
+        }
+        refreshAnswers(q);
+    }
+
     private void refreshAnswers(Question q) {
         answersContainer.getChildren().clear();
 
@@ -149,6 +164,9 @@ public class QuestionsController {
             answersContainer.getChildren().add(noAnsLabel);
             return;
         }
+
+        int currentUserId = App.getCurrentUser() != null ? App.getCurrentUser().getId() : -1;
+        String currentUserName = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
 
         for (Answer ans : q.getAnswers()) {
             VBox ansCard = new VBox(8);
@@ -175,19 +193,39 @@ public class QuestionsController {
             Button upvoteBtn = new Button("👍 Upvote");
             upvoteBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #4f46e5; -fx-padding: 2 8; -fx-font-size: 11px; -fx-cursor: hand;");
             upvoteBtn.setOnAction(e -> {
-                ans.setVotes(ans.getVotes() + 1);
-                votes.setText("👍 " + ans.getVotes() + " votes");
+                try {
+                    boolean ok = questionDAO.updateAnswerVotes(ans.getId(), 1);
+                    if (ok) {
+                        ans.setVotes(ans.getVotes() + 1);
+                        votes.setText("👍 " + ans.getVotes() + " votes");
+                    }
+                } catch (Exception ex) {
+                    showError("Failed to upvote: " + ex.getMessage());
+                }
             });
 
             footer.getChildren().addAll(votes, upvoteBtn);
 
-            String currentUserName = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
-            if (ans.getAuthorName().equals(currentUserName)) {
+            // Show Edit and Delete only to the answer author
+            if (ans.getAuthorName() != null && ans.getAuthorName().equals(currentUserName)) {
                 Button deleteBtn = new Button("🗑️ Delete");
                 deleteBtn.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #ef4444; -fx-padding: 2 8; -fx-font-size: 11px; -fx-cursor: hand;");
                 deleteBtn.setOnAction(e -> {
-                    q.getAnswers().remove(ans);
-                    refreshAnswers(q);
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Delete this answer?", ButtonType.YES, ButtonType.NO);
+                    confirm.setHeaderText(null);
+                    if (confirm.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+                        try {
+                            boolean ok = questionDAO.deleteAnswer(ans.getId(), currentUserId);
+                            if (ok) {
+                                reloadAnswersFromDb(q);
+                            } else {
+                                showError("Could not delete answer.");
+                            }
+                        } catch (Exception ex) {
+                            showError("Delete failed: " + ex.getMessage());
+                        }
+                    }
                 });
 
                 Button editBtn = new Button("✏️ Edit");
@@ -197,9 +235,16 @@ public class QuestionsController {
                     dialog.setTitle("Edit Answer");
                     dialog.setHeaderText("Modify your reply:");
                     dialog.showAndWait().ifPresent(newText -> {
-                        if (!newText.trim().isEmpty()) {
-                            ans.setAnswerText(newText.trim());
-                            refreshAnswers(q);
+                        if (newText == null || newText.trim().isEmpty()) return;
+                        try {
+                            boolean ok = questionDAO.updateAnswerText(ans.getId(), currentUserId, newText.trim());
+                            if (ok) {
+                                reloadAnswersFromDb(q);
+                            } else {
+                                showError("Could not edit answer.");
+                            }
+                        } catch (Exception ex) {
+                            showError("Edit failed: " + ex.getMessage());
                         }
                     });
                 });
@@ -298,41 +343,74 @@ public class QuestionsController {
 
     @FXML
     public void handleUpvoteQuestion() {
-        if (selectedQuestion != null) {
-            selectedQuestion.setVotes(selectedQuestion.getVotes() + 1);
-            qVotes.setText("👍 " + selectedQuestion.getVotes() + " votes");
-            System.out.println("⚠️ handleUpvoteQuestion() stub - SQL pending");
+        if (selectedQuestion == null) return;
+        try {
+            boolean ok = questionDAO.updateQuestionVotes(selectedQuestion.getId(), 1);
+            if (ok) {
+                selectedQuestion.setVotes(selectedQuestion.getVotes() + 1);
+                qVotes.setText("👍 " + selectedQuestion.getVotes() + " votes");
+            } else {
+                showError("Failed to upvote question.");
+            }
+        } catch (Exception e) {
+            showError("Upvote error: " + e.getMessage());
         }
     }
 
     @FXML
     public void handleSubmitAnswer() {
         if (selectedQuestion == null) return;
-        String text = answerInput.getText().trim();
-        if (text.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "Answer cannot be empty.");
-            alert.showAndWait();
+
+        // 1. Validate input
+        if (answerInput == null) return;
+        String text = answerInput.getText();
+        if (text == null || text.trim().isEmpty()) {
+            Alert warn = new Alert(Alert.AlertType.WARNING, "Answer cannot be empty.");
+            warn.setHeaderText(null);
+            warn.showAndWait();
             return;
         }
 
-        String author = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
-        Answer newAns = new Answer(
-                selectedQuestion.getAnswers().size() + 1,
-                selectedQuestion.getId(),
-                App.getCurrentUser() != null ? App.getCurrentUser().getId() : 1,
-                author,
-                text,
-                0,
-                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        );
+        // 2. Resolve the current user
+        int userId      = App.getCurrentUser() != null ? App.getCurrentUser().getId()   : 1;
+        String author   = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
 
-        selectedQuestion.getAnswers().add(newAns);
-        answerInput.clear();
-        refreshAnswers(selectedQuestion);
+        // 3. Persist to database via DAO
+        try {
+            boolean saved = questionDAO.submitAnswer(
+                    selectedQuestion.getId(),
+                    userId,
+                    author,
+                    text.trim()
+            );
 
-        System.out.println("⚠️ handleSubmitAnswer() stub - SQL pending");
-        
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Your answer has been posted successfully.");
+            if (!saved) {
+                showError("Your answer could not be saved. Please try again.");
+                return;
+            }
+
+            // 4. Clear input and reload answers from DB
+            answerInput.clear();
+            reloadAnswersFromDb(selectedQuestion);
+
+            Alert success = new Alert(Alert.AlertType.INFORMATION,
+                    "Your answer has been posted successfully.");
+            success.setHeaderText(null);
+            success.showAndWait();
+
+        } catch (Exception e) {
+            showError("Failed to post answer: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, message);
+        alert.setHeaderText(null);
         alert.showAndWait();
     }
 }

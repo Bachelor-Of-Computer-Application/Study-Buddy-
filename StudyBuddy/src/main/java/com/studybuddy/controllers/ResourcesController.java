@@ -57,7 +57,13 @@ public class ResourcesController {
         // Setup History Table
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         subjectCol.setCellValueFactory(new PropertyValueFactory<>("subject"));
-        fileNameCol.setCellValueFactory(new PropertyValueFactory<>("fileType")); // represents file name/type
+        fileNameCol.setCellValueFactory(cellData -> {
+            String path = cellData.getValue().getFilePath();
+            if (path == null) return new SimpleStringProperty("");
+            int index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+            String name = (index >= 0) ? path.substring(index + 1) : path;
+            return new SimpleStringProperty(name);
+        });
         dateCol.setCellValueFactory(new PropertyValueFactory<>("uploadDate"));
 
         statusCol.setCellValueFactory(cellData -> {

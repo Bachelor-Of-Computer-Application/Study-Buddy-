@@ -144,16 +144,22 @@ public class NotesController implements Initializable {
         card.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-width: 1px; -fx-border-radius: 10;");
         card.setMaxWidth(Double.MAX_VALUE);
 
-        // Status Badge
-        Label statusBadge = new Label("Shared");
-        statusBadge.setStyle(
-                "-fx-background-color: #dcfce7;" +
-                        "-fx-text-fill: #16a34a;" +
-                        "-fx-font-size: 10px;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-padding: 3 8;" +
-                        "-fx-background-radius: 5;"
-        );
+        // Dynamic Status Badge based on approval state
+        String status = note.getStatus() != null ? note.getStatus() : "Pending";
+        Label statusBadge = new Label(status);
+        String badgeStyle;
+        switch (status) {
+            case "Approved":
+                badgeStyle = "-fx-background-color: #dcfce7; -fx-text-fill: #16a34a; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8; -fx-background-radius: 5;";
+                break;
+            case "Rejected":
+                badgeStyle = "-fx-background-color: #fef2f2; -fx-text-fill: #dc2626; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8; -fx-background-radius: 5;";
+                break;
+            default: // Pending
+                badgeStyle = "-fx-background-color: #fef9c3; -fx-text-fill: #ca8a04; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8; -fx-background-radius: 5;";
+                break;
+        }
+        statusBadge.setStyle(badgeStyle);
 
         HBox titleRow = new HBox(10);
         titleRow.setAlignment(Pos.CENTER_LEFT);
