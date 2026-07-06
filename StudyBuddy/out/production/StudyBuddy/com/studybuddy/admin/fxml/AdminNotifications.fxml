@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.*?>
 
 <VBox spacing="16" stylesheets="@../css/admin-dashboard.css"
-      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.studybuddy.admin.controllers.AdminNotificationsController"
-      style="-fx-background-color: #f1f5f9;">
+      styleClass="admin-panel-bg">
     <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
 
     <!-- Header -->

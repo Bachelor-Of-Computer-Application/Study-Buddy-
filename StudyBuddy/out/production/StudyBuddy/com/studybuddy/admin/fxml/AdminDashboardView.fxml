@@ -5,12 +5,11 @@
 <?import javafx.scene.layout.*?>
 
 <!-- Main dashboard shell: sidebar (left) + content (center) -->
-<BorderPane xmlns="http://javafx.com/javafx/21"
+<BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.studybuddy.admin.controllers.AdminDashboardController"
             stylesheets="@../css/admin-dashboard.css"
-            styleClass="root-pane"
-            prefHeight="768.0" prefWidth="1280.0">
+            styleClass="root-pane">
 
     <!-- ══ LEFT SIDEBAR ══════════════════════════════════════════════ -->
     <left>

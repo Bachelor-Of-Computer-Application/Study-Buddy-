@@ -13,83 +13,96 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="rootPane" prefHeight="650.0" prefWidth="950.0" styleClass="root-pane" stylesheets="@../css/notes.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.ResourcesController">
+<BorderPane fx:id="rootPane" styleClass="root-pane"
+    stylesheets="@../css/theme.css, @../css/resources.css"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.studybuddy.controllers.ResourcesController">
 
-    <!-- Top Header & Search Area -->
-    <top>
-        <VBox spacing="15.0">
-            <padding>
-                <Insets bottom="15.0" left="25.0" right="25.0" top="20.0" />
-            </padding>
-            
-            <!-- Hero section -->
-            <VBox styleClass="hero-section" style="-fx-background-color: #f8fafc; -fx-padding: 20; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px;">
-                <HBox spacing="40" alignment="CENTER_LEFT">
-                    <padding>
-                        <Insets top="30" right="30" bottom="30" left="30"/>
-                    </padding>
-                    <VBox spacing="10" HBox.hgrow="ALWAYS">
-                        <Label text="Study Resources Library" styleClass="hero-title" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
-                        <Label text="Find and download academic guides, textbooks, and PDF lecture slides shared by the community."
-                               styleClass="hero-subtitle" style="-fx-font-size: 13px; -fx-text-fill: #64748b;" wrapText="true" />
+    <center>
+        <VBox spacing="0">
+            <!-- ── Page Header + Filter Area ─────────────────────────── -->
+            <VBox spacing="16">
+                <padding><Insets top="24" right="24" bottom="0" left="24"/></padding>
+
+                <!-- Header card -->
+                <HBox alignment="CENTER_LEFT" spacing="20"
+                      styleClass="page-header-card">
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="📂  Resource Library" styleClass="page-title"/>
+                        <Label styleClass="page-subtitle"
+                               text="Find and download academic guides, textbooks, and PDF lecture slides."/>
                     </VBox>
-                    <Label text="📂" style="-fx-font-size: 80px;"/>
+                    <Button onAction="#handleUploadResource" styleClass="upload-btn"
+                            text="📤  Upload PDF Resource"/>
+                </HBox>
+
+                <!-- Filter bar -->
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="filter-bar">
+                    <TextField fx:id="searchField" promptText="🔍  Search resources by title…"
+                               prefWidth="240" styleClass="search-field"/>
+                    <ComboBox fx:id="subjectFilter" promptText="Filter by Subject"
+                              prefWidth="175" styleClass="combo-box"/>
+                    <Button onAction="#applyFilters" text="Search"
+                            styleClass="save-button"/>
+                    <Button onAction="#clearFilters" text="Reset"
+                            styleClass="cancel-button"/>
+                    <Region HBox.hgrow="ALWAYS"/>
                 </HBox>
             </VBox>
-            
-            <!-- Filter Bar -->
-            <HBox spacing="15.0" alignment="CENTER_LEFT" styleClass="filter-section" style="-fx-padding: 10; -fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1px;">
-                <TextField fx:id="searchField" promptText="Search resources by title..." prefWidth="250.0" styleClass="form-input" />
-                <ComboBox fx:id="subjectFilter" promptText="Filter by Subject" prefWidth="180.0" styleClass="combo-box" />
-                <Button onAction="#applyFilters" text="🔍 Search" styleClass="save-button" style="-fx-background-color: #4f46e5; -fx-text-fill: white;" />
-                <Button onAction="#clearFilters" text="Reset" styleClass="cancel-button" />
-                <HBox.hgrow>ALWAYS</HBox.hgrow>
-                <Button onAction="#handleUploadResource" text="📤 Upload PDF Resource" styleClass="create-button" />
-            </HBox>
-        </VBox>
-    </top>
 
-    <!-- Center Tabs -->
-    <center>
-        <TabPane fx:id="resourcesTabPane" tabClosingPolicy="UNAVAILABLE" styleClass="tab-pane">
-            <tabs>
-                <!-- Public Resources -->
-                <Tab text="📚 Community Library">
-                    <ScrollPane fitToWidth="true" styleClass="scroll-pane">
-                        <padding>
-                            <Insets top="15" right="15" bottom="15" left="15"/>
-                        </padding>
-                        <VBox spacing="15.0">
-                            <FlowPane fx:id="resourcesFlowPane" hgap="15.0" vgap="15.0" styleClass="notes-grid" />
-                            <VBox fx:id="emptyState" alignment="CENTER" spacing="10.0" visible="false">
-                                <Label text="📂" style="-fx-font-size: 48px;" />
-                                <Label text="No approved resources found." style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #64748b;" />
-                            </VBox>
+            <!-- ── Tab Pane ──────────────────────────────────────────── -->
+            <VBox VBox.vgrow="ALWAYS">
+                <padding><Insets top="16" right="24" bottom="24" left="24"/></padding>
+                <TabPane fx:id="resourcesTabPane" tabClosingPolicy="UNAVAILABLE"
+                         styleClass="tab-pane" VBox.vgrow="ALWAYS">
+
+                    <!-- Community Library tab -->
+                    <Tab text="📚  Community Library">
+                        <ScrollPane fitToWidth="true" styleClass="scroll-pane"
+                                    vbarPolicy="AS_NEEDED">
+                            <content>
+                                <VBox spacing="16">
+                                    <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
+                                    <FlowPane fx:id="resourcesFlowPane" hgap="16" vgap="16"
+                                              styleClass="notes-grid"/>
+                                    <!-- Empty state -->
+                                    <VBox fx:id="emptyState" alignment="CENTER" spacing="12"
+                                          styleClass="empty-state" visible="false"
+                                          managed="false">
+                                        <Label text="📂" style="-fx-font-size:48px;"/>
+                                        <Label text="No approved resources found."
+                                               style="-fx-font-size:15px;-fx-font-weight:bold;-fx-text-fill:#475569;"/>
+                                        <Label text="Be the first to upload one!"
+                                               style="-fx-font-size:12px;-fx-text-fill:#94a3b8;"/>
+                                    </VBox>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </Tab>
+
+                    <!-- My Upload History tab -->
+                    <Tab text="🕒  My Upload History">
+                        <VBox spacing="0" styleClass="tab-content" VBox.vgrow="ALWAYS">
+                            <padding><Insets top="4" right="0" bottom="0" left="0"/></padding>
+                            <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="titleCol"    text="Title"         prefWidth="220"/>
+                                    <TableColumn fx:id="subjectCol"  text="Subject"        prefWidth="140"/>
+                                    <TableColumn fx:id="fileNameCol" text="File Name"      prefWidth="180"/>
+                                    <TableColumn fx:id="dateCol"     text="Uploaded Date"  prefWidth="140"/>
+                                    <TableColumn fx:id="statusCol"   text="Status"         prefWidth="120"/>
+                                </columns>
+                            </TableView>
                         </VBox>
-                    </ScrollPane>
-                </Tab>
+                    </Tab>
 
-                <!-- User History -->
-                <Tab text="🕒 My Upload History">
-                    <VBox spacing="15.0" styleClass="tab-content">
-                        <padding>
-                            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-                        </padding>
-                        <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
-                            <columns>
-                                <TableColumn fx:id="titleCol" text="Title" prefWidth="220.0" />
-                                <TableColumn fx:id="subjectCol" text="Subject" prefWidth="140.0" />
-                                <TableColumn fx:id="fileNameCol" text="File Name" prefWidth="180.0" />
-                                <TableColumn fx:id="dateCol" text="Uploaded Date" prefWidth="140.0" />
-                                <TableColumn fx:id="statusCol" text="Status" prefWidth="120.0" />
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </Tab>
-            </tabs>
-        </TabPane>
+                </TabPane>
+            </VBox>
+        </VBox>
     </center>
 
 </BorderPane>
