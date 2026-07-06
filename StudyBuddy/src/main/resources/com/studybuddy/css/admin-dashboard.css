@@ -1,6 +1,6 @@
 .root-pane {
     -fx-background-color: #f4f7fb;
-    -fx-font-family: "Segoe UI", "Inter", sans-serif;
+    -fx-font-family: "Segoe UI";
 }
 
 .sidebar {

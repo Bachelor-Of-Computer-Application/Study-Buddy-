@@ -227,17 +227,53 @@
     -fx-padding: 3 0;
 }
 
+/* Explicit single-class styling to resolve layout and parsing issues */
+.stat-value-blue {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2563eb;
+    -fx-padding: 3 0;
+}
+
+.stat-value-green {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #059669;
+    -fx-padding: 3 0;
+}
+
+.stat-value-purple {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7c3aed;
+    -fx-padding: 3 0;
+}
+
+.stat-value-yellow {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #d97706;
+    -fx-padding: 3 0;
+}
+
+.stat-value-red {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #dc2626;
+    -fx-padding: 3 0;
+}
+
+.stat-value-default {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+    -fx-padding: 3 0;
+}
+
 .stat-desc {
     -fx-font-size: 11px;
     -fx-text-fill: #94a3b8;
 }
-
-/* Color accents for stat values */
-.stat-blue   { -fx-text-fill: #2563eb; }
-.stat-green  { -fx-text-fill: #059669; }
-.stat-yellow { -fx-text-fill: #d97706; }
-.stat-red    { -fx-text-fill: #dc2626; }
-.stat-purple { -fx-text-fill: #7c3aed; }
 
 /* ── Panel Cards ────────────────────────────────────────────────────────── */
 .panel-card {
