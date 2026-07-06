@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane fx:id="rootPane" styleClass="border-pane" stylesheets="@../css/login.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.RegisterController">
+    
+    <top>
+        <HBox alignment="CENTER" prefHeight="50.0" prefWidth="265.0" spacing="15" styleClass="logo-bar">
+            <padding>
+                <Insets bottom="20" left="20" right="20" top="20" />
+            </padding>
+            <ImageView fitHeight="65.0" fitWidth="170.0" preserveRatio="true" smooth="true">
+                <image>
+                    <Image url="@../images/main_logo_study_buddyy.png" />
+                </image>
+            </ImageView>
+        </HBox>
+    </top>
+    
+    <center>
+        <VBox alignment="CENTER" maxWidth="400.0" spacing="20">
+            <!-- Header -->
+            <VBox alignment="CENTER" spacing="10">
+                <Text styleClass="app-title" text="Study Buddy" />
+                <Text styleClass="app-subtitle" text="Learn Together, Grow Together" />
+            </VBox>
+            
+            <Text styleClass="section-title" text="Register New Account" />
+            
+            <!-- Form -->
+            <TextField id="nameInput" fx:id="nameInput" promptText="Full Name" styleClass="text-field" />
+            <TextField id="emailInput" fx:id="emailInput" promptText="Email Address" styleClass="text-field" />
+            <PasswordField id="passwordInput" fx:id="passwordInput" promptText="Password" styleClass="password-field" />
+            <PasswordField id="confirmPasswordInput" fx:id="confirmPasswordInput" promptText="Confirm Password" styleClass="password-field" />
+            
+            <!-- Buttons -->
+            <Button onAction="#onRegisterButtonClick" styleClass="primary-button" text="Register" />
+            <Button onAction="#onGoToRegistrationClick" styleClass="secondary-button" text="Already have account? Login" />
+            
+            <!-- Database placeholder note -->
+            <Text styleClass="placeholder-note" text="⚠️ Database integration pending" />
+        </VBox>
+    </center>
+</BorderPane>

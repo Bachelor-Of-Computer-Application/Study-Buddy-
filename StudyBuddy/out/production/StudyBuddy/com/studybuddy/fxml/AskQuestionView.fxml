@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:id="rootPane"
+            xmlns="http://javafx.com/javafx/17"
+            fx:controller="com.studybuddy.controllers.AskQuestionController"
+            styleClass="root-pane">
+
+    <top>
+        <HBox styleClass="header" alignment="CENTER_LEFT">
+            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="header-left">
+                <ImageView fx:id="logoImage" fitWidth="42" fitHeight="42" preserveRatio="true" styleClass="logo-image"/>
+                <Label text="Study Buddy" styleClass="header-title"/>
+            </HBox>
+
+            <HBox alignment="CENTER_RIGHT" spacing="12" styleClass="header-right">
+                <VBox alignment="CENTER" spacing="6" styleClass="nav-item">
+                    <Button fx:id="homeButton" onAction="#handleHome" styleClass="icon-button" text="⌂"/>
+                    <Label text="HOME" styleClass="nav-text"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="6" styleClass="nav-item">
+                    <Button fx:id="profileButton" onAction="#handleProfile" styleClass="icon-button" text="◉"/>
+                    <Label text="MY PROFILE" styleClass="nav-text"/>
+                </VBox>
+            </HBox>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox styleClass="content-container" alignment="TOP_CENTER" spacing="24">
+            <padding>
+                <Insets top="34" right="48" bottom="34" left="48"/>
+            </padding>
+
+            <Label fx:id="pageTitle" text="Ask a question about your assignment" styleClass="page-title"/>
+
+            <VBox styleClass="question-box" spacing="8">
+                <Label text="Write your question here" styleClass="question-heading"/>
+                <Label text="Keep it simple and clear to get the best answer" styleClass="question-subheading"/>
+                <TextArea fx:id="questionTextArea"
+                          wrapText="true"
+                          prefHeight="170"
+                          styleClass="question-text-area"/>
+            </VBox>
+
+            <HBox styleClass="toolbar" spacing="12" alignment="CENTER_LEFT">
+                <Button fx:id="attachmentButton" onAction="#handleAttachment" styleClass="toolbar-button" text="📎 Attach Subject Material"/>
+                <Button fx:id="toolsButton" onAction="#handleMath" styleClass="toolbar-button" text="🛠 Apply Special Tools"/>
+                <Button fx:id="filesButton" onAction="#handleSymbols" styleClass="toolbar-button" text="📎 Attach Relevant Files"/>
+            </HBox>
+
+            <HBox styleClass="bottom-controls" spacing="18" alignment="CENTER_LEFT">
+                <VBox spacing="8" styleClass="control-group subject-group">
+                    <Label text="Subject" styleClass="control-label"/>
+                    <ComboBox fx:id="subjectComboBox" prefWidth="360" promptText="Pick a subject" styleClass="rounded-combo-box" />
+                </VBox>
+
+                <VBox spacing="8" styleClass="control-group points-group">
+                    <Label text="Reward Points" styleClass="control-label"/>
+                    <ComboBox fx:id="rewardPointsComboBox" prefWidth="150" promptText="0" styleClass="rounded-combo-box" />
+                </VBox>
+
+                <VBox spacing="4" styleClass="points-display-group">
+                    <Label text="Your Points" styleClass="control-label"/>
+                    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="points-display">
+                        <Label text="115" styleClass="points-value"/>
+                        <Label text="points" styleClass="points-unit"/>
+                        <Label text="i" styleClass="points-info"/>
+                    </HBox>
+                </VBox>
+            </HBox>
+
+            <Button fx:id="submitButton"
+                    text="ASK YOUR QUESTION"
+                    onAction="#handleSubmit"
+                    styleClass="submit-button"
+                    prefWidth="320"
+                    prefHeight="58"/>
+        </VBox>
+    </center>
+</BorderPane>

@@ -36,21 +36,21 @@ public class AdminDAO {
         System.out.println("[DEBUG] DAO called");
         Map<String, Integer> stats = new LinkedHashMap<>();
         String[] queries = {
-            "SELECT COUNT(*) FROM Users",
-            "SELECT COUNT(*) FROM Notes WHERE status != 'Deleted'",
-            "SELECT COUNT(*) FROM Resources WHERE isActive = 1",
-            "SELECT COUNT(*) FROM Questions",
-            "SELECT COUNT(*) FROM Answers",
-            "SELECT COUNT(*) FROM Tasks",
-            "SELECT COUNT(*) FROM Users WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)",
-            "SELECT COUNT(*) FROM Notes WHERE CAST(uploadDate AS DATE) = CAST(GETDATE() AS DATE) AND status != 'Deleted'",
-            "SELECT COUNT(*) FROM Notes WHERE status = 'Pending'",
-            "SELECT COUNT(*) FROM Resources WHERE isActive = 0"
+                "SELECT COUNT(*) FROM Users",
+                "SELECT COUNT(*) FROM Notes WHERE status != 'Deleted'",
+                "SELECT COUNT(*) FROM Resources WHERE isActive = 1",
+                "SELECT COUNT(*) FROM Questions",
+                "SELECT COUNT(*) FROM Answers",
+                "SELECT COUNT(*) FROM Tasks",
+                "SELECT COUNT(*) FROM Users WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)",
+                "SELECT COUNT(*) FROM Notes WHERE CAST(uploadDate AS DATE) = CAST(GETDATE() AS DATE) AND status != 'Deleted'",
+                "SELECT COUNT(*) FROM Notes WHERE status = 'Pending'",
+                "SELECT COUNT(*) FROM Resources WHERE isActive = 0"
         };
         String[] keys = {
-            "totalUsers", "totalNotes", "totalResources", "totalQuestions",
-            "totalAnswers", "totalTasks", "newUsersToday", "uploadsToday",
-            "pendingNotes", "pendingResources"
+                "totalUsers", "totalNotes", "totalResources", "totalQuestions",
+                "totalAnswers", "totalTasks", "newUsersToday", "uploadsToday",
+                "pendingNotes", "pendingResources"
         };
 
         try (Connection conn = DatabaseUtil.getConnection()) {
@@ -204,7 +204,7 @@ public class AdminDAO {
     }
 
     public boolean updateUserInfo(int userId, String name, String email, String role,
-                                   String department, String semester) {
+                                  String department, String semester) {
         String sql = "UPDATE Users SET name=?, email=?, role=?, department=?, semester=? WHERE id=?";
         return executeUpdate(sql, ps -> {
             ps.setString(1, name); ps.setString(2, email); ps.setString(3, role);
