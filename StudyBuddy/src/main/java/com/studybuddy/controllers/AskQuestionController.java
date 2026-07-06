@@ -1,7 +1,6 @@
 package com.studybuddy.controllers;
 
 import com.studybuddy.services.QuestionService;
-import com.studybuddy.services.ResourceService;
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -83,13 +82,11 @@ public class AskQuestionController implements Initializable {
     private Button profileButton;
 
     private QuestionService questionService;
-    private ResourceService resourceService;
     private String selectedAttachmentPath = null;
 
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         questionService = new QuestionService();
-        resourceService = new ResourceService();
 
         loadSubjects();
         loadUserPoints();

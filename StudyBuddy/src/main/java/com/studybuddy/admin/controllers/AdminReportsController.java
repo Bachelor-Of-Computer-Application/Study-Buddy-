@@ -130,13 +130,17 @@ public class AdminReportsController {
     private void setupTables() {
         if (colUserName  != null) colUserName.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("name")));
-        if (colUserScore != null) colUserScore.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleIntegerProperty((int) data.getValue().get("score")).asObject());
+        if (colUserScore != null) colUserScore.setCellValueFactory(data -> {
+            Object val = data.getValue().get("score");
+            return new javafx.beans.property.SimpleIntegerProperty(val instanceof Number ? ((Number) val).intValue() : 0).asObject();
+        });
 
         if (colResTitle     != null) colResTitle.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("title")));
-        if (colResDownloads != null) colResDownloads.setCellValueFactory(data ->
-                new javafx.beans.property.SimpleIntegerProperty((int) data.getValue().get("downloads")).asObject());
+        if (colResDownloads != null) colResDownloads.setCellValueFactory(data -> {
+            Object val = data.getValue().get("downloads");
+            return new javafx.beans.property.SimpleIntegerProperty(val instanceof Number ? ((Number) val).intValue() : 0).asObject();
+        });
     }
 
     private void loadTableData() {
