@@ -1,5 +1,7 @@
 package com.studybuddy.models;
 
+import javafx.scene.image.Image;
+
 public class Category {
     private Integer id;
     private String name;
@@ -19,45 +21,20 @@ public class Category {
     }
 
     // Getters and Setters
-    public Integer getId() {
-        return id;
-    }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getIcon() { return icon; }
+    public void setIcon(String icon) { this.icon = icon; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
 
-    public String getIcon() {
-        return icon;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public Integer getNoteCount() {
-        return noteCount;
-    }
-
-    public void setNoteCount(Integer noteCount) {
-        this.noteCount = noteCount;
-    }
+    public Integer getNoteCount() { return noteCount; }
+    public void setNoteCount(Integer noteCount) { this.noteCount = noteCount; }
 
     @Override
     public String toString() {
