@@ -224,6 +224,8 @@ public class DashboardService {
         list.add(new Category(12, "Business",                "💼", "#0EA5E9", 312));
         list.add(new Category(13, "Programming",             "📝", "#A855F7", 456));
         list.add(new Category(14, "Medical",                 "⚕️", "#EF4444", 178));
+        list.add(new Category(16, "Software Engineering",   "🚀", "#3B82F6", 298));
+        list.add(new Category(17, "Management",              "📈", "#F43F5E", 185));
         list.add(new Category(15, "Others",                  "📚", "#9CA3AF", 267));
         return list;
     }
