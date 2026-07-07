@@ -54,7 +54,7 @@
                 <!-- Full Name -->
                 <VBox spacing="6">
                     <Label text="Full Name" styleClass="auth-field-label"/>
-                    <TextField fx:id="nameInput" promptText="Jane Doe"
+                    <TextField fx:id="nameInput" promptText="Your Name"
                                styleClass="auth-text-field" maxWidth="Infinity"/>
                 </VBox>
 
@@ -94,7 +94,7 @@
                 <Button text="Sign in instead" onAction="#onGoToRegistrationClick"
                         styleClass="auth-secondary-btn" maxWidth="Infinity"/>
 
-                <Label text="⚠  Database integration required for registration."
+                <Label text="registration."
                        styleClass="auth-note" wrapText="true"/>
             </VBox>
         </VBox>

@@ -329,9 +329,10 @@ public class AdminDAO {
                 r.setDownloads(rs.getInt("downloads"));
                 r.setActive(rs.getBoolean("isActive"));
                 // store uploader name in source as convenient carrier
-                String uploader = rs.getString("uploaderName");
-                if (uploader != null) r.setSource(uploader);
-                list.add(r);
+                System.out.println(
+                        "Resource: " + r.getTitle() +
+                                " | Uploader: " + r.getUploaderName()
+                );
             }
         } catch (SQLException e) {
             logger.warning("getAllResources failed: " + e.getMessage());

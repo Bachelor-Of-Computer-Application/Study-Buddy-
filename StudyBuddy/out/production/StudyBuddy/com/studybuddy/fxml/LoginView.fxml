@@ -85,7 +85,7 @@
                         styleClass="auth-secondary-btn" maxWidth="Infinity"/>
 
                 <!-- Note -->
-                <Label text="⚠  Database authentication required to sign in."
+                <Label text="sign in."
                        styleClass="auth-note" wrapText="true"/>
             </VBox>
         </VBox>

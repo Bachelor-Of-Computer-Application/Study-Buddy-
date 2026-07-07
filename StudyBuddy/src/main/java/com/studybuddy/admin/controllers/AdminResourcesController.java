@@ -191,7 +191,7 @@ public class AdminResourcesController {
         if (colId        != null) colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         if (colTitle     != null) colTitle.setCellValueFactory(new PropertyValueFactory<>("title"));
         if (colSubject   != null) colSubject.setCellValueFactory(new PropertyValueFactory<>("subject"));
-        if (colUploader  != null) colUploader.setCellValueFactory(new PropertyValueFactory<>("source"));
+        if (colUploader != null) { colUploader.setCellValueFactory(new PropertyValueFactory<>("uploaderName"));}
         if (colDownloads != null) colDownloads.setCellValueFactory(new PropertyValueFactory<>("downloads"));
         if (colDate      != null) colDate.setCellValueFactory(new PropertyValueFactory<>("uploadDate"));
         if (colStatus    != null) colStatus.setCellValueFactory(cellData ->
