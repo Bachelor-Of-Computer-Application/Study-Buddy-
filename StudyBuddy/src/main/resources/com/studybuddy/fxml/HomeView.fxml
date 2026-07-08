@@ -23,17 +23,15 @@
             <padding><Insets bottom="20" left="14" right="14" top="20" /></padding>
 
             <!-- Brand -->
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <ImageView fitHeight="42" fitWidth="42" preserveRatio="true">
+            <VBox spacing="6" styleClass="sidebar-brand-header">
+                <ImageView fitWidth="150" fitHeight="50" preserveRatio="true" smooth="true" cache="true"
+                           styleClass="app-brand-logo">
                     <image>
-                        <Image url="@../images/main_logo_study_buddyy.png" />
+                        <Image url="@../images/main_logo_study_buddyy.png"/>
                     </image>
                 </ImageView>
-                <VBox spacing="1">
-                    <Text styleClass="sidebar-title" text="Study Buddy" />
-                    <Label styleClass="sidebar-brand-sub" text="Student Platform" />
-                </VBox>
-            </HBox>
+                <Label styleClass="sidebar-brand-sub" text="Student Platform"/>
+            </VBox>
 
             <Separator styleClass="sidebar-sep">
                 <VBox.margin><Insets bottom="4" top="8" /></VBox.margin>

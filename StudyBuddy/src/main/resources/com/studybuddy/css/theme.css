@@ -25,6 +25,19 @@
     sb-sidebar:        #0f172a;
 }
 
+/* ── Application branding logo (150×50, consistent across all screens) ─ */
+.app-brand-logo {
+    -fx-fit-width:  150;
+    -fx-fit-height: 50;
+}
+.sidebar-brand-header {
+    -fx-spacing: 6;
+    -fx-padding: 16 0 12 0;
+}
+.auth-left-panel .app-brand-logo {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.25), 12, 0, 0, 4);
+}
+
 /* ── Page Background ─────────────────────────────────────────────────── */
 .root-pane {
     -fx-background-color: #f8fafc;

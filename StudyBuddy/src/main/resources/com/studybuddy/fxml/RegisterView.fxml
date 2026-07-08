@@ -23,14 +23,14 @@
         <VBox alignment="CENTER" spacing="24" styleClass="auth-left-panel">
             <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
 
-            <ImageView fitHeight="72" fitWidth="72" preserveRatio="true" styleClass="auth-logo-image">
+            <ImageView fitWidth="150" fitHeight="50" preserveRatio="true" smooth="true" cache="true"
+                       styleClass="auth-logo-image app-brand-logo">
                 <image>
                     <Image url="@../images/main_logo_study_buddyy.png"/>
                 </image>
             </ImageView>
 
             <VBox alignment="CENTER" spacing="10">
-                <Label text="Study Buddy" styleClass="auth-brand-title"/>
                 <Label styleClass="auth-brand-sub"
                        text="Join thousands of students learning smarter together."
                        wrapText="true"/>

@@ -20,14 +20,8 @@
 }
 
 /* Brand area */
-.sidebar-brand-icon {
-    -fx-font-size: 28px;
-}
-.sidebar-title {
-    -fx-font-size:   17px;
-    -fx-font-weight: bold;
-    -fx-fill:        #ffffff;
-    -fx-font-family: "Segoe UI";
+.sidebar-brand-header {
+    -fx-padding: 16 0 12 0;
 }
 .sidebar-brand-sub {
     -fx-font-size: 10px;

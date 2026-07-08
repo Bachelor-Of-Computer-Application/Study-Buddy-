@@ -17,14 +17,14 @@
     <VBox styleClass="login-left-panel" alignment="CENTER" spacing="20" HBox.hgrow="SOMETIMES">
         <padding><Insets top="60" right="50" bottom="60" left="50"/></padding>
 
-        <ImageView fitHeight="72" fitWidth="72" preserveRatio="true">
+        <ImageView fitWidth="150" fitHeight="50" preserveRatio="true" smooth="true" cache="true"
+                   styleClass="app-brand-logo">
             <image>
                 <Image url="@../../images/main_logo_study_buddyy.png"/>
             </image>
         </ImageView>
 
         <VBox spacing="8" alignment="CENTER">
-            <Label text="StudyBuddy" styleClass="branding-title"/>
             <Label text="Administration Portal" styleClass="branding-tagline"/>
         </VBox>
 

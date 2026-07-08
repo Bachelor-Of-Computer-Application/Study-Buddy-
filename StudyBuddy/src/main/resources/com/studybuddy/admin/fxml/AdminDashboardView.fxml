@@ -20,18 +20,15 @@
             <padding><Insets top="20" right="14" bottom="20" left="14"/></padding>
 
             <!-- Brand -->
-            <HBox styleClass="brand-box" spacing="10" alignment="CENTER_LEFT">
-                <padding><Insets bottom="4"/></padding>
-                <ImageView fitHeight="42" fitWidth="42" preserveRatio="true">
+            <VBox spacing="6" styleClass="brand-box sidebar-brand-header">
+                <ImageView fitWidth="150" fitHeight="50" preserveRatio="true" smooth="true" cache="true"
+                           styleClass="app-brand-logo">
                     <image>
                         <Image url="@../../images/main_logo_study_buddyy.png"/>
                     </image>
                 </ImageView>
-                <VBox spacing="1">
-                    <Label text="StudyBuddy" styleClass="brand-title"/>
-                    <Label text="Admin Panel" styleClass="brand-subtitle"/>
-                </VBox>
-            </HBox>
+                <Label text="Admin Panel" styleClass="brand-subtitle"/>
+            </VBox>
 
             <Separator styleClass="sidebar-separator"/>
 

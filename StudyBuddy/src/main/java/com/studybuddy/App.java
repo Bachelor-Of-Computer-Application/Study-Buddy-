@@ -4,7 +4,10 @@ import com.studybuddy.dao.DatabaseConnection;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.SceneManager;
 import javafx.application.Application;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
+import java.util.Objects;
 
 /**
  * Main application class extending Application to manage JavaFX life cycle.
@@ -32,6 +35,12 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
+        stage.getIcons().add(new Image(
+                Objects.requireNonNull(
+                        getClass().getResourceAsStream("/com/studybuddy/images/main_logo_study_buddyy.png")
+                )
+        ));
+
         // Attempt database connection — failure must NOT prevent the UI from showing
         try {
             DatabaseConnection.initialize();

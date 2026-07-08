@@ -2,11 +2,20 @@ package com.studybuddy.admin;
 
 import com.studybuddy.admin.utils.AdminSceneManager;
 import javafx.application.Application;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
+import java.util.Objects;
 
 public class AdminApp extends Application {
     @Override
     public void start(Stage stage) {
+        stage.getIcons().add(new Image(
+                Objects.requireNonNull(
+                        getClass().getResourceAsStream("/com/studybuddy/images/main_logo_study_buddyy.png")
+                )
+        ));
+
         AdminSceneManager.setPrimaryStage(stage);
         AdminSceneManager.showLoginPage(stage);
     }
