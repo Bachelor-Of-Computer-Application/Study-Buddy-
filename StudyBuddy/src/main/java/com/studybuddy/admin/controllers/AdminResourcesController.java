@@ -55,14 +55,24 @@ public class AdminResourcesController {
     }
 
     private void loadData() {
-        masterList.setAll(adminService.getResources());
+        List<Resource> resources = adminService.getResources();
+
+        System.out.println("Resources loaded: " + resources.size());
+
+        for (Resource r : resources) {
+            System.out.println(r.getId() + " | " + r.getTitle() + " | " + r.isActive());
+        }
+
+        masterList.setAll(resources);
         filteredList = new ArrayList<>(masterList);
-        currentPage  = 1;
+        currentPage = 1;
         updateTable();
     }
 
-    @FXML public void handleRefresh() { loadData(); }
-
+    @FXML
+    public void handleRefresh() {
+        loadData();
+    }
     // ── Filtering ─────────────────────────────────────────────────────────────
 
     @FXML

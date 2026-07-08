@@ -304,39 +304,65 @@ public class AdminDAO {
 
     public List<Resource> getAllResources() {
         List<Resource> list = new ArrayList<>();
+
         String sql = """
-                SELECT r.*, u.name AS uploaderName
-                FROM Resources r
-                LEFT JOIN Users u ON r.uploadedBy = u.id
-                ORDER BY r.uploadDate DESC
-                """;
+        SELECT
+            r.id,
+            r.noteId,
+            r.uploadedBy,
+            u.name AS uploadedByName,
+            r.title,
+            r.subject,
+            r.source,
+            r.description,
+            r.uploadDate,
+            r.filePath,
+            r.fileType,
+            r.downloads,
+            r.isActive,
+            r.status
+        FROM Resources r
+        LEFT JOIN Users u
+            ON r.uploadedBy = u.id
+        ORDER BY r.uploadDate DESC
+        """;
+
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 Resource r = new Resource();
+
                 r.setId(rs.getInt("id"));
-                int noteIdVal = rs.getInt("noteId");
-                r.setNoteId(rs.wasNull() ? null : noteIdVal);
+
+                int noteId = rs.getInt("noteId");
+                r.setNoteId(rs.wasNull() ? null : noteId);
+
                 r.setUploadedBy(rs.getInt("uploadedBy"));
+                r.setUploaderName(rs.getString("uploadedByName"));
+
                 r.setTitle(rs.getString("title"));
                 r.setSubject(rs.getString("subject"));
                 r.setSource(rs.getString("source"));
                 r.setDescription(rs.getString("description"));
-                r.setUploadDate(rs.getTimestamp("uploadDate") != null ? rs.getTimestamp("uploadDate").toString() : "");
+
+                Timestamp ts = rs.getTimestamp("uploadDate");
+                r.setUploadDate(ts != null ? ts.toString() : "");
+
                 r.setFilePath(rs.getString("filePath"));
                 r.setFileType(rs.getString("fileType"));
+
                 r.setDownloads(rs.getInt("downloads"));
                 r.setActive(rs.getBoolean("isActive"));
-                // store uploader name in source as convenient carrier
-                System.out.println(
-                        "Resource: " + r.getTitle() +
-                                " | Uploader: " + r.getUploaderName()
-                );
+
+                list.add(r);
             }
+
         } catch (SQLException e) {
             logger.warning("getAllResources failed: " + e.getMessage());
         }
+
         return list;
     }
 
