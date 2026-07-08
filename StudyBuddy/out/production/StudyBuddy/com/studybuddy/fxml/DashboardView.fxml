@@ -160,6 +160,8 @@
 
                         <!-- Filter row -->
                         <HBox alignment="CENTER_LEFT" spacing="10">
+                            <ComboBox fx:id="departmentComboBox" prefWidth="160" promptText="Choose Department" styleClass="filter-combo"/>
+                            <ComboBox fx:id="semesterComboBox" prefWidth="140" promptText="Choose Semester" styleClass="filter-combo"/>
                             <ComboBox fx:id="subjectComboBox" prefWidth="175" promptText="Choose Subject" styleClass="filter-combo"/>
                             <ComboBox fx:id="sortComboBox" prefWidth="145" promptText="Sort By" styleClass="filter-combo"/>
                             <TextField fx:id="noteSearchField" prefWidth="200" promptText="🔍  Search library notes…" styleClass="search-field"/>

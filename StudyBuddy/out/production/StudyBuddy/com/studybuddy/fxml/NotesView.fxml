@@ -43,6 +43,16 @@
                         <Label text="FILTER LIBRARY" styleClass="filter-label"/>
                         <HBox alignment="CENTER_LEFT" spacing="12">
                             <VBox spacing="5">
+                                <Label text="Department" styleClass="filter-label"/>
+                                <ComboBox fx:id="departmentFilter" prefWidth="180"
+                                          promptText="All Departments" styleClass="field-box"/>
+                            </VBox>
+                            <VBox spacing="5">
+                                <Label text="Semester" styleClass="filter-label"/>
+                                <ComboBox fx:id="semesterFilter" prefWidth="140"
+                                          promptText="All Semesters" styleClass="field-box"/>
+                            </VBox>
+                            <VBox spacing="5">
                                 <Label text="Subject" styleClass="filter-label"/>
                                 <ComboBox fx:id="subjectFilter" prefWidth="220"
                                           promptText="All Subjects" styleClass="field-box"/>

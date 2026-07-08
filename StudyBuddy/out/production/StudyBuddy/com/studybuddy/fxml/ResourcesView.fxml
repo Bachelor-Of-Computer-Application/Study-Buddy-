@@ -41,11 +41,15 @@
                 </HBox>
 
                 <!-- Filter bar -->
-                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="filter-bar">
+                <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
                     <TextField fx:id="searchField" promptText="🔍  Search resources by title…"
-                               prefWidth="240" styleClass="search-field"/>
-                    <ComboBox fx:id="subjectFilter" promptText="Filter by Subject"
-                              prefWidth="175" styleClass="combo-box"/>
+                               prefWidth="220" styleClass="search-field"/>
+                    <ComboBox fx:id="departmentFilter" promptText="Department"
+                              prefWidth="155" styleClass="combo-box"/>
+                    <ComboBox fx:id="semesterFilter" promptText="Semester"
+                              prefWidth="130" styleClass="combo-box"/>
+                    <ComboBox fx:id="subjectFilter" promptText="Subject"
+                              prefWidth="155" styleClass="combo-box"/>
                     <Button onAction="#applyFilters" text="Search"
                             styleClass="save-button"/>
                     <Button onAction="#clearFilters" text="Reset"

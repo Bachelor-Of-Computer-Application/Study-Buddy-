@@ -20,14 +20,16 @@
     </HBox>
 
     <!-- Filter Bar -->
-    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
+    <FlowPane hgap="8" vgap="8" alignment="CENTER_LEFT" styleClass="filter-bar">
         <TextField fx:id="searchField" promptText="🔍  Search title, subject, uploader…"
-                   styleClass="search-field" prefWidth="260"/>
-        <ComboBox fx:id="subjectFilter" promptText="Subject" styleClass="combo-box" prefWidth="160"/>
-        <ComboBox fx:id="statusFilter"  promptText="Status"  styleClass="combo-box" prefWidth="130"/>
+                   styleClass="search-field" prefWidth="240"/>
+        <ComboBox fx:id="departmentFilter" promptText="Department" styleClass="combo-box" prefWidth="140"/>
+        <ComboBox fx:id="semesterFilter"   promptText="Semester"   styleClass="combo-box" prefWidth="120"/>
+        <ComboBox fx:id="subjectFilter"    promptText="Subject"    styleClass="combo-box" prefWidth="140"/>
+        <ComboBox fx:id="statusFilter"     promptText="Status"     styleClass="combo-box" prefWidth="120"/>
         <Button text="Filter" styleClass="primary-btn" onAction="#applyFilters"/>
         <Button text="Clear"  styleClass="secondary-btn" onAction="#clearFilters"/>
-    </HBox>
+    </FlowPane>
 
     <!-- Resources Table (sortable by Downloads) -->
     <TableView fx:id="resourcesTable" VBox.vgrow="ALWAYS" styleClass="table-view">
