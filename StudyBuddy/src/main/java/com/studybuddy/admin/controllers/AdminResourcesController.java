@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class AdminResourcesController {
 
     @FXML private TextField        searchField;
-    @FXML private ComboBox<String> subjectFilter;
+    @FXML private ComboBox<String> subjectFilter;/
     @FXML private ComboBox<String> statusFilter;
 
     @FXML private TableView<Resource>              resourcesTable;
