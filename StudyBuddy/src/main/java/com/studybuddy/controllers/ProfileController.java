@@ -1,8 +1,14 @@
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
+import com.studybuddy.models.Department;
+import com.studybuddy.models.Semester;
 import com.studybuddy.models.User;
+import com.studybuddy.models.UserActivity;
+import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.StatisticsService;
 import com.studybuddy.services.UserService;
+import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.ValidationUtil;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -15,6 +21,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.net.URL;
+import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +59,8 @@ public class ProfileController {
     @FXML private TextField usernameField;
     @FXML private TextField phoneNumberField;
     @FXML private TextArea bioField;
-    @FXML private TextField departmentField;
-    @FXML private ComboBox<String> semesterCombo;
+    @FXML private ComboBox<Department> departmentField;
+    @FXML private ComboBox<Semester> semesterCombo;
     @FXML private Label avatarPathLabel;
 
     // Study Interests Tab
@@ -78,6 +85,10 @@ public class ProfileController {
     @FXML private ListView<String> activityListView;
 
     private final UserService userService = new UserService();
+    private final StatisticsService statsService = new StatisticsService();
+    private final AcademicService academicService = AcademicService.getInstance();
+    private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
+    private final com.studybuddy.services.TaskService taskService = new com.studybuddy.services.TaskService();
     private User currentUser;
     private File selectedAvatarFile;
 
@@ -104,14 +115,81 @@ public class ProfileController {
             currentUser = null;
         }
 
-        // Initialize Semester Combo Box
-        semesterCombo.setItems(FXCollections.observableArrayList(
-                "Semester 1", "Semester 2", "Semester 3", "Semester 4",
-                "Semester 5", "Semester 6", "Semester 7", "Semester 8"
-        ));
+        // Initialize Department Combo Box with real departments from database
+        try {
+            departmentField.setItems(FXCollections.observableArrayList(academicService.getAllActiveDepartments()));
+        } catch (Exception e) {
+            System.err.println("Failed to load departments: " + e.getMessage());
+        }
+        
+        // Set cell factory for department ComboBox
+        departmentField.setCellFactory(param -> new javafx.scene.control.ListCell<Department>() {
+            @Override
+            protected void updateItem(Department item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getName());
+            }
+        });
+        departmentField.setButtonCell(new javafx.scene.control.ListCell<Department>() {
+            @Override
+            protected void updateItem(Department item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getName());
+            }
+        });
+        
+        // Set cell factory for semester ComboBox
+        semesterCombo.setCellFactory(param -> new javafx.scene.control.ListCell<Semester>() {
+            @Override
+            protected void updateItem(Semester item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getName());
+            }
+        });
+        semesterCombo.setButtonCell(new javafx.scene.control.ListCell<Semester>() {
+            @Override
+            protected void updateItem(Semester item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getName());
+            }
+        });
+
+        // Initialize Semester Combo Box: load semesters when department is selected
+        semesterCombo.setDisable(true);
+        departmentField.setOnAction(e -> {
+            Department selectedDept = departmentField.getValue();
+            semesterCombo.getItems().clear();
+            semesterCombo.setValue(null);
+            semesterCombo.setDisable(selectedDept == null);
+            if (selectedDept != null) {
+                try {
+                    semesterCombo.setItems(FXCollections.observableArrayList(academicService.getSemestersByDepartment(selectedDept.getId())));
+                } catch (Exception ex) {
+                    System.err.println("Failed to load semesters: " + ex.getMessage());
+                }
+            }
+        });
 
         loadProfileData();
         loadActivityLog();
+        
+        // Subscribe to EventBus events
+        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> {
+            loadProfileData();
+            loadActivityLog();
+        });
+        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (_event) -> {
+            loadProfileData();
+            loadActivityLog();
+        });
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> {
+            loadProfileData();
+            loadActivityLog();
+        });
+        EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> {
+            loadProfileData();
+            loadActivityLog();
+        });
     }
 
     private void loadProfileData() {
@@ -139,11 +217,19 @@ public class ProfileController {
         ovInterests.setText(currentUser.getPreferredSubjects() != null ? currentUser.getPreferredSubjects() : "-");
 
         // Stats Labels
-        statNotesCreated.setText("4"); // Mock stats for display
-        statResourcesUploaded.setText(String.valueOf(currentUser.getAchievements())); 
-        statQuestionsAsked.setText(String.valueOf(currentUser.getQuestionsCount()));
-        statAnswersPosted.setText(String.valueOf(currentUser.getAnswersCount()));
-        statStudyHours.setText("12.5h");
+        try {
+            statNotesCreated.setText(String.valueOf(statsService.getNotesUploaded(currentUser.getId())));
+            statResourcesUploaded.setText(String.valueOf(statsService.getResourcesUploaded(currentUser.getId())));
+            statQuestionsAsked.setText(String.valueOf(statsService.getQuestionsAsked(currentUser.getId())));
+            statAnswersPosted.setText(String.valueOf(statsService.getAnswersSubmitted(currentUser.getId())));
+        } catch (SQLException e) {
+            statNotesCreated.setText("0");
+            statResourcesUploaded.setText("0");
+            statQuestionsAsked.setText("0");
+            statAnswersPosted.setText("0");
+        }
+        double studyHours = taskService.getStudyHours(currentUser.getId());
+        statStudyHours.setText(String.format("%.1fh", studyHours));
         statAchievements.setText(String.valueOf(currentUser.getAchievements()));
 
         // Populate Edit Profile Fields
@@ -151,8 +237,34 @@ public class ProfileController {
         usernameField.setText(currentUser.getUsername());
         phoneNumberField.setText(currentUser.getPhoneNumber());
         bioField.setText(currentUser.getBio());
-        departmentField.setText(currentUser.getDepartment());
-        semesterCombo.setValue(currentUser.getSemester());
+        
+        // Set department and semester from database
+        if (currentUser.getDepartment() != null) {
+            // Find the Department object with matching name
+            for (Department dept : departmentField.getItems()) {
+                if (dept.getName().equals(currentUser.getDepartment())) {
+                    departmentField.setValue(dept);
+                    // Load semesters for this department
+                    try {
+                        semesterCombo.setItems(FXCollections.observableArrayList(academicService.getSemestersByDepartment(dept.getId())));
+                        semesterCombo.setDisable(false);
+                        
+                        // Find the Semester object with matching name
+                        if (currentUser.getSemester() != null) {
+                            for (Semester sem : semesterCombo.getItems()) {
+                                if (sem.getName().equals(currentUser.getSemester())) {
+                                    semesterCombo.setValue(sem);
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    } catch (Exception e) {
+                        System.err.println("Failed to load semesters: " + e.getMessage());
+                    }
+                }
+            }
+        }
 
         // Populate Study Interests Fields
         preferredSubjectsField.setText(currentUser.getPreferredSubjects());
@@ -179,12 +291,49 @@ public class ProfileController {
 
     private void loadActivityLog() {
         List<String> activities = new ArrayList<>();
-        activities.add("Logged in successfully (Today, 09:15 AM)");
-        activities.add("Opened 'Computer Architecture' notes (Today, 10:02 AM)");
-        activities.add("Asked community question: 'How to normalize tables?' (Yesterday, 04:30 PM)");
-        activities.add("Uploaded note 'Physics Unit 3 Guide' for review (2 days ago)");
-        activities.add("Completed study session - 2.5 hours (3 days ago)");
+        if (currentUser != null) {
+            try {
+                List<UserActivity> userActivities = activityDAO.getUserActivities(currentUser.getId(), 20);
+                for (UserActivity activity : userActivities) {
+                    String displayText = String.format(
+                        "%s (%s)",
+                        formatActivityText(activity),
+                        activity.getCreatedAt() != null ? activity.getCreatedAt().format(DateTimeFormatter.ofPattern("MMM dd, HH:mm")) : "N/A"
+                    );
+                    activities.add(displayText);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                activities.add("Failed to load activity log");
+            }
+        }
+        if (activities.isEmpty()) {
+            activities.add("No recent activity");
+        }
         activityListView.setItems(FXCollections.observableArrayList(activities));
+    }
+
+    private String formatActivityText(UserActivity activity) {
+        String action = activity.getAction();
+        String targetType = activity.getTargetType();
+        String targetName = activity.getTargetName();
+        
+        switch (action) {
+            case "UPLOAD_NOTE":
+                return String.format("Uploaded note: '%s'", targetName);
+            case "UPLOAD_RESOURCE":
+                return String.format("Uploaded resource: '%s'", targetName);
+            case "ASK_QUESTION":
+                return String.format("Asked question: '%s'", targetName);
+            case "SUBMIT_ANSWER":
+                return String.format("Answered question: '%s'", targetName);
+            case "APPROVE_NOTE":
+                return String.format("Approved note: '%s'", targetName);
+            case "REJECT_NOTE":
+                return String.format("Rejected note: '%s'", targetName);
+            default:
+                return String.format("%s: %s", action, targetName);
+        }
     }
 
     @FXML
@@ -220,8 +369,8 @@ public class ProfileController {
         currentUser.setUsername(uname);
         currentUser.setPhoneNumber(phoneNumberField.getText().trim());
         currentUser.setBio(bioField.getText().trim());
-        currentUser.setDepartment(departmentField.getText().trim());
-        currentUser.setSemester(semesterCombo.getValue());
+        currentUser.setDepartment(departmentField.getValue() != null ? departmentField.getValue().getName() : "");
+        currentUser.setSemester(semesterCombo.getValue() != null ? semesterCombo.getValue().getName() : null);
 
         if (selectedAvatarFile != null) {
             currentUser.setProfileImagePath(

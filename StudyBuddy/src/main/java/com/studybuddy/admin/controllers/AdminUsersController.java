@@ -7,11 +7,16 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -245,6 +250,32 @@ public class AdminUsersController {
         if (confirm("Demote " + u.getName() + " to Student?")) {
             boolean ok = adminService.demoteToUser(u.getId(), u.getName());
             if (ok) { u.setRole("STUDENT"); usersTable.refresh(); }
+        }
+    }
+
+    @FXML
+    public void handleView() {
+        User u = selectedUser(); if (u == null) return;
+        
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/admin/fxml/AdminUserDetailsDialog.fxml"));
+            Parent root = loader.load();
+            
+            AdminUserDetailsController controller = loader.getController();
+            controller.setUserId(u.getId());
+            
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("User Details");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(usersTable.getScene().getWindow());
+            dialogStage.setScene(new Scene(root));
+            
+            controller.setDialogStage(dialogStage);
+            
+            dialogStage.showAndWait();
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Failed to load user details dialog: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

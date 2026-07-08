@@ -32,18 +32,30 @@ public class QuestionDAO {
      * SQL column names match the schema: user_id, subject, question_text,
      * attachment_path, reward_points, author_name
      */
-    public boolean createQuestion(int userId, String text, String subject, int points, String attachment) throws SQLException {
+    /**
+     * Creates a question with an optional subjectId FK referencing the Subjects table.
+     * subjectId = 0 is treated as NULL (backward-compatible with questions created before
+     * the hierarchy migration).
+     */
+    public boolean createQuestion(int userId, String text, String subject,
+                                  int subjectId, int points, String attachment) throws SQLException {
         String sql = "INSERT INTO Questions " +
-                "(user_id, subject, question_text, attachment_path, reward_points, created_at, votes, views, is_locked) " +
-                "VALUES (?, ?, ?, ?, ?, GETDATE(), 0, 0, 0)";
+                "(user_id, subject, subjectId, question_text, attachment_path, reward_points, created_at, votes, views, is_locked) " +
+                "VALUES (?, ?, ?, ?, ?, ?, GETDATE(), 0, 0, 0)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, subject);
-            stmt.setString(3, text);
-            stmt.setString(4, attachment);
-            stmt.setInt(5, points);
+            // NULL when no subject was chosen (backward-compatible)
+            if (subjectId > 0) {
+                stmt.setInt(3, subjectId);
+            } else {
+                stmt.setNull(3, java.sql.Types.INTEGER);
+            }
+            stmt.setString(4, text);
+            stmt.setString(5, attachment != null ? attachment : "");
+            stmt.setInt(6, points);
             return stmt.executeUpdate() > 0;
         }
     }
@@ -58,10 +70,13 @@ public class QuestionDAO {
      * SQL PK is question_id — aliased to "id" in the result set.
      */
     public List<Question> getAllQuestions() throws SQLException {
-        // question_id aliased as id — matches mapQuestion() which reads rs.getInt("id")
+        // question_id aliased as id — matches mapQuestion() which reads rs.getInt("id").
+        // subjectId is selected so the model is fully populated after the hierarchy migration.
         String sql = "SELECT q.question_id AS id, q.user_id, " +
                 "COALESCE(u.name, u.email, 'Unknown User') AS author_name, " +
-                "q.subject, q.question_text, COALESCE(q.tags, '') AS tags, q.attachment_path, " +
+                "u.name, u.fullName, u.department, u.semester, " +
+                "q.subject, q.subjectId, q.question_text, COALESCE(q.tags, '') AS tags, " +
+                "q.attachment_path, " +
                 "q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(10), q.created_at, 120) AS created_at, " +
                 "COALESCE(q.is_locked, 0) AS is_locked " +
@@ -96,6 +111,7 @@ public class QuestionDAO {
         // question_id aliased as id — matches mapQuestion()
         String sql = "SELECT q.question_id AS id, q.user_id, " +
                 "COALESCE(u.name, u.email, 'Unknown User') AS author_name, " +
+                "u.name, u.fullName, u.department, u.semester, " +
                 "q.subject, q.question_text, COALESCE(q.tags, '') AS tags, q.attachment_path, " +
                 "q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(10), q.created_at, 120) AS created_at, " +
@@ -142,6 +158,7 @@ public class QuestionDAO {
         // question_id aliased as id; WHERE filters on q.question_id (the actual PK)
         String sql = "SELECT TOP (?) q.question_id AS id, q.user_id, " +
                 "COALESCE(u.name, u.email, 'Unknown User') AS author_name, " +
+                "u.name, u.fullName, u.department, u.semester, " +
                 "q.subject, q.question_text, COALESCE(q.tags, '') AS tags, q.attachment_path, " +
                 "q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(10), q.created_at, 120) AS created_at, " +
@@ -351,18 +368,28 @@ public class QuestionDAO {
     // =========================
 
     /**
-     * Returns all distinct subjects from Notes and Questions tables.
+     * Returns all distinct, active subject names from the canonical Subjects table.
+     * These names are guaranteed to match the subject strings stored in Notes and
+     * Questions because CreateNoteController / AskQuestionController always write
+     * Subject.getName() into those columns.
+     *
+     * Falls back to a UNION of Notes/Questions subjects for backward-compatibility
+     * with rows that were created before the hierarchy migration.
      */
     public List<String> getAvailableSubjects() throws SQLException {
-        String sql = "SELECT DISTINCT subject FROM Notes WHERE subject IS NOT NULL " +
-                "UNION " +
-                "SELECT DISTINCT subject FROM Questions WHERE subject IS NOT NULL " +
-                "ORDER BY subject";
+        String sql =
+            "SELECT name AS subject FROM Subjects WHERE isActive = 1 " +
+            "UNION " +
+            "SELECT DISTINCT subject FROM Notes WHERE subject IS NOT NULL AND subject NOT IN (SELECT name FROM Subjects WHERE isActive = 1) " +
+            "UNION " +
+            "SELECT DISTINCT subject FROM Questions WHERE subject IS NOT NULL AND subject NOT IN (SELECT name FROM Subjects WHERE isActive = 1) " +
+            "ORDER BY subject";
+
         List<String> subjects = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 subjects.add(rs.getString("subject"));
             }
@@ -439,7 +466,7 @@ public class QuestionDAO {
      * Reads column alias "id" which is question_id aliased in SELECT.
      */
     private Question mapQuestion(ResultSet rs) throws SQLException {
-        return new Question(
+        Question q = new Question(
                 rs.getInt("id"),              // aliased from question_id
                 rs.getInt("user_id"),
                 rs.getString("author_name"),
@@ -453,6 +480,40 @@ public class QuestionDAO {
                 rs.getString("created_at"),
                 rs.getBoolean("is_locked")
         );
+        // subjectId — only present after hierarchy migration; guard against missing column
+        try {
+            int subjectId = rs.getInt("subjectId");
+            if (!rs.wasNull()) {
+                q.setSubjectId(subjectId);
+            }
+        } catch (SQLException ignored) {
+            // Column not yet present in this DB — backward compatible
+        }
+
+        // Load user info (full name, department, semester)
+        try {
+            String fullName = rs.getString("fullName");
+            if (fullName == null || fullName.isEmpty()) {
+                fullName = rs.getString("name"); // Fallback to name field
+            }
+            q.setUserFullName(fullName != null ? fullName : "Unknown User");
+        } catch (SQLException ignored) {
+            q.setUserFullName("Unknown User");
+        }
+
+        try {
+            q.setUserDepartment(rs.getString("department"));
+        } catch (SQLException ignored) {
+            q.setUserDepartment(null);
+        }
+
+        try {
+            q.setUserSemester(rs.getString("semester"));
+        } catch (SQLException ignored) {
+            q.setUserSemester(null);
+        }
+
+        return q;
     }
 
     // =========================

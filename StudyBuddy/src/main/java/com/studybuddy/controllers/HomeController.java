@@ -8,6 +8,7 @@ import com.studybuddy.admin.services.NotificationService;
 import com.studybuddy.services.AuthService;
 import com.studybuddy.services.TaskService;
 import com.studybuddy.utils.SceneManager;
+import com.studybuddy.controllers.ProfileController;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,7 +22,6 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
-import java.util.List;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -30,7 +30,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
 import java.util.List;
 
 /**

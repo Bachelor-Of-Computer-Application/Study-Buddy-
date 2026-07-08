@@ -38,12 +38,8 @@ public class DatabaseConnection {
     // ── Connection configuration ──────────────────────────────────────────────
 
     private static final String DB_URL =
-            "jdbc:sqlserver://localhost:1433;" +
-            "databaseName=StudyBuddy;" +
-            "encrypt=true;" +
-            "trustServerCertificate=true;";
-
-    private static final String DB_USER     = "studybuddy";
+            "jdbc:sqlserver://localhost:1433;databaseName=StudyBuddy;encrypt=true;trustServerCertificate=true;";
+    private static final String DB_USER = "studybuddy";
     private static final String DB_PASSWORD = "StudyBuddy123";
 
     // ── Public API ────────────────────────────────────────────────────────────

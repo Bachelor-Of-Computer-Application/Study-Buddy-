@@ -69,7 +69,7 @@ public class AdminService {
     // ══════════════════════════════════════════════════════════════════════════
 
     public Map<String, Integer> getDashboardStats() {
-        System.out.println("[DEBUG] Service called");
+
         return adminDAO.getDashboardStats();
     }
 
@@ -90,6 +90,13 @@ public class AdminService {
     // ══════════════════════════════════════════════════════════════════════════
 
     public List<User> getUsers() { return adminDAO.getAllUsers(); }
+    public User getUserById(int userId) { return adminDAO.getUserById(userId); }
+    public int getUserTotalNotes(int userId) { return adminDAO.getUserTotalNotes(userId); }
+    public int getUserTotalResources(int userId) { return adminDAO.getUserTotalResources(userId); }
+    public int getUserTotalQuestions(int userId) { return adminDAO.getUserTotalQuestions(userId); }
+    public List<Note> getUserRecentNotes(int userId, int limit) { return adminDAO.getUserRecentNotes(userId, limit); }
+    public List<Resource> getUserRecentResources(int userId, int limit) { return adminDAO.getUserRecentResources(userId, limit); }
+    public List<Map<String, Object>> getUserApprovalHistory(int userId, int limit) { return adminDAO.getUserApprovalHistory(userId, limit); }
 
     public List<User> searchUsers(String query) { return adminDAO.searchUsers(query); }
 

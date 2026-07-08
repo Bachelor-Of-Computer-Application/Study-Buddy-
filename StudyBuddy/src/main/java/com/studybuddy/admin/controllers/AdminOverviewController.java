@@ -4,6 +4,7 @@ import com.studybuddy.admin.services.AdminService;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.User;
+import com.studybuddy.utils.EventBus;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.chart.PieChart;
@@ -13,6 +14,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 /**
  * Controller for the AdminDashboardOverview.fxml panel.
@@ -20,14 +22,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class AdminOverviewController {
 
-    // ── Instance counter — proves how many times this controller is created ──
+    private static final Logger logger = Logger.getLogger(AdminOverviewController.class.getName());
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Instance counter – proves how many times this controller is created
+    // ══════════════════════════════════════════════════════════════════════════
     private static final AtomicInteger INSTANCE_COUNT = new AtomicInteger(0);
     private final int instanceId;
 
     public AdminOverviewController() {
         instanceId = INSTANCE_COUNT.incrementAndGet();
-        System.out.println("[DEBUG] AdminOverviewController CREATED. Total instances so far: " + instanceId);
-        System.out.println("[DEBUG] Constructor identityHashCode: " + System.identityHashCode(this));
+        logger.fine("AdminOverviewController CREATED. Total instances so far: " + instanceId);
+        logger.fine("Constructor identityHashCode: " + System.identityHashCode(this));
     }
 
     // ── Stat card labels ──────────────────────────────────────────────────────
@@ -67,40 +73,46 @@ public class AdminOverviewController {
 
     @FXML
     public void initialize() {
-        System.out.println("[DEBUG] initialize called on instance #" + instanceId);
-        System.out.println("[DEBUG] AdminOverviewController initialized (instance #" + instanceId + ")");
-        System.out.println("[DEBUG] initialize identityHashCode: " + System.identityHashCode(this));
-        System.out.println("[DEBUG] lblTotalUsers != null: " + (lblTotalUsers != null));
-        System.out.println("[DEBUG] lblTotalNotes != null: " + (lblTotalNotes != null));
-        System.out.println("[DEBUG] lblTotalResources != null: " + (lblTotalResources != null));
-        System.out.println("[DEBUG] lblTotalQuestions != null: " + (lblTotalQuestions != null));
-        System.out.println("[DEBUG] lblTotalAnswers != null: " + (lblTotalAnswers != null));
-        System.out.println("[DEBUG] lblTotalTasks != null: " + (lblTotalTasks != null));
-        System.out.println("[DEBUG] lblNewUsersToday != null: " + (lblNewUsersToday != null));
-        System.out.println("[DEBUG] lblUploadsToday != null: " + (lblUploadsToday != null));
-        System.out.println("[DEBUG] lblPendingNotes != null: " + (lblPendingNotes != null));
-        System.out.println("[DEBUG] lblPendingResources != null: " + (lblPendingResources != null));
+        logger.fine("[DEBUG] initialize called on instance #" + instanceId);
+        logger.fine("[DEBUG] AdminOverviewController initialized (instance #" + instanceId + ")");
+        logger.fine("[DEBUG] initialize identityHashCode: " + System.identityHashCode(this));
+        logger.fine("[DEBUG] lblTotalUsers != null: " + (lblTotalUsers != null));
+        logger.fine("[DEBUG] lblTotalNotes != null: " + (lblTotalNotes != null));
+        logger.fine("[DEBUG] lblTotalResources != null: " + (lblTotalResources != null));
+        logger.fine("[DEBUG] lblTotalQuestions != null: " + (lblTotalQuestions != null));
+        logger.fine("[DEBUG] lblTotalAnswers != null: " + (lblTotalAnswers != null));
+        logger.fine("[DEBUG] lblTotalTasks != null: " + (lblTotalTasks != null));
+        logger.fine("[DEBUG] lblNewUsersToday != null: " + (lblNewUsersToday != null));
+        logger.fine("[DEBUG] lblUploadsToday != null: " + (lblUploadsToday != null));
+        logger.fine("[DEBUG] lblPendingNotes != null: " + (lblPendingNotes != null));
+        logger.fine("[DEBUG] lblPendingResources != null: " + (lblPendingResources != null));
         setupTableColumns();
         loadStats();
         loadRecentData();
         loadSubjectChart();
         // Verify labels were actually set — print text AFTER loadStats() finishes
-        System.out.println("[DEBUG] POST-LOAD VERIFY lblTotalUsers.getText() = '" + (lblTotalUsers != null ? lblTotalUsers.getText() : "NULL_LABEL") + "'");
-        System.out.println("[DEBUG] POST-LOAD VERIFY lblTotalNotes.getText() = '" + (lblTotalNotes != null ? lblTotalNotes.getText() : "NULL_LABEL") + "'");
+        logger.fine("[DEBUG] POST-LOAD VERIFY lblTotalUsers.getText() = '" + (lblTotalUsers != null ? lblTotalUsers.getText() : "NULL_LABEL") + "'");
+        logger.fine("[DEBUG] POST-LOAD VERIFY lblTotalNotes.getText() = '" + (lblTotalNotes != null ? lblTotalNotes.getText() : "NULL_LABEL") + "'");
+        
+        // Subscribe to EventBus events
+        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> refreshStats());
+        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (_event) -> refreshStats());
+        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> refreshStats());
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> refreshStats());
     }
 
     // ── Stats ─────────────────────────────────────────────────────────────────
 
     private void loadStats() {
-        System.out.println("[DEBUG] loadStats called on instance #" + instanceId);
+        logger.fine("[DEBUG] loadStats called on instance #" + instanceId);
         Map<String, Integer> stats = adminService.getDashboardStats();
-        System.out.println("[DEBUG] Retrieved Stats Map: " + stats);
+        logger.fine("[DEBUG] Retrieved Stats Map: " + stats);
         if (stats != null) {
-            System.out.println("[DEBUG] Users = " + stats.get("totalUsers"));
-            System.out.println("[DEBUG] Notes = " + stats.get("totalNotes"));
-            System.out.println("[DEBUG] Resources = " + stats.get("totalResources"));
-            System.out.println("[DEBUG] Questions = " + stats.get("totalQuestions"));
-            System.out.println("[DEBUG] Answers = " + stats.get("totalAnswers"));
+            logger.fine("[DEBUG] Users = " + stats.get("totalUsers"));
+            logger.fine("[DEBUG] Notes = " + stats.get("totalNotes"));
+            logger.fine("[DEBUG] Resources = " + stats.get("totalResources"));
+            logger.fine("[DEBUG] Questions = " + stats.get("totalQuestions"));
+            logger.fine("[DEBUG] Answers = " + stats.get("totalAnswers"));
         }
         setTextAndLog(lblTotalUsers,      "lblTotalUsers",      stats.get("totalUsers"));
         setTextAndLog(lblTotalNotes,      "lblTotalNotes",      stats.get("totalNotes"));
@@ -117,14 +129,14 @@ public class AdminOverviewController {
     /** Sets label text AND prints proof that setText() was actually executed. */
     private void setTextAndLog(Label lbl, String name, Integer val) {
         if (lbl == null) {
-            System.out.println("[DEBUG] SKIP " + name + " — label is NULL (fx:id mismatch)");
+            logger.fine("[DEBUG] SKIP " + name + " — label is NULL (fx:id mismatch)");
             return;
         }
         String text = val != null ? String.valueOf(val) : "0";
-        System.out.println("[DEBUG] " + lbl);
-        System.out.println("[DEBUG] Before " + name + ".getText(): " + lbl.getText());
+        logger.fine("[DEBUG] " + lbl);
+        logger.fine("[DEBUG] Before " + name + ".getText(): " + lbl.getText());
         lbl.setText(text);
-        System.out.println("[DEBUG] After " + name + ".getText(): " + lbl.getText());
+        logger.fine("[DEBUG] After " + name + ".getText(): " + lbl.getText());
     }
 
     // ── Recent data ───────────────────────────────────────────────────────────

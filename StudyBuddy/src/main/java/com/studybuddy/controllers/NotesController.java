@@ -1,10 +1,14 @@
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
+import com.studybuddy.models.Department;
 import com.studybuddy.models.Note;
+import com.studybuddy.models.Semester;
+import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
 import com.studybuddy.services.NoteService;
-import com.studybuddy.services.ResourceService;
+import com.studybuddy.services.AcademicService;
+import com.studybuddy.utils.EventBus;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -17,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import java.util.stream.Collectors;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +32,8 @@ import java.util.ResourceBundle;
 
 public class NotesController implements Initializable {
 
+    @FXML private ComboBox<Department> departmentFilter;
+    @FXML private ComboBox<Semester> semesterFilter;
     @FXML private ComboBox<String> subjectFilter;
     @FXML private ComboBox<String> sourceFilter;
     @FXML private VBox myNotesContainer;
@@ -34,30 +41,93 @@ public class NotesController implements Initializable {
     @FXML private VBox emptyState;
 
     private NoteService noteService;
-    private ResourceService resourceService;
+    private AcademicService academicService;
     private List<Note> allNotes = new ArrayList<>();
     private int currentUserId = 1;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         noteService = new NoteService();
-        resourceService = new ResourceService();
+        academicService = AcademicService.getInstance();
 
         User currentUser = App.getCurrentUser();
         if (currentUser != null) {
             currentUserId = currentUser.getId();
         }
 
+        loadFilterDepartments();
         loadSubjects();
         loadSources();
         loadNotes();
+        
+        // Subscribe to EventBus events
+        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (event) -> loadNotes());
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (event) -> loadNotes());
+    }
+    
+    private void loadFilterDepartments() {
+        if (departmentFilter != null) {
+            semesterFilter.setDisable(true);
+            try {
+                departmentFilter.setItems(FXCollections.observableArrayList(
+                        academicService.getAllActiveDepartments()));
+            } catch (Exception e) {
+                System.err.println("[NotesController] Dept filter load failed: " + e.getMessage());
+            }
+
+            departmentFilter.setOnAction(e -> {
+                Department dept = departmentFilter.getValue();
+                if (semesterFilter != null) {
+                    semesterFilter.getItems().clear();
+                    semesterFilter.setValue(null);
+                    semesterFilter.setDisable(dept == null);
+                }
+                subjectFilter.getItems().clear();
+                subjectFilter.setValue(null);
+
+                if (dept != null && semesterFilter != null) {
+                    try {
+                        semesterFilter.setItems(FXCollections.observableArrayList(
+                                academicService.getSemestersByDepartment(dept.getId())));
+                    } catch (Exception ex) {
+                        System.err.println("[NotesController] Sem filter load failed: " + ex.getMessage());
+                    }
+                } else {
+                    loadSubjects();
+                }
+            });
+
+            if (semesterFilter != null) {
+                semesterFilter.setOnAction(e -> {
+                    Semester sem = semesterFilter.getValue();
+                    subjectFilter.getItems().clear();
+                    subjectFilter.setValue(null);
+                    if (sem != null) {
+                        try {
+                            List<String> semSubjects = academicService
+                                    .getSubjectsBySemester(sem.getId())
+                                    .stream()
+                                    .map(Subject::getName)
+                                    .collect(Collectors.toList());
+                            subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
+                        } catch (Exception ex) {
+                            System.err.println("[NotesController] Sub filter load failed: " + ex.getMessage());
+                        }
+                    } else {
+                        loadSubjects();
+                    }
+                });
+            }
+        }
     }
 
+    /**
+     * Loads subject names from the canonical Subjects table via AcademicService.
+     * No hardcoded subjects. No cross-domain service coupling.
+     */
     private void loadSubjects() {
-        subjectFilter.setItems(FXCollections.observableArrayList(
-            "Mathematics", "Physics", "Chemistry", "Biology",
-            "Computer Science", "English", "History"
-        ));
+        List<String> subjects = academicService.getAllSubjectNames();
+        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
     }
 
     private void loadSources() {
@@ -167,6 +237,26 @@ public class NotesController implements Initializable {
         titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
         titleRow.getChildren().addAll(titleLabel, statusBadge);
 
+        // Build author label with full name, dept, sem
+        StringBuilder authorText = new StringBuilder("👤 Uploaded by: ");
+        String fullName = note.getUserFullName();
+        if (fullName != null && !fullName.isEmpty()) {
+            authorText.append(fullName);
+        } else {
+            authorText.append("User ").append(note.getUserId());
+        }
+        String dept = note.getUserDepartment();
+        String sem = note.getUserSemester();
+        if (dept != null || sem != null) {
+            authorText.append(" (");
+            if (dept != null) authorText.append(dept);
+            if (dept != null && sem != null) authorText.append(" • ");
+            if (sem != null) authorText.append(sem);
+            authorText.append(")");
+        }
+        Label authorLabel = new Label(authorText.toString());
+        authorLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
+        
         Label metaLabel = new Label("📅 " + note.getUploadDate() + " | 📄 " + note.getFileType());
         metaLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
 
@@ -185,7 +275,7 @@ public class NotesController implements Initializable {
         openBtn.setOnAction(e -> openNote(note));
         buttonBox.getChildren().add(openBtn);
 
-        card.getChildren().addAll(titleRow, metaLabel, metaBox, buttonBox);
+        card.getChildren().addAll(titleRow, authorLabel, metaLabel, metaBox, buttonBox);
 
         return card;
     }
@@ -239,21 +329,53 @@ public class NotesController implements Initializable {
     }
 
     public void applyFilters() {
+        Department dept = departmentFilter.getValue();
+        Semester sem = semesterFilter.getValue();
         String subject = subjectFilter.getValue();
         String source = sourceFilter.getValue();
+        
+        List<Subject> allSubjects = academicService.getAllActiveSubjects();
+        java.util.Map<Integer, Subject> subjectMap = allSubjects.stream()
+                .collect(Collectors.toMap(Subject::getId, s -> s, (s1, unused) -> s1));
 
         List<Note> filtered = new ArrayList<>();
         for (Note note : allNotes) {
-            if (subject != null && !note.getSubject().equalsIgnoreCase(subject)) continue;
-            if (source != null && !note.getSource().equalsIgnoreCase(source)) continue;
+            // NPE guard: subject and source may be null for legacy rows
+            String noteSubject = note.getSubject() != null ? note.getSubject() : "";
+            String noteSource  = note.getSource()  != null ? note.getSource()  : "";
+            if (subject != null && !noteSubject.equalsIgnoreCase(subject)) continue;
+            if (source  != null && !noteSource.equalsIgnoreCase(source))   continue;
+            
+            if (dept != null || sem != null) {
+                Subject subModel = subjectMap.get(note.getSubjectId());
+                if (subModel == null) {
+                    boolean matches = allSubjects.stream().anyMatch(s ->
+                            s.getName().equalsIgnoreCase(noteSubject) &&
+                                    (dept == null || s.getDepartmentId() == dept.getId()) &&
+                                    (sem == null || s.getSemesterId() == sem.getId())
+                    );
+                    if (!matches) continue;
+                } else {
+                    if (dept != null && subModel.getDepartmentId() != dept.getId()) continue;
+                    if (sem != null && subModel.getSemesterId() != sem.getId()) continue;
+                }
+            }
+            
             filtered.add(note);
         }
         displayNotes(filtered);
     }
 
     public void clearFilters() {
+        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
+        if (semesterFilter != null) {
+            semesterFilter.getItems().clear();
+            semesterFilter.setValue(null);
+            semesterFilter.setDisable(true);
+        }
         subjectFilter.getSelectionModel().clearSelection();
         sourceFilter.getSelectionModel().clearSelection();
+        loadSubjects();
         displayNotes(allNotes);
     }
 

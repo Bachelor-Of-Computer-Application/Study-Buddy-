@@ -69,22 +69,41 @@ public class SettingsDAO {
      * @return true on success
      */
     public boolean updateSetting(String key, String value) {
+        return updateSetting(key, value, null);
+    }
+
+    /**
+     * Upsert a single setting with updated_by user ID.
+     *
+     * @return true on success
+     */
+    public boolean updateSetting(String key, String value, Integer updatedBy) {
         // MERGE (upsert) for SQL Server
         String sql = """
                 MERGE INTO Settings AS target
                 USING (SELECT ? AS setting_key) AS source
                 ON (target.setting_key = source.setting_key)
                 WHEN MATCHED THEN
-                    UPDATE SET setting_value = ?, updated_at = GETDATE()
+                    UPDATE SET setting_value = ?, updated_at = SYSUTCDATETIME(), updated_by = ?
                 WHEN NOT MATCHED THEN
-                    INSERT (setting_key, setting_value) VALUES (?, ?);
+                    INSERT (setting_key, setting_value, updated_by) VALUES (?, ?, ?);
                 """;
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, key);
             ps.setString(2, value);
-            ps.setString(3, key);
-            ps.setString(4, value);
+            if (updatedBy != null) {
+                ps.setInt(3, updatedBy);
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            ps.setString(4, key);
+            ps.setString(5, value);
+            if (updatedBy != null) {
+                ps.setInt(6, updatedBy);
+            } else {
+                ps.setNull(6, Types.INTEGER);
+            }
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -99,6 +118,15 @@ public class SettingsDAO {
      * @return true if all updates succeeded
      */
     public boolean saveAllSettings(Map<String, String> settings) {
+        return saveAllSettings(settings, null);
+    }
+
+    /**
+     * Batch-save a map of settings in a single transaction with updated_by user ID.
+     *
+     * @return true if all updates succeeded
+     */
+    public boolean saveAllSettings(Map<String, String> settings, Integer updatedBy) {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -107,16 +135,26 @@ public class SettingsDAO {
                         USING (SELECT ? AS setting_key) AS source
                         ON (target.setting_key = source.setting_key)
                         WHEN MATCHED THEN
-                            UPDATE SET setting_value = ?, updated_at = GETDATE()
+                            UPDATE SET setting_value = ?, updated_at = SYSUTCDATETIME(), updated_by = ?
                         WHEN NOT MATCHED THEN
-                            INSERT (setting_key, setting_value) VALUES (?, ?);
+                            INSERT (setting_key, setting_value, updated_by) VALUES (?, ?, ?);
                         """;
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
                     for (Map.Entry<String, String> entry : settings.entrySet()) {
                         ps.setString(1, entry.getKey());
                         ps.setString(2, entry.getValue());
-                        ps.setString(3, entry.getKey());
-                        ps.setString(4, entry.getValue());
+                        if (updatedBy != null) {
+                            ps.setInt(3, updatedBy);
+                        } else {
+                            ps.setNull(3, Types.INTEGER);
+                        }
+                        ps.setString(4, entry.getKey());
+                        ps.setString(5, entry.getValue());
+                        if (updatedBy != null) {
+                            ps.setInt(6, updatedBy);
+                        } else {
+                            ps.setNull(6, Types.INTEGER);
+                        }
                         ps.addBatch();
                     }
                     ps.executeBatch();

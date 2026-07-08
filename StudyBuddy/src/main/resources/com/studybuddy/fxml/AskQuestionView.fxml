@@ -85,39 +85,60 @@
                         <Button fx:id="filesButton" onAction="#handleSymbols"
                                 styleClass="toolbar-button"
                                 text="📁 Attach Relevant Files"/>
+                        <!-- Attachment status label — bound to controller @FXML attachmentLabel -->
+                        <Label fx:id="attachmentLabel"
+                               styleClass="attachment-label"
+                               text=""
+                               style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;"/>
                     </HBox>
 
                     <!-- ── Bottom controls card ────────────────────── -->
-                    <HBox styleClass="bottom-controls" spacing="20"
-                          alignment="CENTER_LEFT" maxWidth="760">
+                    <VBox styleClass="bottom-controls" spacing="16" maxWidth="760">
+                        
+                        <!-- Cascading Department → Semester → Subject -->
+                        <HBox spacing="16" alignment="CENTER_LEFT">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Department *" styleClass="control-label"/>
+                                <ComboBox fx:id="departmentComboBox"
+                                          promptText="Select department"
+                                          styleClass="rounded-combo-box" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Semester *" styleClass="control-label"/>
+                                <ComboBox fx:id="semesterComboBox"
+                                          promptText="Select semester"
+                                          styleClass="rounded-combo-box" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Subject *" styleClass="control-label"/>
+                                <ComboBox fx:id="subjectComboBox"
+                                          promptText="Select subject"
+                                          styleClass="rounded-combo-box" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
 
-                        <!-- Subject selector -->
-                        <VBox spacing="6" styleClass="subject-group" HBox.hgrow="ALWAYS">
-                            <Label text="Subject" styleClass="control-label"/>
-                            <ComboBox fx:id="subjectComboBox" prefWidth="340"
-                                      promptText="Pick a subject"
-                                      styleClass="rounded-combo-box"/>
-                        </VBox>
+                        <!-- Reward points and user points -->
+                        <HBox spacing="20" alignment="CENTER_LEFT">
+                            <!-- Reward points selector -->
+                            <VBox spacing="6" styleClass="points-group">
+                                <Label text="Reward Points" styleClass="control-label"/>
+                                <ComboBox fx:id="rewardPointsComboBox" prefWidth="140"
+                                          promptText="0"
+                                          styleClass="rounded-combo-box"/>
+                            </VBox>
 
-                        <!-- Reward points selector -->
-                        <VBox spacing="6" styleClass="points-group">
-                            <Label text="Reward Points" styleClass="control-label"/>
-                            <ComboBox fx:id="rewardPointsComboBox" prefWidth="140"
-                                      promptText="0"
-                                      styleClass="rounded-combo-box"/>
-                        </VBox>
-
-                        <!-- Points display -->
-                        <VBox spacing="6" styleClass="points-display-group">
-                            <Label text="Your Points" styleClass="control-label"/>
-                            <HBox alignment="CENTER_LEFT" spacing="6"
-                                  styleClass="points-display">
-                                <Label text="115" styleClass="points-value"/>
-                                <Label text="pts" styleClass="points-unit"/>
-                                <Label text="i" styleClass="points-info"/>
-                            </HBox>
-                        </VBox>
-                    </HBox>
+                            <!-- Points display -->
+                            <VBox spacing="6" styleClass="points-display-group">
+                                <Label text="Your Points" styleClass="control-label"/>
+                                <HBox alignment="CENTER_LEFT" spacing="6"
+                                      styleClass="points-display">
+                                    <Label fx:id="userPointsLabel" text="0" styleClass="points-value"/>
+                                    <Label text="pts" styleClass="points-unit"/>
+                                    <Label text="i" styleClass="points-info"/>
+                                </HBox>
+                            </VBox>
+                        </HBox>
+                    </VBox>
 
                     <!-- ── Submit button ────────────────────────────── -->
                     <HBox alignment="CENTER">

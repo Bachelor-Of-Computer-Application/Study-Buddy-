@@ -11,6 +11,7 @@ public class Resource {
     private String uploaderName;
     private String title;
     private String subject;
+    private int subjectId;
     private String source;
     private String description;
     private String uploadDate;
@@ -19,6 +20,9 @@ public class Resource {
     private String fileId; // used by ResourceDAO (UUID-based schema)
     private int downloads;
     private boolean isActive;
+    private String userFullName;
+    private String userDepartment;
+    private String userSemester;
 
     public Resource() {
     }
@@ -72,6 +76,10 @@ public class Resource {
 
     public String getSubject() {
         return subject;
+    }
+
+    public int getSubjectId() {
+        return subjectId;
     }
 
     public String getSource() {
@@ -131,6 +139,10 @@ public class Resource {
         this.subject = subject;
     }
 
+    public void setSubjectId(int subjectId) {
+        this.subjectId = subjectId;
+    }
+
     public void setSource(String source) {
         this.source = source;
     }
@@ -165,5 +177,30 @@ public class Resource {
 
     public void setActive(boolean active) {
         this.isActive = active;
+    }
+
+    // Getters and Setters for transient user info fields
+    public String getUserFullName() {
+        return userFullName;
+    }
+
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
+    }
+
+    public String getUserDepartment() {
+        return userDepartment;
+    }
+
+    public void setUserDepartment(String userDepartment) {
+        this.userDepartment = userDepartment;
+    }
+
+    public String getUserSemester() {
+        return userSemester;
+    }
+
+    public void setUserSemester(String userSemester) {
+        this.userSemester = userSemester;
     }
 }

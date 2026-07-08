@@ -2,13 +2,18 @@ package com.studybuddy.controllers;
 
 import com.studybuddy.App;
 import com.studybuddy.dao.QuestionDAO;
+import com.studybuddy.models.Department;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
+import com.studybuddy.models.Semester;
+import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
+import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.DashboardService;
 import com.studybuddy.services.NoteService;
 import com.studybuddy.services.ResourceService;
 import com.studybuddy.services.TaskService;
+import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.ImageLoader;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -54,10 +59,14 @@ public class DashboardController implements Initializable {
     @FXML private ProgressBar overallProgressBar;
 
     // Library Filtering
+    @FXML private ComboBox<Department> departmentComboBox;
+    @FXML private ComboBox<Semester> semesterComboBox;
     @FXML private ComboBox<String> subjectComboBox;
     @FXML private ComboBox<String> sortComboBox;
     @FXML private TextField noteSearchField;
     @FXML private FlowPane notesFlowPane;
+
+    private final AcademicService academicService = AcademicService.getInstance();
 
     // Recent Containers
     @FXML private HBox recentNotesContainer;
@@ -68,6 +77,7 @@ public class DashboardController implements Initializable {
     private final ResourceService resourceService = new ResourceService();
     private final TaskService taskService = new TaskService();
     private final QuestionDAO questionDAO = new QuestionDAO(); // FIXED: for real question count
+    private final com.studybuddy.dao.NoteDAO noteDAO = new com.studybuddy.dao.NoteDAO();
     private final ImageLoader imageLoader = ImageLoader.getInstance();
 
     private List<Note> approvedNotes;
@@ -80,6 +90,10 @@ public class DashboardController implements Initializable {
         initializeComboBoxes();
         refreshDashboard();
         setupListeners();
+
+        // Subscribe to EventBus events
+        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> refreshDashboard());
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> refreshDashboard());
     }
 
     private void initializeComboBoxes() {
@@ -88,11 +102,52 @@ public class DashboardController implements Initializable {
         ));
         sortComboBox.setValue("Most Popular");
 
-        subjectComboBox.setItems(FXCollections.observableArrayList(
-                "Physics", "Computer Science", "Mathematics", "Chemistry",
-                "Civil Engineering", "Electrical Engineering", "Mechanical",
-                "Architecture", "Biology", "Economics", "Business", "Programming"
-        ));
+        // Load departments
+        try {
+            departmentComboBox.setItems(FXCollections.observableArrayList(academicService.getAllActiveDepartments()));
+        } catch (Exception e) {
+            System.err.println("Error loading departments: " + e.getMessage());
+        }
+
+        // Disable semester/subject initially
+        semesterComboBox.setDisable(true);
+        subjectComboBox.setDisable(true);
+
+        // Department change listener
+        departmentComboBox.setOnAction(e -> {
+            Department selectedDept = departmentComboBox.getValue();
+            semesterComboBox.getItems().clear();
+            subjectComboBox.getItems().clear();
+            semesterComboBox.setValue(null);
+            subjectComboBox.setValue(null);
+            semesterComboBox.setDisable(selectedDept == null);
+            subjectComboBox.setDisable(true);
+
+            if (selectedDept != null) {
+                try {
+                    semesterComboBox.setItems(FXCollections.observableArrayList(academicService.getSemestersByDepartment(selectedDept.getId())));
+                } catch (Exception ex) {
+                    System.err.println("Error loading semesters: " + ex.getMessage());
+                }
+            }
+        });
+
+        // Semester change listener
+        semesterComboBox.setOnAction(e -> {
+            Semester selectedSem = semesterComboBox.getValue();
+            subjectComboBox.getItems().clear();
+            subjectComboBox.setValue(null);
+            subjectComboBox.setDisable(selectedSem == null);
+
+            if (selectedSem != null) {
+                try {
+                    List<Subject> subjects = academicService.getSubjectsBySemester(selectedSem.getId());
+                    subjectComboBox.setItems(FXCollections.observableArrayList(subjects.stream().map(Subject::getName).collect(Collectors.toList())));
+                } catch (Exception ex) {
+                    System.err.println("Error loading subjects: " + ex.getMessage());
+                }
+            }
+        });
     }
 
     @FXML
@@ -157,15 +212,24 @@ public class DashboardController implements Initializable {
 
     private void loadCharts() {
         studyBarChart.getData().clear();
-
+        
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.setName("Hours Studied");
-        series.getData().add(new XYChart.Data<>("Math", 12));
-        series.getData().add(new XYChart.Data<>("Physics", 8));
-        series.getData().add(new XYChart.Data<>("CompSci", 18));
-        series.getData().add(new XYChart.Data<>("Chemistry", 5));
-        series.getData().add(new XYChart.Data<>("Programming", 15));
-
+        series.setName("Notes by Subject");
+        
+        try {
+            java.util.Map<String, Integer> subjectCount = noteDAO.getNotesCountBySubjectForUser(currentUser.getId());
+            if (subjectCount.isEmpty()) {
+                series.getData().add(new XYChart.Data<>("No Notes", 0));
+            } else {
+                for (var entry : subjectCount.entrySet()) {
+                    series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            series.getData().add(new XYChart.Data<>("Error", 0));
+        }
+        
         studyBarChart.getData().add(series);
     }
 
@@ -230,13 +294,36 @@ public class DashboardController implements Initializable {
 
     public void searchNotes() {
         String query = noteSearchField.getText().trim();
-        String subject = subjectComboBox.getValue();
+        Department selectedDept = departmentComboBox.getValue();
+        Semester selectedSem = semesterComboBox.getValue();
+        String selectedSubject = subjectComboBox.getValue();
 
-        List<Note> filtered = dashboardService.searchNotes(query);
-        if (subject != null) {
-            filtered = filtered.stream()
-                    .filter(n -> n.getSubject().equalsIgnoreCase(subject))
-                    .collect(Collectors.toList());
+        Integer deptId = selectedDept != null ? selectedDept.getId() : null;
+        Integer semId = selectedSem != null ? selectedSem.getId() : null;
+
+        // Find subjectId if subject selected
+        Integer subjectId = null;
+        if (selectedSubject != null && selectedSem != null) {
+            try {
+                List<Subject> subjects = academicService.getSubjectsBySemester(selectedSem.getId());
+                for (Subject subj : subjects) {
+                    if (subj.getName().equalsIgnoreCase(selectedSubject)) {
+                        subjectId = subj.getId();
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error finding subject ID: " + e.getMessage());
+            }
+        }
+
+        // Use NoteDAO.searchNotesWithHierarchy which is already implemented!
+        List<Note> filtered = new ArrayList<>();
+        try {
+            filtered = noteDAO.searchNotesWithHierarchy(query, deptId, semId, subjectId);
+        } catch (SQLException e) {
+            System.err.println("Error searching notes with hierarchy: " + e.getMessage());
+            filtered = dashboardService.searchNotes(query);
         }
 
         displayNotes(filtered);
@@ -263,8 +350,26 @@ public class DashboardController implements Initializable {
         Label sub = new Label("📚 " + note.getSubject());
         sub.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
 
-        Label author = new Label("👤 By: User " + note.getUserId());
+        // Build author label with full name, dept, sem
+        StringBuilder authorText = new StringBuilder("👤 By: ");
+        String fullName = note.getUserFullName();
+        if (fullName != null && !fullName.isEmpty()) {
+            authorText.append(fullName);
+        } else {
+            authorText.append("User ").append(note.getUserId());
+        }
+        String dept = note.getUserDepartment();
+        String sem = note.getUserSemester();
+        if (dept != null || sem != null) {
+            authorText.append(" (");
+            if (dept != null) authorText.append(dept);
+            if (dept != null && sem != null) authorText.append(" • ");
+            if (sem != null) authorText.append(sem);
+            authorText.append(")");
+        }
+        Label author = new Label(authorText.toString());
         author.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
+        author.setWrapText(true);
 
         card.getChildren().addAll(title, sub, author);
         return card;

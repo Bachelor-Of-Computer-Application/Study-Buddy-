@@ -17,6 +17,7 @@ public class User {
     private String role;
     private String status = "Active";
     private LocalDateTime createdAt;
+    private LocalDateTime lastLogin;
 
     // ===========================
     // Profile Information (New for Edit Profile)
@@ -127,6 +128,14 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
     }
 
     // ===========================

@@ -3,9 +3,11 @@ package com.studybuddy.utils;
 import javafx.scene.image.Image;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class ImageLoader {
 
+    private static final Logger logger = Logger.getLogger(ImageLoader.class.getName());
     private static final ImageLoader INSTANCE = new ImageLoader();
 
     public ImageLoader() {
@@ -19,7 +21,7 @@ public class ImageLoader {
         try {
             return new Image(new FileInputStream(path));
         } catch (IOException e) {
-            System.out.println("Failed to load image: " + path);
+            logger.warning("Failed to load image: " + path);
             return getPlaceholderImage();
         }
     }

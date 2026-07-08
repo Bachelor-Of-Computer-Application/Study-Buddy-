@@ -1,8 +1,16 @@
 package com.studybuddy.controllers;
 
+import com.studybuddy.App;
+import com.studybuddy.models.Department;
+import com.studybuddy.models.Semester;
+import com.studybuddy.models.Subject;
+import com.studybuddy.models.UserActivity;
+import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.QuestionService;
 import com.studybuddy.services.ResourceService;
+import com.studybuddy.utils.EventBus;
 import javafx.animation.ScaleTransition;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,100 +18,124 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
 import javafx.util.Duration;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.List;
-import javafx.collections.FXCollections;
-import javafx.stage.FileChooser;
 
 /**
- * Controller for AskQuestionView.fxml.
- *
- * Key fixes applied:
- * 1. rewardPointsComboBox changed to ComboBox<String> to match FXML (which uses String values).
- * 2. mathButton / symbolsButton / logoutButton fx:ids removed — FXML uses toolsButton / filesButton.
- *    setupButtonHoverEffects() now uses the correct fx:ids from the FXML.
- * 3. handleHome() fixed — old path /com/studybuddy/view/HomeView.fxml was wrong.
- *    Correct path is /com/studybuddy/fxml/HomeView.fxml.
- * 4. userPointsLabel is present in the controller but has no fx:id in the FXML —
- *    guarded with null check to prevent NPE.
+ * Controller for AskQuestionView.fxml - with cascading Department → Semester → Subject.
  */
 public class AskQuestionController implements Initializable {
 
-    @FXML
-    private BorderPane rootPane;
-
-    @FXML
-    private Label pageTitle;
-
-    @FXML
-    private TextArea questionTextArea;
-
-    @FXML
-    private ComboBox<String> subjectComboBox;
-
-    /**
-     * NOTE: FXML defines rewardPointsComboBox items as String values ("0", "10", "20", "50", "100").
-     * Changed from ComboBox<Integer> to ComboBox<String> to match.
-     */
-    @FXML
-    private ComboBox<String> rewardPointsComboBox;
-
-    /** May be null if fx:id is absent in FXML — always guarded with null check. */
-    @FXML
-    private Label userPointsLabel;
-
-    @FXML
-    private Button submitButton;
-
-    /**
-     * FXML uses fx:id="toolsButton" — maps to handleMath action.
-     */
-    @FXML
-    private Button toolsButton;
-
-    /**
-     * FXML uses fx:id="filesButton" — maps to handleSymbols action.
-     */
-    @FXML
-    private Button filesButton;
-
-    @FXML
-    private Button attachmentButton;
-
-    @FXML
-    private Label attachmentLabel;
-
-    @FXML
-    private Button homeButton;
-
-    @FXML
-    private Button profileButton;
+    @FXML private BorderPane rootPane;
+    @FXML private Label pageTitle;
+    @FXML private TextArea questionTextArea;
+    
+    @FXML private ComboBox<Department> departmentComboBox;
+    @FXML private ComboBox<Semester> semesterComboBox;
+    @FXML private ComboBox<Subject> subjectComboBox;
+    
+    @FXML private ComboBox<String> rewardPointsComboBox;
+    @FXML private Label userPointsLabel;
+    @FXML private Button submitButton;
+    @FXML private Button toolsButton;
+    @FXML private Button filesButton;
+    @FXML private Button attachmentButton;
+    @FXML private Label attachmentLabel;
+    @FXML private Button homeButton;
+    @FXML private Button profileButton;
 
     private QuestionService questionService;
     private ResourceService resourceService;
+    private AcademicService academicService;
+    private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
     private String selectedAttachmentPath = null;
 
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         questionService = new QuestionService();
         resourceService = new ResourceService();
+        academicService = AcademicService.getInstance();
 
-        loadSubjects();
+        loadDepartments();
         loadUserPoints();
+        
         if (rewardPointsComboBox != null) {
             rewardPointsComboBox.setItems(FXCollections.observableArrayList("0", "10", "20", "50", "100"));
             rewardPointsComboBox.setValue("0");
         }
+        
+        setupCascading();
         setupButtonHoverEffects();
         setupSubmitButtonEffects();
     }
 
-    private void loadSubjects() {
-        List<String> subjects = questionService.getAvailableSubjects();
-        subjectComboBox.setItems(FXCollections.observableArrayList(subjects));
+    private void setupCascading() {
+        if (semesterComboBox != null) {
+            semesterComboBox.setDisable(true);
+        }
+        if (subjectComboBox != null) {
+            subjectComboBox.setDisable(true);
+        }
+
+        departmentComboBox.setOnAction(e -> {
+            Department selectedDept = departmentComboBox.getValue();
+            semesterComboBox.getItems().clear();
+            subjectComboBox.getItems().clear();
+            semesterComboBox.setValue(null);
+            subjectComboBox.setValue(null);
+            semesterComboBox.setDisable(selectedDept == null);
+            subjectComboBox.setDisable(true);
+            
+            if (selectedDept != null) {
+                loadSemesters(selectedDept.getId());
+            }
+        });
+
+        semesterComboBox.setOnAction(e -> {
+            Semester selectedSem = semesterComboBox.getValue();
+            subjectComboBox.getItems().clear();
+            subjectComboBox.setValue(null);
+            subjectComboBox.setDisable(selectedSem == null);
+            
+            if (selectedSem != null) {
+                loadSubjects(selectedSem.getId());
+            }
+        });
+    }
+
+    private void loadDepartments() {
+        try {
+            List<Department> departments = academicService.getAllActiveDepartments();
+            departmentComboBox.setItems(FXCollections.observableArrayList(departments));
+        } catch (Exception e) {
+            System.err.println("Error loading departments: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void loadSemesters(int departmentId) {
+        try {
+            List<Semester> semesters = academicService.getSemestersByDepartment(departmentId);
+            semesterComboBox.setItems(FXCollections.observableArrayList(semesters));
+        } catch (Exception e) {
+            System.err.println("Error loading semesters: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void loadSubjects(int semesterId) {
+        try {
+            List<Subject> subjects = academicService.getSubjectsBySemester(semesterId);
+            subjectComboBox.setItems(FXCollections.observableArrayList(subjects));
+        } catch (Exception e) {
+            System.err.println("Error loading subjects: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void loadUserPoints() {
@@ -205,8 +237,10 @@ public class AskQuestionController implements Initializable {
         }
         try {
             String questionText = questionTextArea.getText().trim();
-            String subject = subjectComboBox.getValue();
-            // rewardPointsComboBox now holds String values; parse safely
+            Subject selectedSubject = subjectComboBox.getValue();
+            String subject = selectedSubject != null ? selectedSubject.getName() : "";
+            int subjectId = selectedSubject != null ? selectedSubject.getId() : 0;
+            
             int rewardPoints = 0;
             String rewardStr = rewardPointsComboBox.getValue();
             if (rewardStr != null) {
@@ -216,11 +250,32 @@ public class AskQuestionController implements Initializable {
             boolean success = questionService.saveQuestion(
                     questionText,
                     subject,
+                    subjectId,
                     rewardPoints,
                     selectedAttachmentPath
             );
 
             if (success) {
+                // Log activity
+                if (App.getCurrentUser() != null) {
+                    UserActivity activity = new UserActivity(
+                            App.getCurrentUser().getId(),
+                            App.getCurrentUser().getFullName() != null ? App.getCurrentUser().getFullName() : App.getCurrentUser().getName(),
+                            "ASK_QUESTION",
+                            "QUESTION",
+                            questionText.length() > 50 ? questionText.substring(0, 47) + "..." : questionText
+                    );
+                    try {
+                        activityDAO.logActivity(activity);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                
+                // Publish events
+                EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+                
                 showAlert(Alert.AlertType.INFORMATION, "Success",
                         "Your question has been submitted successfully!",
                         "Question ID will be generated in the database.");
@@ -243,6 +298,16 @@ public class AskQuestionController implements Initializable {
                     "Please enter your question.", "The question field cannot be empty.");
             return false;
         }
+        if (departmentComboBox.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error",
+                    "Please choose a department.", "Select a department from the dropdown menu.");
+            return false;
+        }
+        if (semesterComboBox.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error",
+                    "Please choose a semester.", "Select a semester from the dropdown menu.");
+            return false;
+        }
         if (subjectComboBox.getValue() == null) {
             showAlert(Alert.AlertType.WARNING, "Validation Error",
                     "Please choose a subject.", "Select a subject from the dropdown menu.");
@@ -258,8 +323,18 @@ public class AskQuestionController implements Initializable {
 
     private void clearForm() {
         if (questionTextArea != null) questionTextArea.clear();
-        subjectComboBox.getSelectionModel().clearSelection();
-        rewardPointsComboBox.getSelectionModel().select(1); // Reset to "10"
+        departmentComboBox.getSelectionModel().clearSelection();
+        semesterComboBox.getItems().clear();
+        semesterComboBox.setValue(null);
+        if (semesterComboBox != null) {
+            semesterComboBox.setDisable(true);
+        }
+        subjectComboBox.getItems().clear();
+        subjectComboBox.setValue(null);
+        if (subjectComboBox != null) {
+            subjectComboBox.setDisable(true);
+        }
+        rewardPointsComboBox.getSelectionModel().select(0); // Reset to "0"
         selectedAttachmentPath = null;
         if (attachmentLabel != null) attachmentLabel.setText("");
     }
@@ -287,10 +362,28 @@ public class AskQuestionController implements Initializable {
         }
     }
 
+    /**
+     * Navigates back to the main Home view where the user can access ProfileView
+     * through the sidebar, or directly loads ProfileView into the scene root.
+     */
     public void handleProfile(ActionEvent actionEvent) {
-        showAlert(Alert.AlertType.INFORMATION, "Profile",
-                "Profile page will be opened.",
-                "View and edit your account settings.");
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/studybuddy/fxml/HomeView.fxml")
+            );
+            BorderPane homeView = loader.load();
+            rootPane.getScene().setRoot(homeView);
+
+            // After navigation, trigger profile view
+            HomeController homeController = loader.getController();
+            if (homeController != null) {
+                homeController.goToProfile();
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error",
+                    "Failed to open profile page.", e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String header, String content) {

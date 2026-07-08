@@ -5,8 +5,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import java.util.logging.Logger;
 
 public class AdminSceneManager {
+    private static final Logger logger = Logger.getLogger(AdminSceneManager.class.getName());
     private static Stage primaryStage;
 
     public static void setPrimaryStage(Stage stage) {
@@ -19,7 +21,7 @@ public class AdminSceneManager {
 
     public static void showLoginPage(Stage stage) {
         try {
-            System.out.println("[DEBUG] AdminLoginView.fxml loaded");
+            logger.fine("AdminLoginView.fxml loaded");
             FXMLLoader loader = new FXMLLoader(
                     AdminApp.class.getResource("/com/studybuddy/admin/fxml/AdminLoginView.fxml"));
             Parent root = loader.load();
@@ -27,14 +29,14 @@ public class AdminSceneManager {
             stage.setScene(new Scene(root));
             stage.show();
         } catch (Exception e) {
+            logger.severe("Failed to load AdminLoginView.fxml: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     public static void showDashboardPage(Stage stage) {
         try {
-            System.out.println("[DEBUG] AdminDashboard.fxml loaded"); // Matches user's exact "AdminDashboard.fxml loaded" request
-            System.out.println("[DEBUG] AdminDashboardView.fxml loaded");
+            logger.fine("AdminDashboardView.fxml loaded");
             FXMLLoader loader = new FXMLLoader(
                     AdminApp.class.getResource("/com/studybuddy/admin/fxml/AdminDashboardView.fxml"));
             Parent root = loader.load();
@@ -42,6 +44,7 @@ public class AdminSceneManager {
             stage.setScene(new Scene(root));
             stage.show();
         } catch (Exception e) {
+            logger.severe("Failed to load AdminDashboardView.fxml: " + e.getMessage());
             e.printStackTrace();
         }
     }

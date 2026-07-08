@@ -2,6 +2,14 @@ package com.studybuddy.admin.controllers;
 
 import com.studybuddy.admin.services.AdminService;
 import com.studybuddy.models.Note;
+import com.studybuddy.models.Department;
+import com.studybuddy.models.Semester;
+import com.studybuddy.models.UserActivity;
+import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.QuestionService;
+import com.studybuddy.utils.EventBus;
+import com.studybuddy.utils.SessionManager;
+import com.studybuddy.dao.UserActivityDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,9 +29,11 @@ import java.util.stream.Collectors;
 public class AdminNotesController {
 
     @FXML private TextField        searchField;
-    @FXML private ComboBox<String> subjectFilter;
-    @FXML private ComboBox<String> statusFilter;
-    @FXML private ComboBox<String> visibilityFilter;
+    @FXML private ComboBox<Department>  departmentFilter;
+    @FXML private ComboBox<Semester>    semesterFilter;
+    @FXML private ComboBox<String>      subjectFilter;
+    @FXML private ComboBox<String>      statusFilter;
+    @FXML private ComboBox<String>      visibilityFilter;
 
     @FXML private TableView<Note>             notesTable;
     @FXML private TableColumn<Note, Integer>  colId;
@@ -40,6 +50,8 @@ public class AdminNotesController {
     @FXML private Button btnNextPage;
 
     private final AdminService adminService = AdminService.getInstance();
+    private final QuestionService questionService = new QuestionService();
+    private final AcademicService academicService  = AcademicService.getInstance();
     private final ObservableList<Note> masterList = FXCollections.observableArrayList();
     private List<Note> filteredList = new ArrayList<>();
     private int currentPage = 1;
@@ -93,9 +105,12 @@ public class AdminNotesController {
     @FXML
     public void clearFilters() {
         searchField.clear();
-        subjectFilter.getSelectionModel().clearSelection();
-        statusFilter.getSelectionModel().clearSelection();
+        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
+        if (semesterFilter   != null) { semesterFilter.getItems().clear(); semesterFilter.setValue(null); }
+        if (subjectFilter    != null) subjectFilter.getSelectionModel().clearSelection();
+        if (statusFilter     != null) statusFilter.getSelectionModel().clearSelection();
         if (visibilityFilter != null) visibilityFilter.getSelectionModel().clearSelection();
+        loadSubjectFilter();
         filteredList = new ArrayList<>(masterList);
         currentPage  = 1;
         updateTable();
@@ -134,6 +149,26 @@ public class AdminNotesController {
         if (adminService.approveNote(n.getId(), n.getTitle())) {
             n.setStatus("Approved"); notesTable.refresh();
             info("Note '" + n.getTitle() + "' approved.");
+            
+            // Log activity
+            if (SessionManager.getCurrentAdmin() != null) {
+                try {
+                    UserActivity activity = new UserActivity(
+                        SessionManager.getCurrentAdmin().getId(),
+                        SessionManager.getCurrentAdmin().getFullName() != null ? SessionManager.getCurrentAdmin().getFullName() : SessionManager.getCurrentAdmin().getName(),
+                        "Approve Note",
+                        "Note",
+                        n.getTitle()
+                    );
+                    new UserActivityDAO().logActivity(activity);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            // Publish EventBus events
+            EventBus.getInstance().publish(new EventBus.NotesChangedEvent());
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
         }
     }
 
@@ -142,6 +177,26 @@ public class AdminNotesController {
         Note n = selected(); if (n == null) return;
         if (adminService.rejectNote(n.getId(), n.getTitle())) {
             n.setStatus("Rejected"); notesTable.refresh();
+            
+            // Log activity
+            if (SessionManager.getCurrentAdmin() != null) {
+                try {
+                    UserActivity activity = new UserActivity(
+                        SessionManager.getCurrentAdmin().getId(),
+                        SessionManager.getCurrentAdmin().getFullName() != null ? SessionManager.getCurrentAdmin().getFullName() : SessionManager.getCurrentAdmin().getName(),
+                        "Reject Note",
+                        "Note",
+                        n.getTitle()
+                    );
+                    new UserActivityDAO().logActivity(activity);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            // Publish EventBus events
+            EventBus.getInstance().publish(new EventBus.NotesChangedEvent());
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
         }
     }
 
@@ -211,12 +266,73 @@ public class AdminNotesController {
     }
 
     private void setupFilters() {
-        if (subjectFilter    != null) subjectFilter.setItems(FXCollections.observableArrayList(
-                "", "Mathematics", "Physics", "Chemistry", "Computer Science", "Biology", "English", "Other"));
-        if (statusFilter     != null) statusFilter.setItems(FXCollections.observableArrayList(
+        // Cascade: Department → Semester → Subject (all from DB)
+        if (departmentFilter != null) {
+            try {
+                departmentFilter.setItems(FXCollections.observableArrayList(
+                        academicService.getAllActiveDepartments()));
+            } catch (Exception e) {
+                System.err.println("[AdminNotesController] Dept load failed: " + e.getMessage());
+            }
+            departmentFilter.setOnAction(e -> {
+                Department dept = departmentFilter.getValue();
+                if (semesterFilter != null) {
+                    semesterFilter.getItems().clear();
+                    semesterFilter.setValue(null);
+                }
+                if (subjectFilter != null) {
+                    subjectFilter.getItems().clear();
+                    subjectFilter.setValue(null);
+                }
+                if (dept != null && semesterFilter != null) {
+                    try {
+                        semesterFilter.setItems(FXCollections.observableArrayList(
+                                academicService.getSemestersByDepartment(dept.getId())));
+                    } catch (Exception ex) {
+                        System.err.println("[AdminNotesController] Sem load failed: " + ex.getMessage());
+                    }
+                } else {
+                    // dept cleared — restore full subject list
+                    loadSubjectFilter();
+                }
+            });
+        }
+        if (semesterFilter != null) {
+            semesterFilter.setOnAction(e -> {
+                com.studybuddy.models.Semester sem = semesterFilter.getValue();
+                if (subjectFilter != null) {
+                    subjectFilter.getItems().clear();
+                    subjectFilter.setValue(null);
+                }
+                if (sem != null) {
+                    try {
+                        List<String> semSubjects = academicService
+                                .getSubjectsBySemester(sem.getId())
+                                .stream()
+                                .map(com.studybuddy.models.Subject::getName)
+                                .collect(java.util.stream.Collectors.toList());
+                        if (subjectFilter != null)
+                            subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
+                    } catch (Exception ex) {
+                        System.err.println("[AdminNotesController] Sub load failed: " + ex.getMessage());
+                    }
+                } else {
+                    loadSubjectFilter();
+                }
+            });
+        }
+        loadSubjectFilter();
+        if (statusFilter != null) statusFilter.setItems(FXCollections.observableArrayList(
                 "", "Pending", "Approved", "Rejected"));
         if (visibilityFilter != null) visibilityFilter.setItems(FXCollections.observableArrayList(
                 "", "Public", "Private"));
+    }
+
+    /** Loads the full subject list from the canonical Subjects table. */
+    private void loadSubjectFilter() {
+        if (subjectFilter == null) return;
+        List<String> subjects = questionService.getAvailableSubjects();
+        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────

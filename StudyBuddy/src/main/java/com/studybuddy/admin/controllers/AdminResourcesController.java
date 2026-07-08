@@ -1,7 +1,15 @@
 package com.studybuddy.admin.controllers;
 
 import com.studybuddy.admin.services.AdminService;
+import com.studybuddy.models.Department;
 import com.studybuddy.models.Resource;
+import com.studybuddy.models.Semester;
+import com.studybuddy.models.UserActivity;
+import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.ResourceService;
+import com.studybuddy.utils.EventBus;
+import com.studybuddy.utils.SessionManager;
+import com.studybuddy.dao.UserActivityDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,9 +30,11 @@ import java.util.stream.Collectors;
  */
 public class AdminResourcesController {
 
-    @FXML private TextField        searchField;
-    @FXML private ComboBox<String> subjectFilter;/
-    @FXML private ComboBox<String> statusFilter;
+    @FXML private TextField           searchField;
+    @FXML private ComboBox<Department> departmentFilter;
+    @FXML private ComboBox<Semester>   semesterFilter;
+    @FXML private ComboBox<String>     subjectFilter;
+    @FXML private ComboBox<String>     statusFilter;
 
     @FXML private TableView<Resource>              resourcesTable;
     @FXML private TableColumn<Resource, Integer>   colId;
@@ -41,6 +51,8 @@ public class AdminResourcesController {
     @FXML private Button btnNextPage;
 
     private final AdminService adminService = AdminService.getInstance();
+    private final ResourceService resourceService = new ResourceService();
+    private final AcademicService academicService  = AcademicService.getInstance();
     private final ObservableList<Resource> masterList = FXCollections.observableArrayList();
     private List<Resource> filteredList = new ArrayList<>();
     private int currentPage = 1;
@@ -55,15 +67,7 @@ public class AdminResourcesController {
     }
 
     private void loadData() {
-        List<Resource> resources = adminService.getResources();
-
-        System.out.println("Resources loaded: " + resources.size());
-
-        for (Resource r : resources) {
-            System.out.println(r.getId() + " | " + r.getTitle() + " | " + r.isActive());
-        }
-
-        masterList.setAll(resources);
+        masterList.setAll(adminService.getResources());
         filteredList = new ArrayList<>(masterList);
         currentPage = 1;
         updateTable();
@@ -100,8 +104,11 @@ public class AdminResourcesController {
     @FXML
     public void clearFilters() {
         searchField.clear();
-        subjectFilter.getSelectionModel().clearSelection();
-        statusFilter.getSelectionModel().clearSelection();
+        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
+        if (semesterFilter   != null) { semesterFilter.getItems().clear(); semesterFilter.setValue(null); }
+        if (subjectFilter    != null) subjectFilter.getSelectionModel().clearSelection();
+        if (statusFilter     != null) statusFilter.getSelectionModel().clearSelection();
+        loadSubjectFilter();
         filteredList = new ArrayList<>(masterList);
         currentPage  = 1;
         updateTable();
@@ -135,14 +142,61 @@ public class AdminResourcesController {
     public void handleActivate() {
         Resource r = selected(); if (r == null) return;
         boolean ok = adminService.activateResource(r.getId(), r.getTitle());
-        if (ok) { r.setActive(true); resourcesTable.refresh(); info("Resource activated."); }
+        if (ok) { 
+            r.setActive(true); 
+            resourcesTable.refresh(); 
+            info("Resource activated."); 
+            
+            // Log activity
+            if (SessionManager.getCurrentAdmin() != null) {
+                try {
+                    UserActivity activity = new UserActivity(
+                        SessionManager.getCurrentAdmin().getId(),
+                        SessionManager.getCurrentAdmin().getFullName() != null ? SessionManager.getCurrentAdmin().getFullName() : SessionManager.getCurrentAdmin().getName(),
+                        "Approve Resource",
+                        "Resource",
+                        r.getTitle()
+                    );
+                    new UserActivityDAO().logActivity(activity);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            // Publish EventBus events
+            EventBus.getInstance().publish(new EventBus.ResourcesChangedEvent());
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+        }
     }
 
     @FXML
     public void handleDeactivate() {
         Resource r = selected(); if (r == null) return;
         boolean ok = adminService.deactivateResource(r.getId(), r.getTitle());
-        if (ok) { r.setActive(false); resourcesTable.refresh(); }
+        if (ok) { 
+            r.setActive(false); 
+            resourcesTable.refresh(); 
+            
+            // Log activity
+            if (SessionManager.getCurrentAdmin() != null) {
+                try {
+                    UserActivity activity = new UserActivity(
+                        SessionManager.getCurrentAdmin().getId(),
+                        SessionManager.getCurrentAdmin().getFullName() != null ? SessionManager.getCurrentAdmin().getFullName() : SessionManager.getCurrentAdmin().getName(),
+                        "Reject Resource",
+                        "Resource",
+                        r.getTitle()
+                    );
+                    new UserActivityDAO().logActivity(activity);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            // Publish EventBus events
+            EventBus.getInstance().publish(new EventBus.ResourcesChangedEvent());
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+        }
     }
 
     @FXML
@@ -212,10 +266,70 @@ public class AdminResourcesController {
     }
 
     private void setupFilters() {
-        if (subjectFilter != null) subjectFilter.setItems(FXCollections.observableArrayList(
-                "", "Mathematics", "Physics", "Chemistry", "Computer Science", "Biology", "English", "Other"));
-        if (statusFilter  != null) statusFilter.setItems(FXCollections.observableArrayList(
+        // Cascade: Department → Semester → Subject (all from DB)
+        if (departmentFilter != null) {
+            try {
+                departmentFilter.setItems(FXCollections.observableArrayList(
+                        academicService.getAllActiveDepartments()));
+            } catch (Exception e) {
+                System.err.println("[AdminResourcesController] Dept load failed: " + e.getMessage());
+            }
+            departmentFilter.setOnAction(e -> {
+                Department dept = departmentFilter.getValue();
+                if (semesterFilter != null) {
+                    semesterFilter.getItems().clear();
+                    semesterFilter.setValue(null);
+                }
+                if (subjectFilter != null) {
+                    subjectFilter.getItems().clear();
+                    subjectFilter.setValue(null);
+                }
+                if (dept != null && semesterFilter != null) {
+                    try {
+                        semesterFilter.setItems(FXCollections.observableArrayList(
+                                academicService.getSemestersByDepartment(dept.getId())));
+                    } catch (Exception ex) {
+                        System.err.println("[AdminResourcesController] Sem load failed: " + ex.getMessage());
+                    }
+                } else {
+                    loadSubjectFilter();
+                }
+            });
+        }
+        if (semesterFilter != null) {
+            semesterFilter.setOnAction(e -> {
+                Semester sem = semesterFilter.getValue();
+                if (subjectFilter != null) {
+                    subjectFilter.getItems().clear();
+                    subjectFilter.setValue(null);
+                }
+                if (sem != null) {
+                    try {
+                        List<String> semSubjects = academicService
+                                .getSubjectsBySemester(sem.getId())
+                                .stream()
+                                .map(com.studybuddy.models.Subject::getName)
+                                .collect(java.util.stream.Collectors.toList());
+                        if (subjectFilter != null)
+                            subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
+                    } catch (Exception ex) {
+                        System.err.println("[AdminResourcesController] Sub load failed: " + ex.getMessage());
+                    }
+                } else {
+                    loadSubjectFilter();
+                }
+            });
+        }
+        loadSubjectFilter();
+        if (statusFilter != null) statusFilter.setItems(FXCollections.observableArrayList(
                 "", "Active", "Inactive"));
+    }
+
+    /** Loads the full resource subject list from the canonical Subjects table. */
+    private void loadSubjectFilter() {
+        if (subjectFilter == null) return;
+        List<String> subjects = resourceService.getAllSubjectNames();
+        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────

@@ -31,19 +31,32 @@
                    styleClass="form-input" maxWidth="Infinity"/>
     </VBox>
 
-    <!-- Subject + Source (side by side) -->
+    <!-- Department / Semester / Subject — Cascading dropdowns -->
+    <VBox spacing="6">
+        <Label text="Department *" styleClass="field-label"/>
+        <ComboBox fx:id="departmentComboBox" promptText="Select department"
+                  styleClass="combo-box" maxWidth="Infinity"/>
+    </VBox>
+
     <HBox spacing="16">
         <VBox spacing="6" HBox.hgrow="ALWAYS">
-            <Label text="Subject *" styleClass="field-label"/>
-            <ComboBox fx:id="subjectField" promptText="Select subject"
+            <Label text="Semester *" styleClass="field-label"/>
+            <ComboBox fx:id="semesterComboBox" promptText="Select semester"
                       styleClass="combo-box" maxWidth="Infinity"/>
         </VBox>
         <VBox spacing="6" HBox.hgrow="ALWAYS">
-            <Label text="Source" styleClass="field-label"/>
-            <ComboBox fx:id="sourceField" promptText="Select source"
+            <Label text="Subject *" styleClass="field-label"/>
+            <ComboBox fx:id="subjectComboBox" promptText="Select subject"
                       styleClass="combo-box" maxWidth="Infinity"/>
         </VBox>
     </HBox>
+
+    <!-- Source -->
+    <VBox spacing="6">
+        <Label text="Source" styleClass="field-label"/>
+        <ComboBox fx:id="sourceField" promptText="Select source"
+                  styleClass="combo-box" maxWidth="Infinity"/>
+    </VBox>
 
     <!-- Date -->
     <VBox spacing="6">

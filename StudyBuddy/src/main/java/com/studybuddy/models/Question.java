@@ -8,6 +8,7 @@ public class Question {
     private int userId;
     private String authorName;
     private String subject;
+    private int subjectId;
     private String questionText;
     private String tags;
     private String attachmentPath;
@@ -17,6 +18,11 @@ public class Question {
     private String createdAt;
     private boolean isLocked;
     private List<Answer> answers = new ArrayList<>();
+
+    // Transient display fields for user info
+    private String userFullName;
+    private String userDepartment;
+    private String userSemester;
 
     public Question() {
     }
@@ -50,6 +56,9 @@ public class Question {
     public String getSubject() { return subject; }
     public void setSubject(String subject) { this.subject = subject; }
 
+    public int getSubjectId() { return subjectId; }
+    public void setSubjectId(int subjectId) { this.subjectId = subjectId; }
+
     public String getQuestionText() { return questionText; }
     public void setQuestionText(String questionText) { this.questionText = questionText; }
 
@@ -77,8 +86,36 @@ public class Question {
     public List<Answer> getAnswers() { return answers; }
     public void setAnswers(List<Answer> answers) { this.answers = answers; }
 
+    // Getters and Setters for transient user info fields
+    public String getUserFullName() {
+        return userFullName;
+    }
+
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
+    }
+
+    public String getUserDepartment() {
+        return userDepartment;
+    }
+
+    public void setUserDepartment(String userDepartment) {
+        this.userDepartment = userDepartment;
+    }
+
+    public String getUserSemester() {
+        return userSemester;
+    }
+
+    public void setUserSemester(String userSemester) {
+        this.userSemester = userSemester;
+    }
+
     @Override
     public String toString() {
-        return "[" + subject.toUpperCase() + "] " + (questionText.length() > 50 ? questionText.substring(0, 47) + "..." : questionText);
+        String sub  = subject      != null ? subject.toUpperCase()       : "GENERAL";
+        String text = questionText != null ? questionText                 : "";
+        String preview = text.length() > 50 ? text.substring(0, 47) + "..." : text;
+        return "[" + sub + "] " + preview;
     }
 }

@@ -44,6 +44,10 @@
                     <TextField fx:id="searchField" prefWidth="240"
                                promptText="🔍  Search questions or tags…"
                                styleClass="form-input"/>
+                    <ComboBox fx:id="departmentFilter" prefWidth="160"
+                              promptText="Choose Department" styleClass="combo-box"/>
+                    <ComboBox fx:id="semesterFilter" prefWidth="120"
+                              promptText="Choose Semester" styleClass="combo-box"/>
                     <ComboBox fx:id="subjectFilter" prefWidth="175"
                               promptText="Choose Subject" styleClass="combo-box"/>
                     <Button onAction="#applyFilters" styleClass="save-button" text="Search"/>

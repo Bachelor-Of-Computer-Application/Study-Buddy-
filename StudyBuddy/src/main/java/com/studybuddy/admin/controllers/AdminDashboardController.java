@@ -11,8 +11,11 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class AdminDashboardController {
+
+    private static final Logger logger = Logger.getLogger(AdminDashboardController.class.getName());
 
     @FXML
     private StackPane adminContentArea;
@@ -58,17 +61,13 @@ public class AdminDashboardController {
     private final AdminService adminService = AdminService.getInstance();
 
     public AdminDashboardController() {
-        System.out.println("========================================");
-        System.out.println("AdminDashboardController Constructor");
-        System.out.println("Controller ID = " + System.identityHashCode(this));
-        System.out.println("========================================");
+        logger.fine("AdminDashboardController Constructor. ID = " + System.identityHashCode(this));
     }
 
     @FXML
     public void initialize() {
 
-        System.out.println("AdminDashboardController.initialize()");
-        System.out.println("Controller ID = " + System.identityHashCode(this));
+        logger.fine("AdminDashboardController.initialize(). ID = " + System.identityHashCode(this));
 
         if (SessionManager.getCurrentAdmin() != null) {
             adminNameLabel.setText(SessionManager.getCurrentAdmin().getName());
@@ -84,7 +83,7 @@ public class AdminDashboardController {
 
     @FXML
     public void showOverview() {
-        System.out.println("Opening Overview...");
+        logger.fine("Opening Overview...");
         setActive(btnOverview);
         loadView("/com/studybuddy/admin/fxml/AdminDashboardOverview.fxml");
     }
@@ -163,53 +162,39 @@ public class AdminDashboardController {
 
             Parent root = loader.load();
 
-            System.out.println("Loaded Global Search Controller = "
-                    + loader.getController());
+            logger.fine("Loaded Global Search Controller = " + loader.getController());
 
             adminContentArea.getChildren().setAll(root);
 
         } catch (IOException ex) {
-
+            logger.severe("Failed to load AdminGlobalSearch.fxml: " + ex.getMessage());
             ex.printStackTrace();
-
             showOverview();
         }
     }
 
     private void loadView(String fxmlPath) {
-        System.out.println("[DEBUG] FXML loading path: " + fxmlPath);
-        if (fxmlPath.contains("AdminDashboardOverview.fxml")) {
-            System.out.println("[DEBUG] AdminDashboardOverview.fxml loaded");
-        }
+        logger.fine("FXML loading path: " + fxmlPath);
         try {
-
-            System.out.println("--------------------------------");
-            System.out.println("Loading FXML : " + fxmlPath);
+            logger.fine("Loading FXML : " + fxmlPath);
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-
             Parent root = loader.load();
-
             Object controller = loader.getController();
 
-            System.out.println("FXML Loaded Successfully");
-            System.out.println("Controller = " + controller);
+            logger.fine("FXML Loaded Successfully. Controller = " + controller);
 
             if (controller != null) {
-                System.out.println("Controller Class = " + controller.getClass().getName());
-                System.out.println("Controller Hash = " + System.identityHashCode(controller));
+                logger.fine("Controller Class = " + controller.getClass().getName() + ". Hash = " + System.identityHashCode(controller));
             }
 
             adminContentArea.getChildren().clear();
             adminContentArea.getChildren().add(root);
 
-            System.out.println("Children Count = "
-                    + adminContentArea.getChildren().size());
-
-            System.out.println("--------------------------------");
+            logger.fine("Children Count = " + adminContentArea.getChildren().size());
 
         } catch (Exception ex) {
-
+            logger.severe("Failed to load FXML " + fxmlPath + ": " + ex.getMessage());
             ex.printStackTrace();
 
             Alert alert = new Alert(

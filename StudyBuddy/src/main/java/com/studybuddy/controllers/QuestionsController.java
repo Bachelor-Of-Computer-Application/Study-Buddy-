@@ -2,8 +2,13 @@ package com.studybuddy.controllers;
 
 import com.studybuddy.App;
 import com.studybuddy.models.Answer;
+import com.studybuddy.models.Department;
 import com.studybuddy.models.Question;
+import com.studybuddy.models.Semester;
+import com.studybuddy.models.Subject;
+import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.QuestionService;
+import com.studybuddy.utils.EventBus;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -19,19 +24,27 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.studybuddy.utils.DatabaseUtil;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+/**
+ * Controller for QuestionsView.fxml.
+ *
+ * All data access goes through QuestionService → QuestionDAO → SQL Server.
+ * No raw SQL is written inside this controller (MVC compliance).
+ *
+ * Fixes applied:
+ *  - loadQuestions() now calls questionDAO.getAllQuestions() instead of inline SQL.
+ *  - subject filter populated from SubjectDAO (via QuestionService) — no hardcoded list.
+ *  - NPE guards on subject, tags, questionText.
+ *  - Answer authorship check uses userId (not display name).
+ */
 public class QuestionsController {
 
     @FXML private TextField searchField;
+    @FXML private ComboBox<Department> departmentFilter;
+    @FXML private ComboBox<Semester> semesterFilter;
     @FXML private ComboBox<String> subjectFilter;
     @FXML private ListView<Question> questionsListView;
 
@@ -54,14 +67,15 @@ public class QuestionsController {
 
     private final QuestionService questionService = new QuestionService();
     private final com.studybuddy.dao.QuestionDAO questionDAO = new com.studybuddy.dao.QuestionDAO();
+    private final AcademicService academicService = AcademicService.getInstance();
     private List<Question> allQuestions = new ArrayList<>();
     private Question selectedQuestion;
 
     @FXML
     public void initialize() {
-        // Populate subject filter
-        List<String> subjects = questionService.getAvailableSubjects();
-        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
+        // Populate subject filter from canonical Subjects table (not hardcoded)
+        loadFilterDepartments();
+        loadSubjects();
 
         // Selection listener: navigate directly to detail view
         questionsListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
@@ -73,57 +87,120 @@ public class QuestionsController {
         });
 
         loadQuestions();
+        
+        // Subscribe to EventBus events
+        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> loadQuestions());
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> loadQuestions());
     }
-
-    private void loadQuestions() {
-
-        allQuestions = new ArrayList<>();
-
-        String sql = """
-            SELECT *
-            FROM Questions
-            ORDER BY created_at DESC
-            """;
-
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-
-                Question q = new Question(
-                        rs.getInt("question_id"),
-                        rs.getInt("user_id"),
-                        rs.getString("author_name"),
-                        rs.getString("subject"),
-                        rs.getString("question_text"),
-                        rs.getString("tags"),
-                        rs.getString("attachment_path"),
-                        rs.getInt("reward_points"),
-                        rs.getInt("votes"),
-                        rs.getInt("views"),
-                        rs.getString("created_at"),
-                        rs.getBoolean("is_locked")
-                );
-
-                allQuestions.add(q);
+    
+    private void loadFilterDepartments() {
+        if (departmentFilter != null) {
+            semesterFilter.setDisable(true);
+            try {
+                departmentFilter.setItems(FXCollections.observableArrayList(
+                        academicService.getAllActiveDepartments()));
+            } catch (Exception e) {
+                System.err.println("[QuestionsController] Dept filter load failed: " + e.getMessage());
             }
 
-            questionsListView.setItems(
-                    FXCollections.observableArrayList(allQuestions)
-            );
+            departmentFilter.setOnAction(e -> {
+                Department dept = departmentFilter.getValue();
+                if (semesterFilter != null) {
+                    semesterFilter.getItems().clear();
+                    semesterFilter.setValue(null);
+                    semesterFilter.setDisable(dept == null);
+                }
+                subjectFilter.getItems().clear();
+                subjectFilter.setValue(null);
 
-        } catch (Exception e) {
-            e.printStackTrace();
+                if (dept != null && semesterFilter != null) {
+                    try {
+                        semesterFilter.setItems(FXCollections.observableArrayList(
+                                academicService.getSemestersByDepartment(dept.getId())));
+                    } catch (Exception ex) {
+                        System.err.println("[QuestionsController] Sem filter load failed: " + ex.getMessage());
+                    }
+                } else {
+                    loadSubjects();
+                }
+            });
+
+            if (semesterFilter != null) {
+                semesterFilter.setOnAction(e -> {
+                    Semester sem = semesterFilter.getValue();
+                    subjectFilter.getItems().clear();
+                    subjectFilter.setValue(null);
+                    if (sem != null) {
+                        try {
+                            List<String> semSubjects = academicService
+                                    .getSubjectsBySemester(sem.getId())
+                                    .stream()
+                                    .map(Subject::getName)
+                                    .collect(java.util.stream.Collectors.toList());
+                            subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
+                        } catch (Exception ex) {
+                            System.err.println("[QuestionsController] Sub filter load failed: " + ex.getMessage());
+                        }
+                    } else {
+                        loadSubjects();
+                    }
+                });
+            }
         }
     }
+    
+    private void loadSubjects() {
+        List<String> subjects = questionService.getAvailableSubjects();
+        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
+    }
+
+    // =========================
+    // LOAD QUESTIONS via DAO (MVC — no inline SQL)
+    // =========================
+
+    private void loadQuestions() {
+        try {
+            allQuestions = questionDAO.getAllQuestions();
+        } catch (Exception e) {
+            allQuestions = new ArrayList<>();
+            System.err.println("[QuestionsController] Failed to load questions: " + e.getMessage());
+            e.printStackTrace();
+        }
+        questionsListView.setItems(FXCollections.observableArrayList(allQuestions));
+    }
+
+    // =========================
+    // DISPLAY QUESTION DETAILS
+    // =========================
 
     private void displayQuestionDetails(Question q) {
-        qSubject.setText(q.getSubject().toUpperCase());
-        qTags.setText(q.getTags());
-        qDate.setText(q.getCreatedAt());
-        qText.setText(q.getQuestionText());
-        qAuthor.setText("Asked by: " + q.getAuthorName() + " (" + q.getRewardPoints() + " pts bounty)");
+        // NPE-safe: subject, tags, createdAt may be null in legacy rows
+        qSubject.setText(nullSafe(q.getSubject()).toUpperCase());
+        qTags.setText(nullSafe(q.getTags()));
+        qDate.setText(nullSafe(q.getCreatedAt()));
+        qText.setText(nullSafe(q.getQuestionText()));
+        
+        StringBuilder authorInfo = new StringBuilder();
+        authorInfo.append("Asked by: ");
+        if (q.getUserFullName() != null && !q.getUserFullName().isEmpty()) {
+            authorInfo.append(q.getUserFullName());
+        } else {
+            authorInfo.append(nullSafe(q.getAuthorName()));
+        }
+        if (q.getUserDepartment() != null || q.getUserSemester() != null) {
+            authorInfo.append(" (");
+            if (q.getUserDepartment() != null) {
+                authorInfo.append(q.getUserDepartment());
+            }
+            if (q.getUserSemester() != null) {
+                if (q.getUserDepartment() != null) authorInfo.append(" • ");
+                authorInfo.append(q.getUserSemester());
+            }
+            authorInfo.append(")");
+        }
+        authorInfo.append(" (" + q.getRewardPoints() + " pts bounty)");
+        qAuthor.setText(authorInfo.toString());
+        
         qVotes.setText("👍 " + q.getVotes() + " votes");
         qViews.setText("👁️ " + q.getViews() + " views");
 
@@ -141,8 +218,12 @@ public class QuestionsController {
         loadRelatedQuestions(q);
     }
 
+    // =========================
+    // ANSWERS
+    // =========================
+
     /**
-     * Reloads answers for the given question from the database and refreshes the UI.
+     * Reloads answers from DB and refreshes the UI panel.
      */
     private void reloadAnswersFromDb(Question q) {
         try {
@@ -166,7 +247,6 @@ public class QuestionsController {
         }
 
         int currentUserId = App.getCurrentUser() != null ? App.getCurrentUser().getId() : -1;
-        String currentUserName = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
 
         for (Answer ans : q.getAnswers()) {
             VBox ansCard = new VBox(8);
@@ -174,13 +254,13 @@ public class QuestionsController {
             ansCard.setStyle("-fx-background-color: #f8fafc; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-width: 1px; -fx-border-radius: 10;");
 
             HBox header = new HBox(10);
-            Label author = new Label(ans.getAuthorName());
+            Label author = new Label(nullSafe(ans.getAuthorName()));
             author.setStyle("-fx-font-weight: bold; -fx-text-fill: #1f2937; -fx-font-size: 13px;");
-            Label date = new Label(ans.getCreatedAt());
+            Label date = new Label(nullSafe(ans.getCreatedAt()));
             date.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
             header.getChildren().addAll(author, date);
 
-            Label text = new Label(ans.getAnswerText());
+            Label text = new Label(nullSafe(ans.getAnswerText()));
             text.setWrapText(true);
             text.setStyle("-fx-font-size: 13px; -fx-text-fill: #334155;");
 
@@ -206,8 +286,10 @@ public class QuestionsController {
 
             footer.getChildren().addAll(votes, upvoteBtn);
 
-            // Show Edit and Delete only to the answer author
-            if (ans.getAuthorName() != null && ans.getAuthorName().equals(currentUserName)) {
+            // FIXED: authorship check uses userId, NOT display name
+            // This prevents any user from seeing edit/delete buttons on another
+            // user's answer simply because they share the same display name.
+            if (ans.getUserId() > 0 && ans.getUserId() == currentUserId) {
                 Button deleteBtn = new Button("🗑️ Delete");
                 deleteBtn.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #ef4444; -fx-padding: 2 8; -fx-font-size: 11px; -fx-cursor: hand;");
                 deleteBtn.setOnAction(e -> {
@@ -257,12 +339,19 @@ public class QuestionsController {
         }
     }
 
+    // =========================
+    // RELATED QUESTIONS
+    // =========================
+
     private void loadRelatedQuestions(Question current) {
         relatedQuestionsContainer.getChildren().clear();
 
+        String currentSubject = nullSafe(current.getSubject());
+
         List<Question> related = allQuestions.stream()
-                .filter(q -> q.getId() != current.getId() &&
-                             (q.getSubject().equalsIgnoreCase(current.getSubject())))
+                .filter(q -> q.getId() != current.getId()
+                        && !nullSafe(q.getSubject()).isEmpty()
+                        && nullSafe(q.getSubject()).equalsIgnoreCase(currentSubject))
                 .limit(3)
                 .collect(Collectors.toList());
 
@@ -274,7 +363,7 @@ public class QuestionsController {
         }
 
         for (Question q : related) {
-            Hyperlink link = new Hyperlink("[" + q.getSubject().toUpperCase() + "] " + q.getQuestionText());
+            Hyperlink link = new Hyperlink("[" + nullSafe(q.getSubject()).toUpperCase() + "] " + nullSafe(q.getQuestionText()));
             link.setStyle("-fx-font-size: 13px; -fx-text-fill: #3b82f6;");
             link.setOnAction(e -> {
                 selectedQuestion = q;
@@ -283,6 +372,10 @@ public class QuestionsController {
             relatedQuestionsContainer.getChildren().add(link);
         }
     }
+
+    // =========================
+    // NAVIGATION
+    // =========================
 
     @FXML
     public void handleBackToFeed() {
@@ -304,14 +397,42 @@ public class QuestionsController {
         detailPane.setManaged(true);
     }
 
+    // =========================
+    // FILTERS
+    // =========================
+
     @FXML
     public void applyFilters() {
         String query = searchField.getText().trim().toLowerCase();
+        Department dept = departmentFilter.getValue();
+        Semester sem = semesterFilter.getValue();
         String subject = subjectFilter.getValue();
+        
+        List<Subject> allSubjects = academicService.getAllActiveSubjects();
+        java.util.Map<Integer, Subject> subjectMap = allSubjects.stream()
+                .collect(java.util.stream.Collectors.toMap(Subject::getId, s -> s, (s1, unused) -> s1));
 
         List<Question> filtered = allQuestions.stream()
-                .filter(q -> (query.isEmpty() || q.getQuestionText().toLowerCase().contains(query) || q.getTags().toLowerCase().contains(query)) &&
-                             (subject == null || q.getSubject().equalsIgnoreCase(subject)))
+                .filter(q -> (query.isEmpty()
+                        || nullSafe(q.getQuestionText()).toLowerCase().contains(query)
+                        || nullSafe(q.getTags()).toLowerCase().contains(query))
+                        && (subject == null || nullSafe(q.getSubject()).equalsIgnoreCase(subject)))
+                .filter(q -> {
+                    if (dept == null && sem == null) return true;
+                    
+                    Subject subModel = subjectMap.get(q.getSubjectId());
+                    if (subModel == null) {
+                        return allSubjects.stream().anyMatch(s ->
+                                s.getName().equalsIgnoreCase(nullSafe(q.getSubject())) &&
+                                        (dept == null || s.getDepartmentId() == dept.getId()) &&
+                                        (sem == null || s.getSemesterId() == sem.getId())
+                        );
+                    } else {
+                        if (dept != null && subModel.getDepartmentId() != dept.getId()) return false;
+                        if (sem != null && subModel.getSemesterId() != sem.getId()) return false;
+                        return true;
+                    }
+                })
                 .collect(Collectors.toList());
 
         questionsListView.setItems(FXCollections.observableArrayList(filtered));
@@ -320,9 +441,20 @@ public class QuestionsController {
     @FXML
     public void clearFilters() {
         searchField.clear();
+        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
+        if (semesterFilter != null) {
+            semesterFilter.getItems().clear();
+            semesterFilter.setValue(null);
+            semesterFilter.setDisable(true);
+        }
         subjectFilter.getSelectionModel().clearSelection();
+        loadSubjects();
         questionsListView.setItems(FXCollections.observableArrayList(allQuestions));
     }
+
+    // =========================
+    // ACTIONS
+    // =========================
 
     @FXML
     public void handleAskQuestion() {
@@ -334,8 +466,8 @@ public class QuestionsController {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(root));
             stage.showAndWait();
-            
-            loadQuestions();
+
+            loadQuestions(); // Refresh after new question is submitted
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -361,7 +493,6 @@ public class QuestionsController {
     public void handleSubmitAnswer() {
         if (selectedQuestion == null) return;
 
-        // 1. Validate input
         if (answerInput == null) return;
         String text = answerInput.getText();
         if (text == null || text.trim().isEmpty()) {
@@ -371,11 +502,9 @@ public class QuestionsController {
             return;
         }
 
-        // 2. Resolve the current user
-        int userId      = App.getCurrentUser() != null ? App.getCurrentUser().getId()   : 1;
-        String author   = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
+        int userId    = App.getCurrentUser() != null ? App.getCurrentUser().getId()   : 1;
+        String author = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
 
-        // 3. Persist to database via DAO
         try {
             boolean saved = questionDAO.submitAnswer(
                     selectedQuestion.getId(),
@@ -389,7 +518,6 @@ public class QuestionsController {
                 return;
             }
 
-            // 4. Clear input and reload answers from DB
             answerInput.clear();
             reloadAnswersFromDb(selectedQuestion);
 
@@ -407,6 +535,10 @@ public class QuestionsController {
     // =========================
     // HELPERS
     // =========================
+
+    private String nullSafe(String s) {
+        return s != null ? s : "";
+    }
 
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message);

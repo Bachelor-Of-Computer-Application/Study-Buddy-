@@ -8,6 +8,7 @@ public class Note {
     private int id;
     private String title;
     private String subject;
+    private int subjectId;
     private String source;
     private String uploadDate;
     private String fileType;
@@ -17,6 +18,12 @@ public class Note {
     private int userId;
     private boolean isPrivate;
     private String status = "Pending";
+
+    // Transient display field — populated via JOIN, not a DB column
+    private String userName;
+    private String userFullName;
+    private String userDepartment;
+    private String userSemester;
 
     public Note() {
     }
@@ -60,6 +67,10 @@ public class Note {
 
     public String getSubject() {
         return subject;
+    }
+
+    public int getSubjectId() {
+        return subjectId;
     }
 
     public String getSource() {
@@ -108,6 +119,10 @@ public class Note {
         this.subject = subject;
     }
 
+    public void setSubjectId(int subjectId) {
+        this.subjectId = subjectId;
+    }
+
     public void setSource(String source) {
         this.source = source;
     }
@@ -144,5 +159,45 @@ public class Note {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    // =========================
+    // USER NAME (transient)
+    // =========================
+
+    /**
+     * Returns the uploader's display name.
+     * Populated via a JOIN on the Users table; not a persisted column on Notes.
+     */
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserFullName() {
+        return userFullName;
+    }
+
+    public void setUserFullName(String userFullName) {
+        this.userFullName = userFullName;
+    }
+
+    public String getUserDepartment() {
+        return userDepartment;
+    }
+
+    public void setUserDepartment(String userDepartment) {
+        this.userDepartment = userDepartment;
+    }
+
+    public String getUserSemester() {
+        return userSemester;
+    }
+
+    public void setUserSemester(String userSemester) {
+        this.userSemester = userSemester;
     }
 }

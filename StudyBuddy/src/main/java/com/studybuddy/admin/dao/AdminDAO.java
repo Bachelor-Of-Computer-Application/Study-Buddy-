@@ -33,7 +33,7 @@ public class AdminDAO {
      *       pendingNotes, pendingResources
      */
     public Map<String, Integer> getDashboardStats() {
-        System.out.println("[DEBUG] DAO called");
+        logger.fine("[DEBUG] DAO called");
         Map<String, Integer> stats = new LinkedHashMap<>();
         String[] queries = {
                 "SELECT COUNT(*) FROM Users",
@@ -55,24 +55,24 @@ public class AdminDAO {
 
         try (Connection conn = DatabaseUtil.getConnection()) {
             if (conn == null) {
-                System.out.println("[DEBUG] Connection is NULL. Database might not be running.");
+                logger.fine("[DEBUG] Connection is NULL. Database might not be running.");
                 return stats;
             }
             for (int i = 0; i < queries.length; i++) {
-                System.out.println("[DEBUG] Executing SQL: " + queries[i]);
+                logger.fine("[DEBUG] Executing SQL: " + queries[i]);
                 try (PreparedStatement ps = conn.prepareStatement(queries[i]);
                      ResultSet rs = ps.executeQuery()) {
                     int val = rs.next() ? rs.getInt(1) : 0;
-                    System.out.println("[DEBUG] ResultSet value for " + keys[i] + ": " + val);
+                    logger.fine("[DEBUG] ResultSet value for " + keys[i] + ": " + val);
                     stats.put(keys[i], val);
                 } catch (SQLException e) {
                     stats.put(keys[i], 0);
-                    System.out.println("[DEBUG] SQLException for " + keys[i] + ": " + e.getMessage());
+                    logger.fine("[DEBUG] SQLException for " + keys[i] + ": " + e.getMessage());
                     logger.warning("Stat query failed [" + keys[i] + "]: " + e.getMessage());
                 }
             }
         } catch (SQLException e) {
-            System.out.println("[DEBUG] Connection SQLException: " + e.getMessage());
+            logger.fine("[DEBUG] Connection SQLException: " + e.getMessage());
             logger.warning("getDashboardStats connection failed: " + e.getMessage());
         }
         return stats;
@@ -150,6 +150,33 @@ public class AdminDAO {
     // ══════════════════════════════════════════════════════════════════════════
 
     /** All users with extended profile fields. */
+    public User getUserById(int userId) {
+        String sql = """
+                SELECT id, name, fullName, email, role, status, department, semester,
+                       points, created_at, last_login
+                FROM Users
+                WHERE id = ?
+                """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User u = mapUserFull(rs);
+                    try { u.setFullName(rs.getString("fullName")); } catch (SQLException ignored) {}
+                    try { 
+                        java.sql.Timestamp ts = rs.getTimestamp("last_login");
+                        if (ts != null) u.setLastLogin(ts.toLocalDateTime());
+                    } catch (SQLException ignored) {}
+                    return u;
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("getUserById failed: " + e.getMessage());
+        }
+        return null;
+    }
+
     public List<User> getAllUsers() {
         List<User> list = new ArrayList<>();
         String sql = """
@@ -167,6 +194,133 @@ public class AdminDAO {
             }
         } catch (SQLException e) {
             logger.warning("getAllUsers failed: " + e.getMessage());
+        }
+        return list;
+    }
+    
+    public int getUserTotalNotes(int userId) {
+        String sql = "SELECT COUNT(*) FROM Notes WHERE userId = ? AND status != 'Deleted'";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.warning("getUserTotalNotes failed: " + e.getMessage());
+        }
+        return 0;
+    }
+    
+    public int getUserTotalResources(int userId) {
+        String sql = "SELECT COUNT(*) FROM Resources WHERE uploadedBy = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.warning("getUserTotalResources failed: " + e.getMessage());
+        }
+        return 0;
+    }
+    
+    public int getUserTotalQuestions(int userId) {
+        String sql = "SELECT COUNT(*) FROM Questions WHERE user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.warning("getUserTotalQuestions failed: " + e.getMessage());
+        }
+        return 0;
+    }
+    
+    public List<Note> getUserRecentNotes(int userId, int limit) {
+        List<Note> list = new ArrayList<>();
+        String sql = "SELECT TOP (?) id, title, subject, uploadDate, status FROM Notes WHERE userId = ? ORDER BY uploadDate DESC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Note n = new Note();
+                    n.setId(rs.getInt("id"));
+                    n.setTitle(rs.getString("title"));
+                    n.setSubject(rs.getString("subject"));
+                    n.setUploadDate(rs.getTimestamp("uploadDate") != null ? rs.getTimestamp("uploadDate").toString() : "");
+                    n.setStatus(rs.getString("status"));
+                    list.add(n);
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("getUserRecentNotes failed: " + e.getMessage());
+        }
+        return list;
+    }
+    
+    public List<Resource> getUserRecentResources(int userId, int limit) {
+        List<Resource> list = new ArrayList<>();
+        String sql = "SELECT TOP (?) id, title, subject, uploadDate, isActive FROM Resources WHERE uploadedBy = ? ORDER BY uploadDate DESC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Resource r = new Resource();
+                    r.setId(rs.getInt("id"));
+                    r.setTitle(rs.getString("title"));
+                    r.setSubject(rs.getString("subject"));
+                    r.setUploadDate(rs.getTimestamp("uploadDate") != null ? rs.getTimestamp("uploadDate").toString() : "");
+                    r.setActive(rs.getBoolean("isActive"));
+                    list.add(r);
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("getUserRecentResources failed: " + e.getMessage());
+        }
+        return list;
+    }
+    
+    public List<Map<String, Object>> getUserApprovalHistory(int userId, int limit) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = """
+                SELECT TOP (?) 
+                    'Note' AS itemType, id, title, status, uploadDate AS date 
+                FROM Notes 
+                WHERE userId = ? 
+                UNION ALL 
+                SELECT TOP (?) 
+                    'Resource' AS itemType, id, title, CASE WHEN isActive = 1 THEN 'Approved' ELSE 'Pending' END AS status, uploadDate AS date 
+                FROM Resources 
+                WHERE uploadedBy = ? 
+                ORDER BY date DESC
+                """;
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            ps.setInt(2, userId);
+            ps.setInt(3, limit);
+            ps.setInt(4, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("itemType", rs.getString("itemType"));
+                    row.put("id", rs.getInt("id"));
+                    row.put("title", rs.getString("title"));
+                    row.put("status", rs.getString("status"));
+                    row.put("date", rs.getTimestamp("date") != null ? rs.getTimestamp("date").toString() : "");
+                    list.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("getUserApprovalHistory failed: " + e.getMessage());
         }
         return list;
     }

@@ -3,6 +3,7 @@ package com.studybuddy.admin.controllers;
 import com.studybuddy.admin.services.AdminService;
 import com.studybuddy.models.Answer;
 import com.studybuddy.models.Question;
+import com.studybuddy.services.QuestionService;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -50,6 +51,7 @@ public class AdminQuestionsController {
     @FXML private Button btnNextPage;
 
     private final AdminService adminService = AdminService.getInstance();
+    private final QuestionService questionService = new QuestionService();
     private final ObservableList<Question> masterList = FXCollections.observableArrayList();
     private List<Question> filteredList = new ArrayList<>();
     private int currentPage = 1;
@@ -231,9 +233,11 @@ public class AdminQuestionsController {
     }
 
     private void setupFilters() {
-        if (subjectFilter != null) subjectFilter.setItems(FXCollections.observableArrayList(
-                "", "Mathematics", "Physics", "Chemistry", "Computer Science",
-                "Biology", "English", "History", "Geography", "Other"));
+        // Load subject names from the canonical Subjects table — no hardcoded list
+        if (subjectFilter != null) {
+            List<String> subjects = questionService.getAvailableSubjects();
+            subjectFilter.setItems(FXCollections.observableArrayList(subjects));
+        }
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────
