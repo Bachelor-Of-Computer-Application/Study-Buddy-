@@ -88,6 +88,13 @@ public class UserService {
         return userDAO.updateProfileImagePath(userId, profileImagePath);
     }
 
+    /**
+     * Clears the user's profile image path in the database.
+     */
+    public boolean clearProfileImage(int userId) {
+        return userDAO.updateProfileImagePath(userId, null);
+    }
+
     // =========================
     // UPDATE PROFILE - STUDY PREFERENCES
     // =========================

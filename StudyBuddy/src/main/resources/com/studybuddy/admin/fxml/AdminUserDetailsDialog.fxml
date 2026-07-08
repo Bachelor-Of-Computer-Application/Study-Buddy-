@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="16" stylesheets="@../css/admin-dashboard.css"
+<VBox spacing="16" stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
       xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.studybuddy.admin.controllers.AdminUserDetailsController"
       styleClass="admin-panel-bg"

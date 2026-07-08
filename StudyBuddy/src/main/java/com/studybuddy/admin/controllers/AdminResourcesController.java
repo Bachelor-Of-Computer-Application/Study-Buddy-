@@ -4,9 +4,12 @@ import com.studybuddy.admin.services.AdminService;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Resource;
 import com.studybuddy.models.Semester;
+import com.studybuddy.models.Subject;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.FileStorageService;
 import com.studybuddy.services.ResourceService;
+import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.SessionManager;
 import com.studybuddy.dao.UserActivityDAO;
@@ -22,6 +25,7 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +33,17 @@ import java.util.stream.Collectors;
  * Resource management: activate/deactivate, delete, preview/download, search, sort, download count.
  */
 public class AdminResourcesController {
+
+    // Upload form
+    @FXML private TextField uploadNameField;
+    @FXML private TextArea uploadDescriptionField;
+    @FXML private ComboBox<Department> uploadDepartmentCombo;
+    @FXML private ComboBox<Semester> uploadSemesterCombo;
+    @FXML private ComboBox<Subject> uploadSubjectCombo;
+    @FXML private ComboBox<String> uploadCategoryCombo;
+    @FXML private TextField uploadFileField;
+    @FXML private ComboBox<String> uploadStatusCombo;
+    private File selectedUploadFile;
 
     @FXML private TextField           searchField;
     @FXML private ComboBox<Department> departmentFilter;
@@ -60,10 +75,185 @@ public class AdminResourcesController {
 
     @FXML
     public void initialize() {
+        setupUploadForm();
         setupColumns();
         setupFilters();
         loadData();
         searchField.textProperty().addListener((obs, o, n) -> applyFilters());
+    }
+
+    private void setupUploadForm() {
+        if (uploadCategoryCombo != null) {
+            uploadCategoryCombo.setItems(FXCollections.observableArrayList(
+                    "Lecture Notes", "Textbook", "Past Paper", "Assignment", "Lab Manual", "Other"));
+        }
+        if (uploadStatusCombo != null) {
+            uploadStatusCombo.setItems(FXCollections.observableArrayList("Approved", "Pending", "Hidden", "Rejected"));
+            uploadStatusCombo.setValue("Approved");
+        }
+        if (uploadDepartmentCombo != null) {
+            uploadDepartmentCombo.setItems(AcademicFilterHelper.departmentsForFilter(academicService));
+            uploadDepartmentCombo.setValue(AcademicFilterHelper.allDepartments());
+        }
+        if (uploadSemesterCombo != null) {
+            uploadSemesterCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
+            uploadSemesterCombo.setValue(AcademicFilterHelper.allSemesters());
+            uploadSemesterCombo.setDisable(true);
+        }
+        if (uploadSubjectCombo != null) uploadSubjectCombo.setDisable(true);
+        AcademicFilterHelper.wireCascade(academicService, uploadDepartmentCombo, uploadSemesterCombo, uploadSubjectCombo,
+                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, uploadSemesterCombo.getValue(), uploadSubjectCombo));
+        if (uploadSemesterCombo != null) {
+            uploadSemesterCombo.setOnAction(e -> AcademicFilterHelper.loadSubjectsForSemester(
+                    academicService, uploadSemesterCombo.getValue(), uploadSubjectCombo));
+        }
+    }
+
+    @FXML public void handleSelectUploadFile() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Select Resource File");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Study Materials",
+                "*.pdf", "*.docx", "*.doc", "*.ppt", "*.pptx", "*.zip", "*.png", "*.jpg", "*.jpeg"));
+        File f = fc.showOpenDialog(resourcesTable.getScene().getWindow());
+        if (f != null) { selectedUploadFile = f; uploadFileField.setText(f.getName()); }
+    }
+
+    @FXML public void handleUploadResource() {
+        if (uploadNameField.getText() == null || uploadNameField.getText().trim().isEmpty()) {
+            warn("Resource name is required."); return;
+        }
+        if (uploadDepartmentCombo.getValue() == null || uploadSemesterCombo.getValue() == null) {
+            warn("Select department and semester (or All options)."); return;
+        }
+        if (!AcademicFilterHelper.isAllSemesters(uploadSemesterCombo.getValue()) && uploadSubjectCombo.getValue() == null) {
+            warn("Select a subject when a specific semester is chosen."); return;
+        }
+        if (selectedUploadFile == null) { warn("Select a file."); return; }
+        try {
+            Resource r = new Resource();
+            r.setTitle(uploadNameField.getText().trim());
+            r.setDescription(uploadDescriptionField.getText());
+            r.setDepartmentId(AcademicFilterHelper.resolveDepartmentId(uploadDepartmentCombo.getValue()));
+            r.setSemesterId(AcademicFilterHelper.resolveSemesterId(uploadSemesterCombo.getValue()));
+            Subject sub = uploadSubjectCombo.getValue();
+            if (sub != null) {
+                r.setSubject(sub.getName());
+                r.setSubjectId(sub.getId());
+            } else {
+                r.setSubject(AcademicFilterHelper.isAllDepartments(uploadDepartmentCombo.getValue()) ? "All Departments" : "General");
+            }
+            r.setCategory(uploadCategoryCombo.getValue());
+            r.setUploadedBy(SessionManager.getCurrentAdmin() != null ? SessionManager.getCurrentAdmin().getId() : 1);
+            boolean autoApprove = "Approved".equalsIgnoreCase(uploadStatusCombo.getValue());
+            resourceService.createResource(r, selectedUploadFile, autoApprove);
+            info("Resource uploaded successfully.");
+            resetUploadForm();
+            loadData();
+            EventBus.getInstance().publish(new EventBus.ResourcesChangedEvent());
+        } catch (Exception e) {
+            warn("Upload failed: " + e.getMessage());
+        }
+    }
+
+    @FXML public void handleUpdateResource() {
+        Resource sel = selected(); if (sel == null) return;
+        try {
+            sel.setTitle(uploadNameField.getText().trim());
+            sel.setDescription(uploadDescriptionField.getText());
+            Subject sub = uploadSubjectCombo.getValue();
+            if (sub != null) { sel.setSubject(sub.getName()); sel.setSubjectId(sub.getId()); }
+            sel.setDepartmentId(AcademicFilterHelper.resolveDepartmentId(uploadDepartmentCombo.getValue()));
+            sel.setSemesterId(AcademicFilterHelper.resolveSemesterId(uploadSemesterCombo.getValue()));
+            sel.setCategory(uploadCategoryCombo.getValue());
+            sel.setStatus(uploadStatusCombo.getValue());
+            sel.setActive("Approved".equalsIgnoreCase(uploadStatusCombo.getValue()));
+            if (selectedUploadFile != null) {
+                FileStorageService.getInstance().deleteFile(sel.getFilePath());
+                sel.setFilePath(FileStorageService.getInstance()
+                        .storeFile(selectedUploadFile, "resources"));
+            }
+            resourceService.updateResource(sel);
+            info("Resource updated.");
+            resetUploadForm();
+            loadData();
+        } catch (Exception e) {
+            warn("Update failed: " + e.getMessage());
+        }
+    }
+
+    @FXML public void handleResetUploadForm() { resetUploadForm(); }
+
+    private void resetUploadForm() {
+        if (uploadNameField != null) uploadNameField.clear();
+        if (uploadDescriptionField != null) uploadDescriptionField.clear();
+        if (uploadFileField != null) uploadFileField.clear();
+        if (uploadDepartmentCombo != null) uploadDepartmentCombo.setValue(AcademicFilterHelper.allDepartments());
+        if (uploadSemesterCombo != null) {
+            uploadSemesterCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
+            uploadSemesterCombo.setValue(AcademicFilterHelper.allSemesters());
+            uploadSemesterCombo.setDisable(true);
+        }
+        if (uploadSubjectCombo != null) { uploadSubjectCombo.getItems().clear(); uploadSubjectCombo.setValue(null); }
+        if (uploadStatusCombo != null) uploadStatusCombo.setValue("Approved");
+        selectedUploadFile = null;
+    }
+
+    @FXML public void handleEditResource() {
+        Resource r = selected(); if (r == null) return;
+        uploadNameField.setText(r.getTitle());
+        uploadDescriptionField.setText(r.getDescription());
+        uploadFileField.setText(r.getFilePath() != null ? new File(r.getFilePath()).getName() : "");
+        uploadCategoryCombo.setValue(r.getCategory());
+        uploadStatusCombo.setValue(r.getStatus() != null ? r.getStatus() : (r.isActive() ? "Approved" : "Pending"));
+        populateUploadCombosFromResource(r);
+    }
+
+    private void populateUploadCombosFromResource(Resource r) {
+        if (uploadDepartmentCombo == null) return;
+        Integer deptId = r.getDepartmentId();
+        if (deptId != null && deptId > 0) {
+            for (Department d : academicService.getAllActiveDepartments()) {
+                if (d.getId() == deptId) {
+                    uploadDepartmentCombo.setValue(d);
+                    uploadSemesterCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, d));
+                    uploadSemesterCombo.setDisable(false);
+                    break;
+                }
+            }
+        } else {
+            uploadDepartmentCombo.setValue(AcademicFilterHelper.allDepartments());
+            uploadSemesterCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
+            uploadSemesterCombo.setDisable(true);
+        }
+        Integer semId = r.getSemesterId();
+        if (semId != null && semId > 0) {
+            for (Semester s : uploadSemesterCombo.getItems()) {
+                if (s.getId() == semId) {
+                    uploadSemesterCombo.setValue(s);
+                    AcademicFilterHelper.loadSubjectsForSemester(academicService, s, uploadSubjectCombo);
+                    break;
+                }
+            }
+        } else if (uploadSemesterCombo != null) {
+            uploadSemesterCombo.setValue(AcademicFilterHelper.allSemesters());
+        }
+        if (r.getSubjectId() > 0 && uploadSubjectCombo != null) {
+            for (Subject s : uploadSubjectCombo.getItems()) {
+                if (s.getId() == r.getSubjectId()) { uploadSubjectCombo.setValue(s); break; }
+            }
+        }
+    }
+
+    @FXML public void handleApproveResource() {
+        Resource r = selected(); if (r == null) return;
+        adminService.updateResourceStatus(r.getId(), "Approved", r.getTitle());
+        loadData();
+    }
+
+    @FXML public void handleHideResource() {
+        Resource r = selected(); if (r == null) return;
+        adminService.updateResourceStatus(r.getId(), "Hidden", r.getTitle());
+        loadData();
     }
 
     private void loadData() {
@@ -82,8 +272,13 @@ public class AdminResourcesController {
     @FXML
     public void applyFilters() {
         String q       = searchField.getText().trim().toLowerCase();
+        Department dept = departmentFilter.getValue();
+        Semester sem = semesterFilter.getValue();
         String subject = subjectFilter.getValue();
         String status  = statusFilter.getValue();
+        List<Subject> allSubjects = academicService.getAllActiveSubjects();
+        Map<Integer, Subject> subjectMap = allSubjects.stream()
+                .collect(Collectors.toMap(Subject::getId, s -> s, (a, b) -> a));
 
         filteredList = masterList.stream()
             .filter(r -> q.isEmpty()
@@ -91,9 +286,14 @@ public class AdminResourcesController {
                     || nullSafe(r.getSubject()).toLowerCase().contains(q)
                     || nullSafe(r.getSource()).toLowerCase().contains(q))
             .filter(r -> subject == null || subject.isEmpty() || nullSafe(r.getSubject()).equalsIgnoreCase(subject))
+            .filter(r -> AcademicFilterHelper.matchesDeptSemFilter(
+                    r.getDepartmentId(), r.getSemesterId(), r.getSubjectId(),
+                    dept, sem, subjectMap, allSubjects, nullSafe(r.getSubject())))
             .filter(r -> {
                 if (status == null || status.isEmpty()) return true;
-                return "Active".equalsIgnoreCase(status) ? r.isActive() : !r.isActive();
+                if ("Active".equalsIgnoreCase(status)) return r.isActive();
+                if ("Inactive".equalsIgnoreCase(status)) return !r.isActive();
+                return status.equalsIgnoreCase(nullSafe(r.getStatus()));
             })
             .collect(Collectors.toList());
 
@@ -104,11 +304,8 @@ public class AdminResourcesController {
     @FXML
     public void clearFilters() {
         searchField.clear();
-        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
-        if (semesterFilter   != null) { semesterFilter.getItems().clear(); semesterFilter.setValue(null); }
-        if (subjectFilter    != null) subjectFilter.getSelectionModel().clearSelection();
-        if (statusFilter     != null) statusFilter.getSelectionModel().clearSelection();
-        loadSubjectFilter();
+        AcademicFilterHelper.resetFilters(academicService, departmentFilter, semesterFilter, subjectFilter);
+        if (statusFilter != null) statusFilter.getSelectionModel().clearSelection();
         filteredList = new ArrayList<>(masterList);
         currentPage  = 1;
         updateTable();
@@ -203,8 +400,8 @@ public class AdminResourcesController {
     public void handleDelete() {
         Resource r = selected(); if (r == null) return;
         if (confirm("Delete resource '" + r.getTitle() + "'? This cannot be undone.")) {
-            boolean ok = adminService.deleteResource(r.getId(), r.getTitle());
-            if (ok) { masterList.remove(r); filteredList.remove(r); updateTable(); }
+            boolean ok = adminService.deleteResourceWithFile(r.getId(), r.getTitle());
+            if (ok) { loadData(); EventBus.getInstance().publish(new EventBus.ResourcesChangedEvent()); }
         }
     }
 
@@ -266,70 +463,9 @@ public class AdminResourcesController {
     }
 
     private void setupFilters() {
-        // Cascade: Department → Semester → Subject (all from DB)
-        if (departmentFilter != null) {
-            try {
-                departmentFilter.setItems(FXCollections.observableArrayList(
-                        academicService.getAllActiveDepartments()));
-            } catch (Exception e) {
-                System.err.println("[AdminResourcesController] Dept load failed: " + e.getMessage());
-            }
-            departmentFilter.setOnAction(e -> {
-                Department dept = departmentFilter.getValue();
-                if (semesterFilter != null) {
-                    semesterFilter.getItems().clear();
-                    semesterFilter.setValue(null);
-                }
-                if (subjectFilter != null) {
-                    subjectFilter.getItems().clear();
-                    subjectFilter.setValue(null);
-                }
-                if (dept != null && semesterFilter != null) {
-                    try {
-                        semesterFilter.setItems(FXCollections.observableArrayList(
-                                academicService.getSemestersByDepartment(dept.getId())));
-                    } catch (Exception ex) {
-                        System.err.println("[AdminResourcesController] Sem load failed: " + ex.getMessage());
-                    }
-                } else {
-                    loadSubjectFilter();
-                }
-            });
-        }
-        if (semesterFilter != null) {
-            semesterFilter.setOnAction(e -> {
-                Semester sem = semesterFilter.getValue();
-                if (subjectFilter != null) {
-                    subjectFilter.getItems().clear();
-                    subjectFilter.setValue(null);
-                }
-                if (sem != null) {
-                    try {
-                        List<String> semSubjects = academicService
-                                .getSubjectsBySemester(sem.getId())
-                                .stream()
-                                .map(com.studybuddy.models.Subject::getName)
-                                .collect(java.util.stream.Collectors.toList());
-                        if (subjectFilter != null)
-                            subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
-                    } catch (Exception ex) {
-                        System.err.println("[AdminResourcesController] Sub load failed: " + ex.getMessage());
-                    }
-                } else {
-                    loadSubjectFilter();
-                }
-            });
-        }
-        loadSubjectFilter();
+        AcademicFilterHelper.setupFilterBar(academicService, departmentFilter, semesterFilter, subjectFilter);
         if (statusFilter != null) statusFilter.setItems(FXCollections.observableArrayList(
-                "", "Active", "Inactive"));
-    }
-
-    /** Loads the full resource subject list from the canonical Subjects table. */
-    private void loadSubjectFilter() {
-        if (subjectFilter == null) return;
-        List<String> subjects = resourceService.getAllSubjectNames();
-        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
+                "", "Approved", "Pending", "Hidden", "Active", "Inactive"));
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────

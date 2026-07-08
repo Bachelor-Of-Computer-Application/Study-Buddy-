@@ -2,13 +2,15 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
 <!-- Main dashboard shell: sidebar (left) + content (center) -->
 <BorderPane xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.studybuddy.admin.controllers.AdminDashboardController"
-            stylesheets="@../css/admin-dashboard.css"
+            stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
             styleClass="root-pane">
 
     <!-- ══ LEFT SIDEBAR ══════════════════════════════════════════════ -->
@@ -20,7 +22,11 @@
             <!-- Brand -->
             <HBox styleClass="brand-box" spacing="10" alignment="CENTER_LEFT">
                 <padding><Insets bottom="4"/></padding>
-                <Label text="📚" styleClass="brand-icon"/>
+                <ImageView fitHeight="42" fitWidth="42" preserveRatio="true">
+                    <image>
+                        <Image url="@../../images/main_logo_study_buddyy.png"/>
+                    </image>
+                </ImageView>
                 <VBox spacing="1">
                     <Label text="StudyBuddy" styleClass="brand-title"/>
                     <Label text="Admin Panel" styleClass="brand-subtitle"/>
@@ -32,8 +38,7 @@
             <!-- Global search -->
             <TextField fx:id="globalSearchField"
                        promptText="🔍  Global search…"
-                       styleClass="search-field"
-                       style="-fx-background-color: #1e293b; -fx-text-fill: #94a3b8; -fx-border-color: #334155; -fx-prompt-text-fill: #64748b;"
+                       styleClass="search-field sidebar-search-field"
                        maxWidth="Infinity">
                 <VBox.margin><Insets top="6" bottom="4"/></VBox.margin>
             </TextField>
@@ -95,9 +100,11 @@
 
             <!-- Admin info box -->
             <HBox styleClass="admin-info-box" spacing="10" alignment="CENTER_LEFT">
-                <VBox styleClass="admin-avatar" alignment="CENTER">
-                    <Label styleClass="admin-avatar-label" text="A"/>
-                </VBox>
+                <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                    <image>
+                        <Image url="@../../images/round-account-button.png"/>
+                    </image>
+                </ImageView>
                 <VBox spacing="2" HBox.hgrow="ALWAYS">
                     <Label fx:id="adminNameLabel" text="Administrator" styleClass="admin-name-label"/>
                     <Label fx:id="adminRoleLabel" text="ADMIN" styleClass="admin-role-label"/>

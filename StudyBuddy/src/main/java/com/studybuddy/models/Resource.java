@@ -12,6 +12,8 @@ public class Resource {
     private String title;
     private String subject;
     private int subjectId;
+    private Integer departmentId;
+    private Integer semesterId;
     private String source;
     private String description;
     private String uploadDate;
@@ -20,6 +22,8 @@ public class Resource {
     private String fileId; // used by ResourceDAO (UUID-based schema)
     private int downloads;
     private boolean isActive;
+    private String status = "Pending";
+    private String category;
     private String userFullName;
     private String userDepartment;
     private String userSemester;
@@ -143,6 +147,22 @@ public class Resource {
         this.subjectId = subjectId;
     }
 
+    public Integer getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Integer getSemesterId() {
+        return semesterId;
+    }
+
+    public void setSemesterId(Integer semesterId) {
+        this.semesterId = semesterId;
+    }
+
     public void setSource(String source) {
         this.source = source;
     }
@@ -202,5 +222,21 @@ public class Resource {
 
     public void setUserSemester(String userSemester) {
         this.userSemester = userSemester;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

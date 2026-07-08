@@ -5,7 +5,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fitToWidth="true" styleClass="content-scroll" stylesheets="@../css/admin-dashboard.css"
+<ScrollPane fitToWidth="true" styleClass="content-scroll" stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
     xmlns="http://javafx.com/javafx/17"
     xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.admin.controllers.AdminOverviewController">
     <content>

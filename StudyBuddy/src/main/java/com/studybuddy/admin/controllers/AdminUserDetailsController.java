@@ -128,6 +128,9 @@ public class AdminUserDetailsController {
         uploads.sort((a, b) -> {
             String dateA = (String) a.get("date");
             String dateB = (String) b.get("date");
+            if (dateA == null && dateB == null) return 0;
+            if (dateA == null) return 1;
+            if (dateB == null) return -1;
             return dateB.compareTo(dateA);
         });
 
@@ -160,7 +163,7 @@ public class AdminUserDetailsController {
     }
 
     @FXML
-    private void handleClose() {
+    public void handleClose() {
         if (dialogStage != null) {
             dialogStage.close();
         }

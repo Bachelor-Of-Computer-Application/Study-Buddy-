@@ -1,10 +1,15 @@
 package com.studybuddy.services;
 
-import com.studybuddy.dao.QuestionDAO;
-import com.studybuddy.utils.DatabaseUtil;
 import com.studybuddy.App;
+import com.studybuddy.dao.QuestionDAO;
+import com.studybuddy.models.Question;
+import com.studybuddy.models.User;
+import com.studybuddy.utils.DatabaseUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,15 +21,21 @@ public class QuestionService {
      * Persists a new question.
      * Delegates to QuestionDAO which now stores both subject (name) and subjectId (FK).
      */
-    public boolean saveQuestion(String text, String subject, int subjectId, int points, String attachment) {
+    public boolean saveQuestion(String text, String subject, int subjectId, int points, String attachment,
+                                  Integer departmentId, Integer semesterId) {
         try {
             int userId = getCurrentUserId();
-            return questionDAO.createQuestion(userId, text, subject, subjectId, points, attachment);
+            return questionDAO.createQuestion(userId, text, subject, subjectId, points, attachment,
+                    departmentId, semesterId);
         } catch (SQLException e) {
             System.err.println("[QuestionService] ❌ Failed to save question: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean saveQuestion(String text, String subject, int subjectId, int points, String attachment) {
+        return saveQuestion(text, subject, subjectId, points, attachment, null, null);
     }
 
     /**
@@ -72,5 +83,45 @@ public class QuestionService {
         return q != null && !q.isEmpty()
                 && s != null && !s.isEmpty()
                 && p >= 0;
+    }
+
+    public int saveQuestionBankEntry(Question q) throws SQLException {
+        return questionDAO.createQuestionBankEntry(q);
+    }
+
+    public boolean updateQuestionBankEntry(Question q) throws SQLException {
+        return questionDAO.updateQuestionBankEntry(q);
+    }
+
+    public List<Question> getQuestionBankEntries() throws SQLException {
+        return questionDAO.getQuestionBankEntries();
+    }
+
+    public List<Question> getAllQuestionsForAdminPanel() throws SQLException {
+        return questionDAO.getAllQuestionsForAdminPanel();
+    }
+
+    public Question getQuestionById(int id) throws SQLException {
+        return questionDAO.getQuestionById(id);
+    }
+
+    public List<Question> getQuestionsByUserId(int userId) throws SQLException {
+        return questionDAO.getQuestionsByUserId(userId);
+    }
+
+    public boolean deleteQuestion(int id, User user) throws SQLException {
+        Question q = questionDAO.getQuestionById(id);
+        if (q == null) return false;
+        AuthorizationService.getInstance().requireOwnership(user, q.getUserId());
+        return deleteQuestion(id);
+    }
+
+    public boolean deleteQuestion(int id) throws SQLException {
+        Question q = questionDAO.getQuestionById(id);
+        boolean deleted = questionDAO.deleteQuestionById(id);
+        if (deleted && q != null && q.getAttachmentPath() != null && !q.getAttachmentPath().isBlank()) {
+            FileStorageService.getInstance().deleteFile(q.getAttachmentPath());
+        }
+        return deleted;
     }
 }

@@ -64,4 +64,23 @@ public class NotificationService {
     public int getUnreadCountByUserId(int userId) {
         return notificationDAO.getUnreadCountByUserId(userId);
     }
+
+    public boolean markAllReadForUser(int userId) {
+        return notificationDAO.markAllReadForUser(userId);
+    }
+
+    public boolean archiveNotification(int id) {
+        return notificationDAO.archiveNotification(id);
+    }
+
+    public List<Notification> searchForUser(int userId, String query, String type, String priority) {
+        return notificationDAO.searchNotificationsForUser(userId, query, type, priority);
+    }
+
+    public boolean sendSmartNotification(Notification n) {
+        if (SessionManager.getCurrentAdmin() != null) {
+            n.setSentBy(SessionManager.getCurrentAdmin().getId());
+        }
+        return notificationDAO.sendNotification(n);
+    }
 }

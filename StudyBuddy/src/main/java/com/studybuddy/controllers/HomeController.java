@@ -7,8 +7,9 @@ import com.studybuddy.models.Notification;
 import com.studybuddy.admin.services.NotificationService;
 import com.studybuddy.services.AuthService;
 import com.studybuddy.services.TaskService;
+import com.studybuddy.utils.EventBus;
+import com.studybuddy.utils.ImageLoader;
 import com.studybuddy.utils.SceneManager;
-import com.studybuddy.controllers.ProfileController;
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -45,15 +47,26 @@ public class HomeController {
     @FXML private BorderPane rootPane;
     @FXML private StackPane  contentArea;
     @FXML private Text       usernameLabel;
+    @FXML private Text       usernameWelcome;
     @FXML private Label      emailLabel;
+
+    @FXML private Button dashboardNavBtn;
+    @FXML private Button notesNavBtn;
+    @FXML private Button questionsNavBtn;
+    @FXML private Button resourcesNavBtn;
+    @FXML private Button profileNavBtn;
 
     // Stats displayed in the home sidebar / welcome area
     @FXML private Text totalTasksCount;
     @FXML private Text completedTasksCount;
     @FXML private Text studyHoursCount;
+    @FXML private ImageView sidebarAvatarView;
 
     private User currentUser;
     private final TaskService taskService = new TaskService();
+    private final ImageLoader imageLoader = ImageLoader.getInstance();
+    private Button activeNavButton;
+    private static final double SIDEBAR_AVATAR_SIZE = 36;
 
     // =========================
     // INITIALIZE
@@ -70,7 +83,10 @@ public class HomeController {
 
         if (currentUser != null) {
             if (usernameLabel != null) {
-                usernameLabel.setText(currentUser.getName());
+                usernameLabel.setText(currentUser.getDisplayFullName());
+            }
+            if (usernameWelcome != null) {
+                usernameWelcome.setText(currentUser.getDisplayFullName());
             }
             if (emailLabel != null) {
                 emailLabel.setText(currentUser.getEmail());
@@ -82,6 +98,21 @@ public class HomeController {
         loadRecentTasks();
         loadStudyProgress();
         checkUserNotifications();
+        refreshSidebarAvatar();
+
+        EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> {
+            currentUser = App.getCurrentUser();
+            refreshSidebarAvatar();
+            if (usernameLabel != null && currentUser != null) {
+                usernameLabel.setText(currentUser.getDisplayFullName());
+            }
+        });
+    }
+
+    private void refreshSidebarAvatar() {
+        if (sidebarAvatarView == null) return;
+        String path = currentUser != null ? currentUser.getProfileImagePath() : null;
+        imageLoader.applyAvatarToView(sidebarAvatarView, path, SIDEBAR_AVATAR_SIZE);
     }
 
     // =========================
@@ -191,41 +222,36 @@ public class HomeController {
 
     @FXML
     public void goToDashboard() {
-        loadCenterView("/com/studybuddy/fxml/DashboardView.fxml");
+        loadCenterView("/com/studybuddy/fxml/DashboardView.fxml", dashboardNavBtn);
     }
 
     @FXML
     public void goToNotes() {
-        loadCenterView("/com/studybuddy/fxml/NotesView.fxml");
+        loadCenterView("/com/studybuddy/fxml/NotesView.fxml", notesNavBtn);
     }
 
     @FXML
     public void goToQuestions() {
-        loadCenterView("/com/studybuddy/fxml/QuestionsView.fxml");
+        loadCenterView("/com/studybuddy/fxml/QuestionsView.fxml", questionsNavBtn);
     }
 
     @FXML
     public void goToResources() {
-        loadCenterView("/com/studybuddy/fxml/ResourcesView.fxml");
+        loadCenterView("/com/studybuddy/fxml/ResourcesView.fxml", resourcesNavBtn);
     }
 
     @FXML
     public void goToProgress() {
-        // Navigate to Dashboard which shows progress bar & statistics
-        loadCenterView("/com/studybuddy/fxml/DashboardView.fxml");
+        loadCenterView("/com/studybuddy/fxml/DashboardView.fxml", dashboardNavBtn);
     }
 
     @FXML
     public void goToProfile() {
+        setActiveNav(profileNavBtn);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/fxml/ProfileView.fxml"));
             Parent view = loader.load();
-
-            // ProfileController reads the current user from App.getCurrentUser()
-            ProfileController controller = loader.getController();
-            // controller is initialised automatically via its own initialize() method
-
-            contentArea.getChildren().setAll(view);
+            fadeInContent(view);
         } catch (Exception e) {
             showAlert("Navigation Error", "Could not navigate to Profile: " + e.getMessage());
             e.printStackTrace();
@@ -248,15 +274,31 @@ public class HomeController {
     // HELPERS
     // =========================
 
-    private void loadCenterView(String fxmlPath) {
+    private void loadCenterView(String fxmlPath, Button navButton) {
+        setActiveNav(navButton);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent view = loader.load();
-            contentArea.getChildren().setAll(view);
+            fadeInContent(view);
         } catch (Exception e) {
             showAlert("Navigation Error", "Could not navigate to " + fxmlPath + ": " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void setActiveNav(Button navButton) {
+        if (activeNavButton != null) {
+            activeNavButton.getStyleClass().remove("nav-button-active");
+        }
+        activeNavButton = navButton;
+        if (activeNavButton != null && !activeNavButton.getStyleClass().contains("nav-button-active")) {
+            activeNavButton.getStyleClass().add("nav-button-active");
+        }
+    }
+
+    private void fadeInContent(Parent view) {
+        contentArea.getChildren().setAll(view);
+        addFadeInAnimation(view);
     }
 
     private void showAlert(String title, String message) {
@@ -293,14 +335,17 @@ public class HomeController {
         dialog.initModality(Modality.APPLICATION_MODAL);
         
         VBox layout = new VBox(15);
+        layout.getStyleClass().add("dialog-panel");
         layout.setPadding(new Insets(20));
-        layout.setStyle("-fx-background-color: white;");
-        
+        if (getClass().getResource("/com/studybuddy/css/theme.css") != null) {
+            layout.getStylesheets().add(getClass().getResource("/com/studybuddy/css/theme.css").toExternalForm());
+        }
+
         Label headerLabel = new Label("Notifications");
-        headerLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        
+        headerLabel.getStyleClass().add("dialog-header");
+
         Label unreadLabel = new Label();
-        unreadLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #ef4444;");
+        unreadLabel.getStyleClass().add("dialog-subheader");
         
         ListView<Notification> listView = new ListView<>();
         listView.setPrefHeight(250);
@@ -314,7 +359,11 @@ public class HomeController {
                 } else {
                     String prefix = item.isRead() ? "✓ " : "🔔 ";
                     setText(prefix + item.getTitle() + "\n" + item.getMessage());
-                    setStyle(item.isRead() ? "-fx-text-fill: #94a3b8;" : "-fx-font-weight: bold;");
+                    if (item.isRead()) {
+                        getStyleClass().setAll("hint-text");
+                    } else {
+                        getStyleClass().setAll("notification-unread");
+                    }
                 }
             }
         });
@@ -328,8 +377,8 @@ public class HomeController {
         
         refreshList.run();
         
-        Button markReadBtn = new Button("Mark as Read");
-        markReadBtn.setStyle("-fx-background-color: #4f46e5; -fx-text-fill: white; -fx-font-weight: bold;");
+        Button markReadBtn = new Button("✓ Mark as Read");
+        markReadBtn.getStyleClass().add("btn-primary");
         markReadBtn.setOnAction(e -> {
             Notification selected = listView.getSelectionModel().getSelectedItem();
             if (selected != null) {
@@ -338,8 +387,8 @@ public class HomeController {
             }
         });
         
-        Button deleteBtn = new Button("Delete");
-        deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold;");
+        Button deleteBtn = new Button("🗑 Delete");
+        deleteBtn.getStyleClass().add("btn-danger");
         deleteBtn.setOnAction(e -> {
             Notification selected = listView.getSelectionModel().getSelectedItem();
             if (selected != null) {
@@ -349,6 +398,7 @@ public class HomeController {
         });
         
         Button closeBtn = new Button("Close");
+        closeBtn.getStyleClass().add("btn-secondary");
         closeBtn.setOnAction(e -> dialog.close());
         
         HBox actions = new HBox(10, markReadBtn, deleteBtn, closeBtn);

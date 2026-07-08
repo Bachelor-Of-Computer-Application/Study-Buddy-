@@ -17,6 +17,9 @@
 .auth-brand-icon {
     -fx-font-size: 56px;
 }
+.auth-logo-image {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.25), 12, 0, 0, 4);
+}
 .auth-brand-title {
     -fx-font-size:   32px;
     -fx-font-weight: bold;

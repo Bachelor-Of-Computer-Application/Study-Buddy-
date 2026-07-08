@@ -4,7 +4,10 @@ import com.studybuddy.dao.NoteDAO;
 import com.studybuddy.dao.SubjectDAO;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Subject;
+import com.studybuddy.models.User;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +84,45 @@ public class NoteService {
      */
     public void createNote(Note note, boolean autoApprove) throws SQLException {
         noteDAO.createNote(note, autoApprove);
+    }
+
+    public int createNoteWithFile(Note note, File file, boolean autoApprove) throws SQLException, IOException {
+        if (noteDAO.duplicateExists(note.getTitle(), note.getUserId(), null)) {
+            throw new IllegalArgumentException("A note with this title already exists.");
+        }
+        FileStorageService storage = FileStorageService.getInstance();
+        if (file != null) {
+            String storedPath = storage.storeFile(file, "notes");
+            note.setFilePath(storedPath);
+            note.setFileName(file.getName());
+            String ext = file.getName().contains(".")
+                    ? file.getName().substring(file.getName().lastIndexOf('.') + 1).toUpperCase()
+                    : "TXT";
+            note.setFileType(ext);
+        }
+        noteDAO.createNote(note, autoApprove);
+        return note.getId();
+    }
+
+    public boolean updateNote(Note note) throws SQLException {
+        return noteDAO.updateNote(note);
+    }
+
+    public Note getNoteById(int id) throws SQLException {
+        return noteDAO.getNoteById(id);
+    }
+
+    public boolean deleteNoteWithFile(int id, User user) throws SQLException {
+        Note note = noteDAO.getNoteById(id);
+        if (note == null) return false;
+        AuthorizationService.getInstance().requireOwnership(user, note.getUserId());
+        FileStorageService.getInstance().deleteFile(note.getFilePath());
+        noteDAO.hardDeleteNote(id);
+        return true;
+    }
+
+    public void incrementDownloads(int noteId) throws SQLException {
+        noteDAO.incrementDownloads(noteId);
     }
 
     // =========================

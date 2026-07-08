@@ -1,6 +1,7 @@
 package com.studybuddy.admin.services;
 
 import com.studybuddy.admin.dao.AdminDAO;
+import com.studybuddy.services.FileStorageService;
 import com.studybuddy.dao.UserDAO;
 import com.studybuddy.models.*;
 import com.studybuddy.utils.PasswordHasher;
@@ -186,6 +187,44 @@ public class AdminService {
         return ok;
     }
 
+    /**
+     * Permanently deletes a note and its linked resources. Returns null on full success,
+     * or a user-facing message when partial failure occurs.
+     */
+    public String deleteNoteWithFile(int noteId, String title) {
+        com.studybuddy.dao.NoteDAO noteDAO = new com.studybuddy.dao.NoteDAO();
+        try {
+            com.studybuddy.models.Note note = noteDAO.getNoteById(noteId);
+            if (note == null) {
+                return "Note not found (id=" + noteId + "). It may have already been deleted.";
+            }
+            boolean dbDeleted = adminDAO.hardDeleteNote(noteId);
+            if (!dbDeleted) {
+                return "Could not delete note from the database. Check server logs for FK or SQL errors.";
+            }
+            logService.logAction("Note Deleted", "Note", title);
+
+            String filePath = note.getFilePath();
+            if (filePath != null && !filePath.isBlank()) {
+                boolean fileRemoved = FileStorageService.getInstance().deleteFile(filePath);
+                if (!fileRemoved && new java.io.File(filePath).exists()) {
+                    return "Note was removed from the database, but the file could not be deleted:\n" + filePath;
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            java.util.logging.Logger.getLogger(AdminService.class.getName())
+                    .log(java.util.logging.Level.SEVERE, "deleteNoteWithFile failed for noteId=" + noteId, e);
+            return "Delete failed: " + e.getMessage();
+        }
+    }
+
+    public boolean updateNoteStatus(int noteId, String status, String title) {
+        boolean ok = adminDAO.updateNoteStatus(noteId, status);
+        if (ok) logService.logAction("Note Status: " + status, "Note", title);
+        return ok;
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // Resource Moderation
     // ══════════════════════════════════════════════════════════════════════════
@@ -207,6 +246,27 @@ public class AdminService {
     public boolean deleteResource(int id, String title) {
         boolean ok = adminDAO.deleteResource(id);
         if (ok) logService.logAction("Resource Deleted", "Resource", title);
+        return ok;
+    }
+
+    public boolean deleteResourceWithFile(int id, String title) {
+        try {
+            com.studybuddy.dao.ResourceDAO dao = new com.studybuddy.dao.ResourceDAO();
+            com.studybuddy.models.Resource r = dao.getResourceById(id);
+            boolean ok = dao.hardDeleteResource(id);
+            if (ok && r != null) {
+                FileStorageService.getInstance().deleteFile(r.getFilePath());
+                logService.logAction("Resource Deleted", "Resource", title);
+            }
+            return ok;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean updateResourceStatus(int id, String status, String title) {
+        boolean ok = adminDAO.updateResourceApprovalStatus(id, status);
+        if (ok) logService.logAction("Resource Status: " + status, "Resource", title);
         return ok;
     }
 

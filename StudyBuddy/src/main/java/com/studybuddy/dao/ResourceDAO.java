@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,9 +69,9 @@ public class ResourceDAO {
         int isActiveValue = autoApprove ? 1 : 0;
         String sql =
             "INSERT INTO Resources " +
-            "(noteId, uploadedBy, title, subject, subjectId, source, description, " +
+            "(noteId, uploadedBy, title, subject, subjectId, departmentId, semesterId, source, description, " +
             " uploadDate, filePath, fileType, downloads, isActive) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)";
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -91,12 +92,15 @@ public class ResourceDAO {
                 stmt.setNull(5, java.sql.Types.INTEGER);
             }
 
-            stmt.setString(6, note.getSource());
-            stmt.setString(7, note.getDescription());
-            stmt.setString(8, note.getUploadDate());
-            stmt.setString(9, filePath);
-            stmt.setString(10, note.getFileType());
-            stmt.setInt(11, isActiveValue);
+            setNullableInt(stmt, 6, note.getDepartmentId());
+            setNullableInt(stmt, 7, note.getSemesterId());
+
+            stmt.setString(8, note.getSource());
+            stmt.setString(9, note.getDescription());
+            stmt.setString(10, note.getUploadDate());
+            stmt.setString(11, filePath);
+            stmt.setString(12, note.getFileType());
+            stmt.setInt(13, isActiveValue);
             stmt.executeUpdate();
         }
     }
@@ -244,6 +248,109 @@ public class ResourceDAO {
         return subjects;
     }
 
+    public int createResource(Resource resource, boolean autoApprove) throws SQLException {
+        String status = autoApprove ? "Approved" : "Pending";
+        int isActive = autoApprove ? 1 : 0;
+        String sql = "INSERT INTO Resources (noteId, uploadedBy, title, subject, subjectId, departmentId, semesterId, source, " +
+                "description, uploadDate, filePath, fileType, downloads, isActive, status, category) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), ?, ?, 0, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            if (resource.getNoteId() != null) {
+                stmt.setInt(1, resource.getNoteId());
+            } else {
+                stmt.setNull(1, java.sql.Types.INTEGER);
+            }
+            stmt.setInt(2, resource.getUploadedBy());
+            stmt.setString(3, resource.getTitle());
+            stmt.setString(4, resource.getSubject());
+            if (resource.getSubjectId() > 0) {
+                stmt.setInt(5, resource.getSubjectId());
+            } else {
+                stmt.setNull(5, java.sql.Types.INTEGER);
+            }
+            setNullableInt(stmt, 6, resource.getDepartmentId());
+            setNullableInt(stmt, 7, resource.getSemesterId());
+            stmt.setString(8, resource.getSource());
+            stmt.setString(9, resource.getDescription());
+            stmt.setString(10, resource.getFilePath());
+            stmt.setString(11, resource.getFileType());
+            stmt.setInt(12, isActive);
+            stmt.setString(13, status);
+            stmt.setString(14, resource.getCategory());
+            stmt.executeUpdate();
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
+        }
+        return -1;
+    }
+
+    public boolean updateResource(Resource resource) throws SQLException {
+        String sql = "UPDATE Resources SET title = ?, subject = ?, subjectId = ?, departmentId = ?, semesterId = ?, source = ?, " +
+                "description = ?, filePath = ?, fileType = ?, isActive = ?, status = ?, category = ? " +
+                "WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, resource.getTitle());
+            stmt.setString(2, resource.getSubject());
+            if (resource.getSubjectId() > 0) {
+                stmt.setInt(3, resource.getSubjectId());
+            } else {
+                stmt.setNull(3, java.sql.Types.INTEGER);
+            }
+            setNullableInt(stmt, 4, resource.getDepartmentId());
+            setNullableInt(stmt, 5, resource.getSemesterId());
+            stmt.setString(6, resource.getSource());
+            stmt.setString(7, resource.getDescription());
+            stmt.setString(8, resource.getFilePath());
+            stmt.setString(9, resource.getFileType());
+            stmt.setBoolean(10, resource.isActive());
+            stmt.setString(11, resource.getStatus());
+            stmt.setString(12, resource.getCategory());
+            stmt.setInt(13, resource.getId());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public boolean duplicateExists(String title, int userId, Integer excludeId) throws SQLException {
+        String sql = excludeId != null
+                ? "SELECT COUNT(*) FROM Resources WHERE title = ? AND uploadedBy = ? AND id <> ?"
+                : "SELECT COUNT(*) FROM Resources WHERE title = ? AND uploadedBy = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, title);
+            stmt.setInt(2, userId);
+            if (excludeId != null) {
+                stmt.setInt(3, excludeId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    public void incrementDownloads(int resourceId) throws SQLException {
+        String sql = "UPDATE Resources SET downloads = downloads + 1 WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, resourceId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public boolean hardDeleteResource(int id) throws SQLException {
+        String sql = "DELETE FROM Resources WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
     // =========================
     // HELPER — MAP ResultSet TO Resource
     // =========================
@@ -269,6 +376,9 @@ public class ResourceDAO {
             // column not yet present in this DB schema
         }
 
+        readNullableIntColumn(rs, "departmentId", resource::setDepartmentId);
+        readNullableIntColumn(rs, "semesterId", resource::setSemesterId);
+
         resource.setSource(rs.getString("source"));
         resource.setDescription(rs.getString("description"));
         resource.setUploadDate(rs.getString("uploadDate"));
@@ -276,6 +386,8 @@ public class ResourceDAO {
         resource.setFileType(rs.getString("fileType"));
         resource.setDownloads(rs.getInt("downloads"));
         resource.setActive(rs.getBoolean("isActive"));
+        try { resource.setStatus(rs.getString("status")); } catch (SQLException ignored) { resource.setStatus("Pending"); }
+        try { resource.setCategory(rs.getString("category")); } catch (SQLException ignored) {}
 
         // Load user info (full name, department, semester)
         try {
@@ -301,5 +413,24 @@ public class ResourceDAO {
         }
 
         return resource;
+    }
+
+    private static void setNullableInt(PreparedStatement stmt, int index, Integer value) throws SQLException {
+        if (value == null || value == 0) {
+            stmt.setNull(index, java.sql.Types.INTEGER);
+        } else {
+            stmt.setInt(index, value);
+        }
+    }
+
+    private static void readNullableIntColumn(ResultSet rs, String column,
+                                              java.util.function.Consumer<Integer> setter) {
+        try {
+            int val = rs.getInt(column);
+            if (!rs.wasNull()) {
+                setter.accept(val);
+            }
+        } catch (SQLException ignored) {
+        }
     }
 }

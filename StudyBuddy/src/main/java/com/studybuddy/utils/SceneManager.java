@@ -104,8 +104,8 @@ public class SceneManager {
      */
     private static void applyWindowDefaults(Stage stage) {
         stage.setResizable(true);
-        stage.setMinWidth(1280);
-        stage.setMinHeight(768);
+        stage.setMinWidth(1200);
+        stage.setMinHeight(720);
         // Grow to preferred size only on first use; avoids jarring jumps on scene switches
         if (!stage.isShowing() || stage.getWidth() < 1280) {
             stage.setWidth(1280);

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -21,7 +23,11 @@
         <VBox alignment="CENTER" spacing="24" styleClass="auth-left-panel">
             <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
 
-            <Label text="📚" styleClass="auth-brand-icon"/>
+            <ImageView fitHeight="72" fitWidth="72" preserveRatio="true" styleClass="auth-logo-image">
+                <image>
+                    <Image url="@../images/main_logo_study_buddyy.png"/>
+                </image>
+            </ImageView>
 
             <VBox alignment="CENTER" spacing="10">
                 <Label text="Study Buddy" styleClass="auth-brand-title"/>

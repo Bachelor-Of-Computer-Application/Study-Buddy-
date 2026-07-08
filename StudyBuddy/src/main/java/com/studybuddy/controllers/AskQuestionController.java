@@ -8,6 +8,7 @@ import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.QuestionService;
 import com.studybuddy.services.ResourceService;
+import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import javafx.animation.ScaleTransition;
 import javafx.collections.FXCollections;
@@ -61,15 +62,21 @@ public class AskQuestionController implements Initializable {
         resourceService = new ResourceService();
         academicService = AcademicService.getInstance();
 
-        loadDepartments();
+        departmentComboBox.setItems(AcademicFilterHelper.departmentsForFilter(academicService));
+        departmentComboBox.setValue(AcademicFilterHelper.allDepartments());
+        semesterComboBox.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
+        semesterComboBox.setValue(AcademicFilterHelper.allSemesters());
+
+        AcademicFilterHelper.wireCascade(academicService, departmentComboBox, semesterComboBox, subjectComboBox,
+                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semesterComboBox.getValue(), subjectComboBox));
+        semesterComboBox.setOnAction(e -> AcademicFilterHelper.loadSubjectsForSemester(
+                academicService, semesterComboBox.getValue(), subjectComboBox));
         loadUserPoints();
-        
+
         if (rewardPointsComboBox != null) {
             rewardPointsComboBox.setItems(FXCollections.observableArrayList("0", "10", "20", "50", "100"));
             rewardPointsComboBox.setValue("0");
         }
-        
-        setupCascading();
         setupButtonHoverEffects();
         setupSubmitButtonEffects();
     }
@@ -147,35 +154,11 @@ public class AskQuestionController implements Initializable {
     }
 
     private void setupButtonHoverEffects() {
-        // Only set up effects on buttons that are actually wired from FXML
-        setupHoverEffect(toolsButton);
-        setupHoverEffect(filesButton);
-        setupHoverEffect(attachmentButton);
-        setupHoverEffect(homeButton);
-        setupHoverEffect(profileButton);
-    }
-
-    /**
-     * Null-safe hover effect setup — skips buttons that were not injected from FXML.
-     */
-    private void setupHoverEffect(Button button) {
-        if (button == null) return;
-        button.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
-            button.setStyle(button.getStyle() + " -fx-background-color: #FFFFFF; -fx-cursor: hand;");
-        });
-        button.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
-            button.setStyle(button.getStyle().replace(" -fx-background-color: #FFFFFF;", ""));
-        });
+        // Hover styling handled via CSS (.toolbar-button:hover, .submit-button:hover)
     }
 
     private void setupSubmitButtonEffects() {
         if (submitButton == null) return;
-        submitButton.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
-            submitButton.setStyle(submitButton.getStyle() + " -fx-background-color: #333333;");
-        });
-        submitButton.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
-            submitButton.setStyle(submitButton.getStyle().replace(" -fx-background-color: #333333;", ""));
-        });
         submitButton.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
             ScaleTransition scale = new ScaleTransition(Duration.millis(100), submitButton);
             scale.setToX(0.98);
@@ -191,6 +174,7 @@ public class AskQuestionController implements Initializable {
     }
 
     /** Bound to toolsButton (fx:id="toolsButton") — inserts math formula example. */
+    @FXML
     public void handleMath(ActionEvent actionEvent) {
         if (questionTextArea == null) return;
         String currentText = questionTextArea.getText();
@@ -202,6 +186,7 @@ public class AskQuestionController implements Initializable {
     }
 
     /** Bound to filesButton (fx:id="filesButton") — inserts math symbols. */
+    @FXML
     public void handleSymbols(ActionEvent actionEvent) {
         if (questionTextArea == null) return;
         String currentText = questionTextArea.getText();
@@ -212,6 +197,7 @@ public class AskQuestionController implements Initializable {
         questionTextArea.positionCaret(cursorPosition + symbol.length());
     }
 
+    @FXML
     public void handleAttachment(ActionEvent actionEvent) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Attach File");
@@ -231,6 +217,7 @@ public class AskQuestionController implements Initializable {
         }
     }
 
+    @FXML
     public void handleSubmit(ActionEvent actionEvent) {
         if (!validateForm()) {
             return;
@@ -238,9 +225,11 @@ public class AskQuestionController implements Initializable {
         try {
             String questionText = questionTextArea.getText().trim();
             Subject selectedSubject = subjectComboBox.getValue();
-            String subject = selectedSubject != null ? selectedSubject.getName() : "";
+            String subject = selectedSubject != null ? selectedSubject.getName() : "General";
             int subjectId = selectedSubject != null ? selectedSubject.getId() : 0;
-            
+            Integer deptId = AcademicFilterHelper.resolveDepartmentId(departmentComboBox.getValue());
+            Integer semId = AcademicFilterHelper.resolveSemesterId(semesterComboBox.getValue());
+
             int rewardPoints = 0;
             String rewardStr = rewardPointsComboBox.getValue();
             if (rewardStr != null) {
@@ -248,11 +237,7 @@ public class AskQuestionController implements Initializable {
             }
 
             boolean success = questionService.saveQuestion(
-                    questionText,
-                    subject,
-                    subjectId,
-                    rewardPoints,
-                    selectedAttachmentPath
+                    questionText, subject, subjectId, rewardPoints, selectedAttachmentPath, deptId, semId
             );
 
             if (success) {
@@ -260,7 +245,7 @@ public class AskQuestionController implements Initializable {
                 if (App.getCurrentUser() != null) {
                     UserActivity activity = new UserActivity(
                             App.getCurrentUser().getId(),
-                            App.getCurrentUser().getFullName() != null ? App.getCurrentUser().getFullName() : App.getCurrentUser().getName(),
+                            App.getCurrentUser().getDisplayFullName(),
                             "ASK_QUESTION",
                             "QUESTION",
                             questionText.length() > 50 ? questionText.substring(0, 47) + "..." : questionText
@@ -300,17 +285,17 @@ public class AskQuestionController implements Initializable {
         }
         if (departmentComboBox.getValue() == null) {
             showAlert(Alert.AlertType.WARNING, "Validation Error",
-                    "Please choose a department.", "Select a department from the dropdown menu.");
+                    "Please choose a department.", "Select a department or All Departments.");
             return false;
         }
         if (semesterComboBox.getValue() == null) {
             showAlert(Alert.AlertType.WARNING, "Validation Error",
-                    "Please choose a semester.", "Select a semester from the dropdown menu.");
+                    "Please choose a semester.", "Select a semester or All Semesters.");
             return false;
         }
-        if (subjectComboBox.getValue() == null) {
+        if (!AcademicFilterHelper.isAllSemesters(semesterComboBox.getValue()) && subjectComboBox.getValue() == null) {
             showAlert(Alert.AlertType.WARNING, "Validation Error",
-                    "Please choose a subject.", "Select a subject from the dropdown menu.");
+                    "Please choose a subject.", "Required when a specific semester is selected.");
             return false;
         }
         if (rewardPointsComboBox.getValue() == null) {
@@ -323,18 +308,14 @@ public class AskQuestionController implements Initializable {
 
     private void clearForm() {
         if (questionTextArea != null) questionTextArea.clear();
-        departmentComboBox.getSelectionModel().clearSelection();
-        semesterComboBox.getItems().clear();
-        semesterComboBox.setValue(null);
-        if (semesterComboBox != null) {
-            semesterComboBox.setDisable(true);
-        }
+        departmentComboBox.setValue(AcademicFilterHelper.allDepartments());
+        semesterComboBox.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
+        semesterComboBox.setValue(AcademicFilterHelper.allSemesters());
+        semesterComboBox.setDisable(true);
         subjectComboBox.getItems().clear();
         subjectComboBox.setValue(null);
-        if (subjectComboBox != null) {
-            subjectComboBox.setDisable(true);
-        }
-        rewardPointsComboBox.getSelectionModel().select(0); // Reset to "0"
+        subjectComboBox.setDisable(true);
+        rewardPointsComboBox.getSelectionModel().select(0);
         selectedAttachmentPath = null;
         if (attachmentLabel != null) attachmentLabel.setText("");
     }

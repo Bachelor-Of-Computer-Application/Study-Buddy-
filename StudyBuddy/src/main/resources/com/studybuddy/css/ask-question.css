@@ -122,6 +122,11 @@
     -fx-border-color:     #7c3aed;
     -fx-text-fill:        #5b21b6;
 }
+.attachment-label {
+    -fx-font-size:  11px;
+    -fx-text-fill:  #64748b;
+    -fx-font-style: italic;
+}
 
 /* ── Bottom controls card ────────────────────────────────────────────── */
 .bottom-controls {

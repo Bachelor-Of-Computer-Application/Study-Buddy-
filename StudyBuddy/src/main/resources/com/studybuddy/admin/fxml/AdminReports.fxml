@@ -6,11 +6,11 @@
 <?import javafx.scene.layout.*?>
 
 <ScrollPane fitToWidth="true" styleClass="content-scroll"
-            stylesheets="@../css/admin-dashboard.css"
+            stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
             xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.studybuddy.admin.controllers.AdminReportsController">
     <content>
-        <VBox spacing="18" style="-fx-background-color: #f1f5f9;">
+        <VBox spacing="18" styleClass="admin-reports-bg">
             <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
 
             <!-- Header -->
@@ -32,8 +32,7 @@
                 <VBox styleClass="panel-card" spacing="12" GridPane.columnIndex="0">
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label text="Monthly Note Uploads" styleClass="panel-title" HBox.hgrow="ALWAYS"/>
-                        <Button text="Export CSV" styleClass="secondary-btn"
-                                style="-fx-font-size:11px; -fx-padding:5 10;"
+                        <Button text="Export CSV" styleClass="secondary-btn, chart-ctrl-btn"
                                 onAction="#handleExportUploads"/>
                     </HBox>
                     <BarChart fx:id="uploadsChart" prefHeight="220" animated="false" legendVisible="false">
@@ -45,8 +44,7 @@
                 <VBox styleClass="panel-card" spacing="12" GridPane.columnIndex="1">
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label text="Monthly Registrations" styleClass="panel-title" HBox.hgrow="ALWAYS"/>
-                        <Button text="Export CSV" styleClass="secondary-btn"
-                                style="-fx-font-size:11px; -fx-padding:5 10;"
+                        <Button text="Export CSV" styleClass="secondary-btn, chart-ctrl-btn"
                                 onAction="#handleExportRegistrations"/>
                     </HBox>
                     <LineChart fx:id="registrationsChart" prefHeight="220" animated="false" legendVisible="false">
@@ -66,8 +64,7 @@
                 <VBox styleClass="panel-card" spacing="12" GridPane.columnIndex="0">
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label text="Notes by Subject" styleClass="panel-title" HBox.hgrow="ALWAYS"/>
-                        <Button text="Export CSV" styleClass="secondary-btn"
-                                style="-fx-font-size:11px; -fx-padding:5 10;"
+                        <Button text="Export CSV" styleClass="secondary-btn, chart-ctrl-btn"
                                 onAction="#handleExportSubjects"/>
                     </HBox>
                     <PieChart fx:id="subjectPieChart" prefHeight="240" legendVisible="true" labelsVisible="true"/>
@@ -76,8 +73,7 @@
                 <VBox styleClass="panel-card" spacing="12" GridPane.columnIndex="1">
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label text="Top Downloaded Resources" styleClass="panel-title" HBox.hgrow="ALWAYS"/>
-                        <Button text="Export CSV" styleClass="secondary-btn"
-                                style="-fx-font-size:11px; -fx-padding:5 10;"
+                        <Button text="Export CSV" styleClass="secondary-btn, chart-ctrl-btn"
                                 onAction="#handleExportTopResources"/>
                     </HBox>
                     <BarChart fx:id="topResourcesChart" prefHeight="240" animated="false" legendVisible="false">
@@ -97,8 +93,7 @@
                 <VBox styleClass="panel-card" spacing="12" GridPane.columnIndex="0">
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label text="Most Active Users" styleClass="panel-title" HBox.hgrow="ALWAYS"/>
-                        <Button text="Export CSV" styleClass="secondary-btn"
-                                style="-fx-font-size:11px; -fx-padding:5 10;"
+                        <Button text="Export CSV" styleClass="secondary-btn, chart-ctrl-btn"
                                 onAction="#handleExportTopUsers"/>
                     </HBox>
                     <TableView fx:id="topUsersTable" prefHeight="220" styleClass="table-view">
@@ -106,7 +101,7 @@
                             <TableColumn fx:id="colUserName"  text="User Name"      prefWidth="200"/>
                             <TableColumn fx:id="colUserScore" text="Activity Score"  prefWidth="140"/>
                         </columns>
-                        <placeholder><Label text="No data." style="-fx-text-fill:#94a3b8;"/></placeholder>
+                        <placeholder><Label text="No data." styleClass="table-empty-label"/></placeholder>
                     </TableView>
                 </VBox>
 
@@ -119,7 +114,7 @@
                             <TableColumn fx:id="colResTitle"     text="Resource Title" prefWidth="240"/>
                             <TableColumn fx:id="colResDownloads" text="Downloads"      prefWidth="110"/>
                         </columns>
-                        <placeholder><Label text="No data." style="-fx-text-fill:#94a3b8;"/></placeholder>
+                        <placeholder><Label text="No data." styleClass="table-empty-label"/></placeholder>
                     </TableView>
                 </VBox>
             </GridPane>

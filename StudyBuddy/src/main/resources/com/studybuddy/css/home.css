@@ -61,12 +61,13 @@
     -fx-text-fill:        #94a3b8;
     -fx-font-size:        13px;
     -fx-font-weight:      bold;
-    -fx-padding:          10 14 10 14;
+    -fx-padding:          10 16 10 16;
     -fx-background-radius: 8px;
     -fx-cursor:            hand;
     -fx-alignment:         CENTER_LEFT;
     -fx-graphic-text-gap:  10;
     -fx-max-width:         Infinity;
+    -fx-min-height:        40px;
 }
 .nav-button:hover {
     -fx-background-color: #1e293b;
@@ -91,9 +92,14 @@
     -fx-background-color: #4f46e5;
     -fx-text-fill:        #ffffff;
     -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.4), 8, 0, 0, 2);
+    -fx-border-color:     transparent transparent transparent #818cf8;
+    -fx-border-width:     0 0 0 3px;
 }
 .nav-button-active:hover {
     -fx-background-color: #4338ca;
+}
+.nav-button-active .nav-text {
+    -fx-fill: #ffffff;
 }
 
 /* Logout button */
@@ -119,6 +125,18 @@
     -fx-background-color:  #1e293b;
     -fx-background-radius: 10px;
     -fx-padding:           12 14 12 14;
+}
+.sidebar-avatar-wrap {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 999px;
+    -fx-min-width:  36px; -fx-min-height: 36px;
+    -fx-pref-width: 36px; -fx-pref-height: 36px;
+    -fx-max-width:  36px; -fx-max-height: 36px;
+    -fx-alignment:  center;
+    -fx-border-color: rgba(255,255,255,0.25);
+    -fx-border-radius: 999px;
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.25), 4, 0, 0, 1);
 }
 .sidebar-user-avatar {
     -fx-background-color:  #4f46e5;
@@ -171,7 +189,7 @@
 
 /* Landing / welcome screen (default HomeView center) */
 .landing-container {
-    -fx-background-color: #f8fafc;
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eef2ff);
 }
 .welcome-text {
     -fx-font-size:   28px;

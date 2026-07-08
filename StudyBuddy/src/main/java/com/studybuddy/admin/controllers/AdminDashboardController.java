@@ -7,7 +7,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -16,6 +18,9 @@ import java.util.logging.Logger;
 public class AdminDashboardController {
 
     private static final Logger logger = Logger.getLogger(AdminDashboardController.class.getName());
+
+    @FXML
+    private VBox sidebar;
 
     @FXML
     private StackPane adminContentArea;
@@ -162,7 +167,12 @@ public class AdminDashboardController {
 
             Parent root = loader.load();
 
-            logger.fine("Loaded Global Search Controller = " + loader.getController());
+            AdminGlobalSearchController searchController = loader.getController();
+            if (searchController != null) {
+                searchController.setSearchQuery(query);
+            }
+
+            logger.fine("Loaded Global Search Controller = " + searchController);
 
             adminContentArea.getChildren().setAll(root);
 
@@ -189,6 +199,9 @@ public class AdminDashboardController {
             }
 
             adminContentArea.getChildren().clear();
+            if (root instanceof Region region) {
+                region.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            }
             adminContentArea.getChildren().add(root);
 
             logger.fine("Children Count = " + adminContentArea.getChildren().size());

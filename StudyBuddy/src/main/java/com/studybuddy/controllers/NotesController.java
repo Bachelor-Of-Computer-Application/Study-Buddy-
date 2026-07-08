@@ -6,32 +6,36 @@ import com.studybuddy.models.Note;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
-import com.studybuddy.services.NoteService;
 import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.AuthorizationService;
+import com.studybuddy.services.NoteService;
+import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.util.stream.Collectors;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class NotesController implements Initializable {
 
+    @FXML private BorderPane mainBorderPane;
+    @FXML private TabPane notesTabPane;
     @FXML private ComboBox<Department> departmentFilter;
     @FXML private ComboBox<Semester> semesterFilter;
     @FXML private ComboBox<String> subjectFilter;
@@ -42,92 +46,30 @@ public class NotesController implements Initializable {
 
     private NoteService noteService;
     private AcademicService academicService;
+    private AuthorizationService authService;
     private List<Note> allNotes = new ArrayList<>();
-    private int currentUserId = 1;
+    private int currentUserId = -1;
+    private User currentUser;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         noteService = new NoteService();
         academicService = AcademicService.getInstance();
+        authService = AuthorizationService.getInstance();
 
-        User currentUser = App.getCurrentUser();
+        currentUser = App.getCurrentUser();
         if (currentUser != null) {
             currentUserId = currentUser.getId();
+        } else {
+            currentUserId = -1;
         }
 
-        loadFilterDepartments();
-        loadSubjects();
+        AcademicFilterHelper.setupFilterBar(academicService, departmentFilter, semesterFilter, subjectFilter);
         loadSources();
         loadNotes();
-        
-        // Subscribe to EventBus events
+
         EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (event) -> loadNotes());
         EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (event) -> loadNotes());
-    }
-    
-    private void loadFilterDepartments() {
-        if (departmentFilter != null) {
-            semesterFilter.setDisable(true);
-            try {
-                departmentFilter.setItems(FXCollections.observableArrayList(
-                        academicService.getAllActiveDepartments()));
-            } catch (Exception e) {
-                System.err.println("[NotesController] Dept filter load failed: " + e.getMessage());
-            }
-
-            departmentFilter.setOnAction(e -> {
-                Department dept = departmentFilter.getValue();
-                if (semesterFilter != null) {
-                    semesterFilter.getItems().clear();
-                    semesterFilter.setValue(null);
-                    semesterFilter.setDisable(dept == null);
-                }
-                subjectFilter.getItems().clear();
-                subjectFilter.setValue(null);
-
-                if (dept != null && semesterFilter != null) {
-                    try {
-                        semesterFilter.setItems(FXCollections.observableArrayList(
-                                academicService.getSemestersByDepartment(dept.getId())));
-                    } catch (Exception ex) {
-                        System.err.println("[NotesController] Sem filter load failed: " + ex.getMessage());
-                    }
-                } else {
-                    loadSubjects();
-                }
-            });
-
-            if (semesterFilter != null) {
-                semesterFilter.setOnAction(e -> {
-                    Semester sem = semesterFilter.getValue();
-                    subjectFilter.getItems().clear();
-                    subjectFilter.setValue(null);
-                    if (sem != null) {
-                        try {
-                            List<String> semSubjects = academicService
-                                    .getSubjectsBySemester(sem.getId())
-                                    .stream()
-                                    .map(Subject::getName)
-                                    .collect(Collectors.toList());
-                            subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
-                        } catch (Exception ex) {
-                            System.err.println("[NotesController] Sub filter load failed: " + ex.getMessage());
-                        }
-                    } else {
-                        loadSubjects();
-                    }
-                });
-            }
-        }
-    }
-
-    /**
-     * Loads subject names from the canonical Subjects table via AcademicService.
-     * No hardcoded subjects. No cross-domain service coupling.
-     */
-    private void loadSubjects() {
-        List<String> subjects = academicService.getAllSubjectNames();
-        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
     }
 
     private void loadSources() {
@@ -138,14 +80,16 @@ public class NotesController implements Initializable {
     }
 
     private void loadNotes() {
+        if (currentUserId <= 0) {
+            allNotes = new ArrayList<>();
+            displayNotes(allNotes);
+            return;
+        }
         try {
-            // Load real notes from SQL Server via NoteService → NoteDAO
-            // SQL: SELECT * FROM Notes WHERE userId = ? ORDER BY uploadDate DESC
             allNotes = noteService.getNotesByUserId(currentUserId);
             if (allNotes == null) {
                 allNotes = new ArrayList<>();
             }
-            // FIXED: Removed mock note injection — display only real DB data
             displayNotes(allNotes);
         } catch (Exception e) {
             showError("Failed to load notes: " + e.getMessage());
@@ -161,90 +105,125 @@ public class NotesController implements Initializable {
 
         for (Note note : notes) {
             if (note.isPrivate()) {
-                VBox card = createPersonalNoteCard(note);
-                myNotesContainer.getChildren().add(card);
+                myNotesContainer.getChildren().add(createPersonalNoteCard(note));
                 hasPersonal = true;
             } else {
-                VBox card = createCommunityNoteCard(note);
-                communityNotesContainer.getChildren().add(card);
+                communityNotesContainer.getChildren().add(createCommunityNoteCard(note));
                 hasCommunity = true;
             }
         }
 
         emptyState.setVisible(!hasPersonal && !hasCommunity);
+        emptyState.setManaged(!hasPersonal && !hasCommunity);
     }
 
     private VBox createPersonalNoteCard(Note note) {
         VBox card = new VBox(10);
-        card.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-width: 1px; -fx-border-radius: 10;");
+        card.getStyleClass().add("note-card");
         card.setMaxWidth(Double.MAX_VALUE);
 
         Label titleLabel = new Label(note.getTitle());
-        titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+        titleLabel.getStyleClass().add("note-title");
+        titleLabel.setWrapText(true);
 
-        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | 📄 " + note.getFileType());
-        metaLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
+        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | " + fileTypeIcon(note.getFileType()) + " " + nullSafe(note.getFileType()));
+        metaLabel.getStyleClass().add("note-date");
 
         HBox metaBox = new HBox(15);
-        Label subjectLabel = new Label("📚 " + note.getSubject());
-        subjectLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #4f46e5; -fx-font-weight: bold;");
-        Label sourceLabel = new Label("🔗 " + note.getSource());
-        sourceLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #0284c7;");
+        Label subjectLabel = new Label("📚 " + nullSafe(note.getSubject()));
+        subjectLabel.getStyleClass().add("note-subject");
+        Label sourceLabel = new Label("🔗 " + nullSafe(note.getSource()));
+        sourceLabel.getStyleClass().add("note-desc");
         metaBox.getChildren().addAll(subjectLabel, sourceLabel);
 
         HBox buttonBox = new HBox(10);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
 
-        Button deleteBtn = new Button("🗑️ Delete");
-        deleteBtn.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #ef4444; -fx-font-size: 11px; -fx-cursor: hand;");
-        deleteBtn.setOnAction(e -> deleteNote(note));
-
-        Button openBtn = new Button("📖 Open");
-        openBtn.setStyle("-fx-background-color: #e0f2fe; -fx-text-fill: #0369a1; -fx-font-size: 11px; -fx-cursor: hand;");
+        Button openBtn = new Button("📖 View");
+        openBtn.getStyleClass().add("btn-action-view");
         openBtn.setOnAction(e -> openNote(note));
 
-        buttonBox.getChildren().addAll(deleteBtn, openBtn);
-        card.getChildren().addAll(titleLabel, metaLabel, metaBox, buttonBox);
+        Button deleteBtn = new Button("🗑 Delete");
+        deleteBtn.getStyleClass().add("btn-action-delete");
+        deleteBtn.setOnAction(e -> deleteNote(note));
 
+        buttonBox.getChildren().addAll(openBtn, deleteBtn);
+        card.getChildren().addAll(titleLabel, metaLabel, metaBox, buttonBox);
         return card;
     }
 
     private VBox createCommunityNoteCard(Note note) {
         VBox card = new VBox(10);
-        card.setStyle("-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-width: 1px; -fx-border-radius: 10;");
+        card.getStyleClass().add("note-card");
         card.setMaxWidth(Double.MAX_VALUE);
 
-        // Dynamic Status Badge based on approval state
         String status = note.getStatus() != null ? note.getStatus() : "Pending";
         Label statusBadge = new Label(status);
-        String badgeStyle;
-        switch (status) {
-            case "Approved":
-                badgeStyle = "-fx-background-color: #dcfce7; -fx-text-fill: #16a34a; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8; -fx-background-radius: 5;";
-                break;
-            case "Rejected":
-                badgeStyle = "-fx-background-color: #fef2f2; -fx-text-fill: #dc2626; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8; -fx-background-radius: 5;";
-                break;
-            default: // Pending
-                badgeStyle = "-fx-background-color: #fef9c3; -fx-text-fill: #ca8a04; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8; -fx-background-radius: 5;";
-                break;
-        }
-        statusBadge.setStyle(badgeStyle);
+        statusBadge.getStyleClass().add(switch (status) {
+            case "Approved" -> "badge-approved";
+            case "Rejected" -> "badge-rejected";
+            default -> "badge-pending";
+        });
 
         HBox titleRow = new HBox(10);
         titleRow.setAlignment(Pos.CENTER_LEFT);
         Label titleLabel = new Label(note.getTitle());
-        titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+        titleLabel.getStyleClass().add("note-title");
+        titleLabel.setWrapText(true);
         titleRow.getChildren().addAll(titleLabel, statusBadge);
 
-        // Build author label with full name, dept, sem
+        Label authorLabel = new Label(buildAuthorText(note));
+        authorLabel.getStyleClass().add("note-desc");
+        authorLabel.setWrapText(true);
+
+        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | " + fileTypeIcon(note.getFileType()) + " " + nullSafe(note.getFileType()));
+        metaLabel.getStyleClass().add("note-date");
+
+        HBox metaBox = new HBox(15);
+        Label subjectLabel = new Label("📚 " + nullSafe(note.getSubject()));
+        subjectLabel.getStyleClass().add("note-subject");
+        Label sourceLabel = new Label("🔗 " + nullSafe(note.getSource()));
+        sourceLabel.getStyleClass().add("note-desc");
+        metaBox.getChildren().addAll(subjectLabel, sourceLabel);
+
+        HBox buttonBox = new HBox(10);
+        buttonBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Button openBtn = new Button("📖 View");
+        openBtn.getStyleClass().add("btn-action-view");
+        openBtn.setOnAction(e -> openNote(note));
+        buttonBox.getChildren().add(openBtn);
+
+        if (authService.canDeleteNote(currentUser, note)) {
+            Button deleteBtn = new Button("🗑 Delete");
+            deleteBtn.getStyleClass().add("btn-action-delete");
+            deleteBtn.setOnAction(e -> deleteNote(note));
+            buttonBox.getChildren().add(deleteBtn);
+        }
+
+        card.getChildren().addAll(titleRow, authorLabel, metaLabel, metaBox, buttonBox);
+        return card;
+    }
+
+    private String fileTypeIcon(String fileType) {
+        if (fileType == null) return "📄";
+        return switch (fileType.toUpperCase()) {
+            case "PDF" -> "📕";
+            case "DOC", "DOCX" -> "📘";
+            case "PPT", "PPTX" -> "📙";
+            case "XLS", "XLSX" -> "📗";
+            case "PNG", "JPG", "JPEG", "GIF", "WEBP" -> "🖼";
+            case "ZIP", "RAR", "7Z" -> "🗜";
+            case "MP4", "AVI", "MKV", "MOV" -> "🎬";
+            case "MP3", "WAV", "AAC" -> "🎵";
+            default -> "📄";
+        };
+    }
+
+    private String buildAuthorText(Note note) {
         StringBuilder authorText = new StringBuilder("👤 Uploaded by: ");
         String fullName = note.getUserFullName();
-        if (fullName != null && !fullName.isEmpty()) {
-            authorText.append(fullName);
-        } else {
-            authorText.append("User ").append(note.getUserId());
-        }
+        authorText.append(fullName != null && !fullName.isEmpty() ? fullName : "User " + note.getUserId());
         String dept = note.getUserDepartment();
         String sem = note.getUserSemester();
         if (dept != null || sem != null) {
@@ -254,32 +233,10 @@ public class NotesController implements Initializable {
             if (sem != null) authorText.append(sem);
             authorText.append(")");
         }
-        Label authorLabel = new Label(authorText.toString());
-        authorLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
-        
-        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | 📄 " + note.getFileType());
-        metaLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #64748b;");
-
-        HBox metaBox = new HBox(15);
-        Label subjectLabel = new Label("📚 " + note.getSubject());
-        subjectLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #4f46e5; -fx-font-weight: bold;");
-        Label sourceLabel = new Label("🔗 " + note.getSource());
-        sourceLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #0284c7;");
-        metaBox.getChildren().addAll(subjectLabel, sourceLabel);
-
-        HBox buttonBox = new HBox(10);
-        buttonBox.setAlignment(Pos.CENTER_RIGHT);
-
-        Button openBtn = new Button("📖 View File");
-        openBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-font-size: 11px; -fx-cursor: hand;");
-        openBtn.setOnAction(e -> openNote(note));
-        buttonBox.getChildren().add(openBtn);
-
-        card.getChildren().addAll(titleRow, authorLabel, metaLabel, metaBox, buttonBox);
-
-        return card;
+        return authorText.toString();
     }
 
+    @FXML
     public void showCreateNoteDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/fxml/CreateNoteDialog.fxml"));
@@ -288,31 +245,40 @@ public class NotesController implements Initializable {
             Stage dialog = new Stage();
             dialog.setTitle("Create New Note");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(dialogContent));
-            dialog.setResizable(false);
+            dialog.setScene(new Scene(dialogContent, 520, 620));
+            dialog.setMinWidth(480);
+            dialog.setMinHeight(500);
             dialog.showAndWait();
-            
-            loadNotes(); // Refresh after creation
+
+            loadNotes();
         } catch (IOException e) {
             showError("Failed to open create note dialog: " + e.getMessage());
         }
     }
 
     private void deleteNote(Note note) {
+        if (currentUser == null) {
+            showError("You must be logged in to delete notes.");
+            return;
+        }
+        if (!authService.canDeleteNote(currentUser, note)) {
+            showError("You can only delete your own notes.");
+            return;
+        }
+
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete Note");
         alert.setHeaderText("Are you sure you want to delete this note?");
         alert.setContentText(note.getTitle());
+        alert.getButtonTypes().setAll(new ButtonType("Yes, Delete", ButtonBar.ButtonData.OK_DONE),
+                new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
 
-        ButtonType yes = new ButtonType("Yes, Delete");
-        ButtonType no = new ButtonType("No, Keep");
-        alert.getButtonTypes().setAll(yes, no);
-
-        if (alert.showAndWait().orElse(no) == yes) {
+        if (alert.showAndWait().orElse(ButtonType.CANCEL) == alert.getButtonTypes().get(0)) {
             try {
-                // Delegates to NoteDAO.deleteNote() → DELETE FROM Notes WHERE id = ?
-                noteService.deleteNote(note.getId());
+                noteService.deleteNoteWithFile(note.getId(), currentUser);
                 loadNotes();
+                EventBus.getInstance().publish(new EventBus.NotesChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
                 showSuccess("Note deleted successfully!");
             } catch (Exception e) {
                 showError("Failed to delete note: " + e.getMessage());
@@ -324,59 +290,48 @@ public class NotesController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Note File Preview");
         alert.setHeaderText(note.getTitle());
-        alert.setContentText("Format: " + note.getFileType() + "\nSource: " + note.getSource() + "\nDescription: " + note.getDescription());
+        alert.setContentText("Format: " + note.getFileType() + "\nSource: " + nullSafe(note.getSource())
+                + "\nDescription: " + nullSafe(note.getDescription()));
         alert.showAndWait();
     }
 
+    @FXML
     public void applyFilters() {
         Department dept = departmentFilter.getValue();
         Semester sem = semesterFilter.getValue();
         String subject = subjectFilter.getValue();
         String source = sourceFilter.getValue();
-        
+
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
-        java.util.Map<Integer, Subject> subjectMap = allSubjects.stream()
+        Map<Integer, Subject> subjectMap = allSubjects.stream()
                 .collect(Collectors.toMap(Subject::getId, s -> s, (s1, unused) -> s1));
 
         List<Note> filtered = new ArrayList<>();
         for (Note note : allNotes) {
-            // NPE guard: subject and source may be null for legacy rows
-            String noteSubject = note.getSubject() != null ? note.getSubject() : "";
-            String noteSource  = note.getSource()  != null ? note.getSource()  : "";
+            String noteSubject = nullSafe(note.getSubject());
+            String noteSource = nullSafe(note.getSource());
             if (subject != null && !noteSubject.equalsIgnoreCase(subject)) continue;
-            if (source  != null && !noteSource.equalsIgnoreCase(source))   continue;
-            
-            if (dept != null || sem != null) {
-                Subject subModel = subjectMap.get(note.getSubjectId());
-                if (subModel == null) {
-                    boolean matches = allSubjects.stream().anyMatch(s ->
-                            s.getName().equalsIgnoreCase(noteSubject) &&
-                                    (dept == null || s.getDepartmentId() == dept.getId()) &&
-                                    (sem == null || s.getSemesterId() == sem.getId())
-                    );
-                    if (!matches) continue;
-                } else {
-                    if (dept != null && subModel.getDepartmentId() != dept.getId()) continue;
-                    if (sem != null && subModel.getSemesterId() != sem.getId()) continue;
-                }
+            if (source != null && !noteSource.equalsIgnoreCase(source)) continue;
+
+            if (!AcademicFilterHelper.matchesDeptSemFilter(
+                    note.getDepartmentId(), note.getSemesterId(), note.getSubjectId(),
+                    dept, sem, subjectMap, allSubjects, noteSubject)) {
+                continue;
             }
-            
             filtered.add(note);
         }
         displayNotes(filtered);
     }
 
+    @FXML
     public void clearFilters() {
-        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
-        if (semesterFilter != null) {
-            semesterFilter.getItems().clear();
-            semesterFilter.setValue(null);
-            semesterFilter.setDisable(true);
-        }
-        subjectFilter.getSelectionModel().clearSelection();
+        AcademicFilterHelper.resetFilters(academicService, departmentFilter, semesterFilter, subjectFilter);
         sourceFilter.getSelectionModel().clearSelection();
-        loadSubjects();
         displayNotes(allNotes);
+    }
+
+    private String nullSafe(String s) {
+        return s != null ? s : "";
     }
 
     private void showError(String message) {

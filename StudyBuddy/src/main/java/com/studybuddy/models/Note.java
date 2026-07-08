@@ -9,6 +9,8 @@ public class Note {
     private String title;
     private String subject;
     private int subjectId;
+    private Integer departmentId;
+    private Integer semesterId;
     private String source;
     private String uploadDate;
     private String fileType;
@@ -18,6 +20,8 @@ public class Note {
     private int userId;
     private boolean isPrivate;
     private String status = "Pending";
+    private String tags;
+    private int downloads;
 
     // Transient display field — populated via JOIN, not a DB column
     private String userName;
@@ -123,6 +127,22 @@ public class Note {
         this.subjectId = subjectId;
     }
 
+    public Integer getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Integer departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Integer getSemesterId() {
+        return semesterId;
+    }
+
+    public void setSemesterId(Integer semesterId) {
+        this.semesterId = semesterId;
+    }
+
     public void setSource(String source) {
         this.source = source;
     }
@@ -199,5 +219,21 @@ public class Note {
 
     public void setUserSemester(String userSemester) {
         this.userSemester = userSemester;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public int getDownloads() {
+        return downloads;
+    }
+
+    public void setDownloads(int downloads) {
+        this.downloads = downloads;
     }
 }

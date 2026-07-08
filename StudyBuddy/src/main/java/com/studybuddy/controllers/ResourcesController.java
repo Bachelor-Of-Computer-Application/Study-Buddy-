@@ -6,9 +6,12 @@ import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
+import com.studybuddy.models.User;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.AuthorizationService;
 import com.studybuddy.services.ResourceService;
+import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -17,6 +20,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -31,6 +35,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +50,8 @@ import java.util.stream.Collectors;
 public class ResourcesController {
 
     // ── Filter bar ────────────────────────────────────────────────────────────
+    @FXML private BorderPane rootPane;
+    @FXML private TabPane resourcesTabPane;
     @FXML private TextField               searchField;
     @FXML private ComboBox<Department>    departmentFilter;
     @FXML private ComboBox<Semester>      semesterFilter;
@@ -62,9 +69,14 @@ public class ResourcesController {
     @FXML private TableColumn<Resource, String>  dateCol;
     @FXML private TableColumn<Resource, String>  statusCol;
 
+    @FXML private TableColumn<Resource, Void> actionsCol;
+
     private final ResourceService resourceService = new ResourceService();
     private final AcademicService academicService  = AcademicService.getInstance();
+    private final AuthorizationService authService = AuthorizationService.getInstance();
     private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
+
+    private User currentUser;
 
     private List<Resource> activeResources     = new ArrayList<>();
     private List<Resource> userUploadedHistory = new ArrayList<>();
@@ -89,12 +101,11 @@ public class ResourcesController {
 
     @FXML
     public void initialize() {
+        currentUser = App.getCurrentUser();
         setupHistoryTableColumns();
-        loadFilterDepartments();   // cascading filter: Dept → Sem → Subject
-        loadSubjectFilter();       // flat subject list for direct filtering
+        AcademicFilterHelper.setupFilterBar(academicService, departmentFilter, semesterFilter, subjectFilter);
         loadResources();
-        
-        // Subscribe to EventBus events
+
         EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (event) -> loadResources());
         EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (event) -> loadResources());
     }
@@ -163,6 +174,9 @@ public class ResourcesController {
     }
 
     private void setupHistoryTableColumns() {
+        if (historyTable != null) {
+            historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        }
         if (titleCol   != null) titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         if (subjectCol != null) subjectCol.setCellValueFactory(new PropertyValueFactory<>("subject"));
         if (fileNameCol != null) fileNameCol.setCellValueFactory(cellData -> {
@@ -174,6 +188,33 @@ public class ResourcesController {
         if (dateCol   != null) dateCol.setCellValueFactory(new PropertyValueFactory<>("uploadDate"));
         if (statusCol != null) statusCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().isActive() ? "Approved" : "Pending"));
+
+        if (actionsCol != null) {
+            actionsCol.setCellFactory(col -> new TableCell<>() {
+                private final Button viewBtn = new Button("👁");
+                private final Button deleteBtn = new Button("🗑");
+                private final HBox box = new HBox(6, viewBtn, deleteBtn);
+
+                {
+                    viewBtn.getStyleClass().add("btn-action-icon");
+                    deleteBtn.getStyleClass().add("btn-action-delete");
+                    viewBtn.setOnAction(e -> {
+                        Resource r = getTableView().getItems().get(getIndex());
+                        if (r != null) handlePreview(r);
+                    });
+                    deleteBtn.setOnAction(e -> {
+                        Resource r = getTableView().getItems().get(getIndex());
+                        if (r != null) deleteResource(r);
+                    });
+                }
+
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setGraphic(empty ? null : box);
+                }
+            });
+        }
     }
 
     // =========================
@@ -184,9 +225,10 @@ public class ResourcesController {
         try {
             activeResources = resourceService.getAllActiveResources();
             if (activeResources == null) activeResources = new ArrayList<>();
+            activeResources = filterVisibleResources(activeResources);
             displayResources(activeResources);
 
-            int userId = App.getCurrentUser() != null ? App.getCurrentUser().getId() : 1;
+            int userId = currentUser != null ? currentUser.getId() : 1;
             userUploadedHistory = resourceService.getResourcesByUser(userId);
             if (userUploadedHistory == null) userUploadedHistory = new ArrayList<>();
             if (historyTable != null)
@@ -194,11 +236,21 @@ public class ResourcesController {
 
         } catch (Exception e) {
             System.err.println("[ResourcesController] Failed to load resources: " + e.getMessage());
-            e.printStackTrace();
-            // Show empty state — no mock fallback data
             activeResources = new ArrayList<>();
             displayResources(activeResources);
         }
+    }
+
+    private List<Resource> filterVisibleResources(List<Resource> resources) {
+        List<Subject> allSubjects = academicService.getAllActiveSubjects();
+        Map<Integer, Subject> subjectMap = allSubjects.stream()
+                .collect(Collectors.toMap(Subject::getId, s -> s, (a, b) -> a));
+        return resources.stream()
+                .filter(r -> AcademicFilterHelper.isVisibleToUser(
+                        r.getDepartmentId(), r.getSemesterId(),
+                        r.getSubjectId() > 0 ? r.getSubjectId() : null,
+                        subjectMap, currentUser, academicService))
+                .collect(Collectors.toList());
     }
 
     // =========================
@@ -221,16 +273,17 @@ public class ResourcesController {
 
     private VBox createResourceCard(Resource r) {
         VBox card = new VBox(8);
+        card.getStyleClass().add("resource-card");
         card.setPadding(new Insets(15));
         card.setPrefWidth(260.0);
-        card.setStyle("-fx-background-color: white; -fx-background-radius: 12px;" +
-                " -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 8, 0, 0, 2);");
+        card.setMaxWidth(320.0);
 
-        Label iconLabel = new Label("📕 PDF");
-        iconLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #dc3545; -fx-font-size: 11px;");
+        String type = r.getFileType() != null ? r.getFileType() : guessTypeFromPath(r.getFilePath());
+        Label iconLabel = new Label(fileTypeIcon(type) + " " + type.toUpperCase());
+        iconLabel.getStyleClass().add("resource-icon");
 
         Label titleLabel = new Label(r.getTitle());
-        titleLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1f2937;");
+        titleLabel.getStyleClass().add("resource-title");
         titleLabel.setWrapText(true);
         
         // Build author label with full name, dept, sem
@@ -251,30 +304,56 @@ public class ResourcesController {
             authorText.append(")");
         }
         Label authorLabel = new Label(authorText.toString());
-        authorLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #475569;");
+        authorLabel.getStyleClass().add("resource-meta");
 
         String subjectText = r.getSubject() != null ? r.getSubject() : "—";
         Label subjectLabel = new Label("📚 " + subjectText);
-        subjectLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #4b5563;");
+        subjectLabel.getStyleClass().add("resource-subject");
 
         String descText = r.getDescription() != null ? r.getDescription() : "";
         Label descLabel = new Label(descText);
-        descLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6b7280;");
+        descLabel.getStyleClass().add("resource-meta");
         descLabel.setWrapText(true);
         descLabel.setPrefHeight(40);
 
         HBox actionBox = new HBox(10);
-        Button previewBtn = new Button("👁️ Preview");
-        previewBtn.setStyle("-fx-background-color: #f1f5f9; -fx-font-size: 11px; -fx-cursor: hand;");
+        Button previewBtn = new Button("👁 Preview");
+        previewBtn.getStyleClass().add("btn-action-view");
         previewBtn.setOnAction(e -> handlePreview(r));
 
         Button downloadBtn = new Button("📥 Download");
-        downloadBtn.setStyle("-fx-background-color: #e0f2fe; -fx-font-size: 11px; -fx-cursor: hand;");
+        downloadBtn.getStyleClass().add("btn-action-download");
         downloadBtn.setOnAction(e -> handleDownload(r));
 
         actionBox.getChildren().addAll(previewBtn, downloadBtn);
+        if (authService.canDeleteResource(currentUser, r)) {
+            Button deleteBtn = new Button("🗑 Delete");
+            deleteBtn.getStyleClass().add("btn-action-delete");
+            deleteBtn.setOnAction(e -> deleteResource(r));
+            actionBox.getChildren().add(deleteBtn);
+        }
         card.getChildren().addAll(iconLabel, titleLabel, authorLabel, subjectLabel, descLabel, actionBox);
         return card;
+    }
+
+    private String guessTypeFromPath(String path) {
+        if (path == null || !path.contains(".")) return "FILE";
+        return path.substring(path.lastIndexOf('.') + 1).toUpperCase();
+    }
+
+    private String fileTypeIcon(String fileType) {
+        if (fileType == null) return "📄";
+        return switch (fileType.toUpperCase()) {
+            case "PDF" -> "📕";
+            case "DOC", "DOCX" -> "📘";
+            case "PPT", "PPTX" -> "📙";
+            case "XLS", "XLSX" -> "📗";
+            case "PNG", "JPG", "JPEG", "GIF", "WEBP" -> "🖼";
+            case "ZIP", "RAR", "7Z" -> "🗜";
+            case "MP4", "AVI", "MKV", "MOV" -> "🎬";
+            case "MP3", "WAV", "AAC" -> "🎵";
+            default -> "📄";
+        };
     }
 
     // =========================
@@ -289,36 +368,18 @@ public class ResourcesController {
         String subject = subjectFilter.getValue();
 
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
-        java.util.Map<Integer, Subject> subjectMap = allSubjects.stream()
+        Map<Integer, Subject> subjectMap = allSubjects.stream()
                 .collect(Collectors.toMap(Subject::getId, s -> s, (s1, unused) -> s1));
 
         List<Resource> filtered = activeResources.stream()
                 .filter(r -> {
                     String t = r.getTitle() != null ? r.getTitle().toLowerCase() : "";
                     String s = r.getSubject() != null ? r.getSubject() : "";
-                    boolean matchesQuery = query.isEmpty() || t.contains(query);
-                    if (!matchesQuery) return false;
-
-                    boolean matchesSub = subject == null || s.equalsIgnoreCase(subject);
-                    if (!matchesSub) return false;
-
-                    if (dept != null || sem != null) {
-                        Subject subModel = subjectMap.get(r.getSubjectId());
-                        if (subModel == null) {
-                            return allSubjects.stream().anyMatch(sub ->
-                                sub.getName().equalsIgnoreCase(s) &&
-                                (dept == null || sub.getDepartmentId() == dept.getId()) &&
-                                (sem == null || sub.getSemesterId() == sem.getId())
-                            );
-                        }
-                        if (dept != null && subModel.getDepartmentId() != dept.getId()) {
-                            return false;
-                        }
-                        if (sem != null && subModel.getSemesterId() != sem.getId()) {
-                            return false;
-                        }
-                    }
-                    return true;
+                    if (!query.isEmpty() && !t.contains(query)) return false;
+                    if (subject != null && !s.equalsIgnoreCase(subject)) return false;
+                    return AcademicFilterHelper.matchesDeptSemFilter(
+                            r.getDepartmentId(), r.getSemesterId(), r.getSubjectId(),
+                            dept, sem, subjectMap, allSubjects, s);
                 })
                 .collect(Collectors.toList());
 
@@ -328,15 +389,40 @@ public class ResourcesController {
     @FXML
     public void clearFilters() {
         searchField.clear();
-        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
-        if (semesterFilter != null) {
-            semesterFilter.getItems().clear();
-            semesterFilter.setValue(null);
-            semesterFilter.setDisable(true);
-        }
-        subjectFilter.getSelectionModel().clearSelection();
-        loadSubjectFilter();
+        AcademicFilterHelper.resetFilters(academicService, departmentFilter, semesterFilter, subjectFilter);
         displayResources(activeResources);
+    }
+
+    private void deleteResource(Resource r) {
+        if (currentUser == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "You must be logged in.");
+            return;
+        }
+        if (!authService.canDeleteResource(currentUser, r)) {
+            showAlert(Alert.AlertType.ERROR, "Denied", "You can only delete your own resources.");
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete resource '" + r.getTitle() + "'?",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) return;
+        try {
+            resourceService.deleteResourceWithFile(r.getId(), currentUser);
+            EventBus.getInstance().publish(new EventBus.ResourcesChangedEvent());
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            loadResources();
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Resource deleted successfully.");
+        } catch (Exception ex) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Delete failed: " + ex.getMessage());
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 
     // =========================
@@ -383,89 +469,66 @@ public class ResourcesController {
         descTxt.setPromptText("Enter short description");
         descTxt.setPrefHeight(70);
 
-        // ── Cascade logic ────────────────────────────────────────────────────
-        try {
-            List<Department> departments = academicService.getAllActiveDepartments();
-            deptCombo.setItems(FXCollections.observableArrayList(departments));
-        } catch (Exception e) {
-            System.err.println("[ResourcesController] Failed to load departments: " + e.getMessage());
-        }
+        deptCombo.setItems(AcademicFilterHelper.departmentsForFilter(academicService));
+        deptCombo.setValue(AcademicFilterHelper.allDepartments());
+        semCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
+        semCombo.setValue(AcademicFilterHelper.allSemesters());
+        semCombo.setDisable(true);
 
-        deptCombo.setOnAction(e -> {
-            Department dept = deptCombo.getValue();
-            semCombo.getItems().clear();
-            subCombo.getItems().clear();
-            semCombo.setValue(null);
-            subCombo.setValue(null);
-            semCombo.setDisable(dept == null);
-            subCombo.setDisable(true);
-
-            if (dept != null) {
-                try {
-                    semCombo.setItems(FXCollections.observableArrayList(
-                            academicService.getSemestersByDepartment(dept.getId())));
-                } catch (Exception ex) {
-                    System.err.println("[ResourcesController] Failed to load semesters: " + ex.getMessage());
-                }
-            }
-        });
-
-        semCombo.setOnAction(e -> {
-            Semester sem = semCombo.getValue();
-            subCombo.getItems().clear();
-            subCombo.setValue(null);
-            subCombo.setDisable(sem == null);
-
-            if (sem != null) {
-                try {
-                    subCombo.setItems(FXCollections.observableArrayList(
-                            academicService.getSubjectsBySemester(sem.getId())));
-                } catch (Exception ex) {
-                    System.err.println("[ResourcesController] Failed to load subjects: " + ex.getMessage());
-                }
-            }
-        });
+        AcademicFilterHelper.wireCascade(academicService, deptCombo, semCombo, subCombo,
+                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semCombo.getValue(), subCombo));
+        semCombo.setOnAction(ev -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semCombo.getValue(), subCombo));
 
         // ── Submit button ────────────────────────────────────────────────────
         Button submitBtn = new Button("Submit for Approval");
-        submitBtn.setStyle("-fx-background-color: #4f46e5; -fx-text-fill: white;" +
-                " -fx-font-weight: bold; -fx-cursor: hand;");
+        submitBtn.getStyleClass().add("btn-primary");
         submitBtn.setOnAction(e -> {
-            if (titleTxt.getText().trim().isEmpty() || subCombo.getValue() == null) {
-                Alert warn = new Alert(Alert.AlertType.WARNING,
-                        "Title and Subject are required.\n" +
-                        "Please select Department → Semester → Subject.");
-                warn.setHeaderText("Missing Fields");
-                warn.showAndWait();
+            if (App.getCurrentUser() == null) {
+                showAlert(Alert.AlertType.WARNING, "Login Required", "Please log in to upload resources.");
+                return;
+            }
+            if (titleTxt.getText().trim().isEmpty()) {
+                showAlert(Alert.AlertType.WARNING, "Missing Fields", "Title is required.");
+                return;
+            }
+            Department dept = deptCombo.getValue();
+            Semester sem = semCombo.getValue();
+            Subject selectedSubject = subCombo.getValue();
+            if (!AcademicFilterHelper.isAllSemesters(sem) && selectedSubject == null) {
+                showAlert(Alert.AlertType.WARNING, "Missing Fields",
+                        "Select a Subject when a specific semester is chosen.");
                 return;
             }
 
-            Subject selectedSubject = subCombo.getValue();
-
             Note noteToShare = new Note();
-            noteToShare.setId(0); // No linked Note row
+            noteToShare.setId(0);
             noteToShare.setTitle(titleTxt.getText().trim());
-            noteToShare.setSubject(selectedSubject.getName());
-            noteToShare.setSubjectId(selectedSubject.getId());  // FK to Subjects table
+            noteToShare.setDepartmentId(AcademicFilterHelper.resolveDepartmentId(dept));
+            noteToShare.setSemesterId(AcademicFilterHelper.resolveSemesterId(sem));
+            if (selectedSubject != null) {
+                noteToShare.setSubject(selectedSubject.getName());
+                noteToShare.setSubjectId(selectedSubject.getId());
+            } else {
+                noteToShare.setSubject(AcademicFilterHelper.isAllDepartments(dept) ? "All Departments" : "General");
+            }
             noteToShare.setSource("Community Upload");
             noteToShare.setUploadDate(
                     LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
             noteToShare.setFileName(file.getName());
             noteToShare.setFileType("PDF");
             noteToShare.setDescription(descTxt.getText().trim());
-            noteToShare.setUserId(
-                    App.getCurrentUser() != null ? App.getCurrentUser().getId() : 1);
+            noteToShare.setUserId(App.getCurrentUser().getId());
             noteToShare.setPrivate(false);
 
             try {
-                boolean isAdmin = App.getCurrentUser() != null && "admin".equalsIgnoreCase(App.getCurrentUser().getRole());
+                boolean isAdmin = "admin".equalsIgnoreCase(App.getCurrentUser().getRole());
                 resourceService.shareAsResource(noteToShare, file.getAbsolutePath(), isAdmin);
                 
                 // Log activity
                 if (App.getCurrentUser() != null) {
                     UserActivity activity = new UserActivity(
                             App.getCurrentUser().getId(),
-                            App.getCurrentUser().getFullName() != null ? App.getCurrentUser().getFullName() : App.getCurrentUser().getName(),
+                            App.getCurrentUser().getDisplayFullName(),
                             "UPLOAD_RESOURCE",
                             "RESOURCE",
                             noteToShare.getTitle()
@@ -517,7 +580,8 @@ public class ResourcesController {
         form.add(descTxt,                      1, 5);
         form.add(submitBtn,                    1, 6);
 
-        dialog.setScene(new Scene(form, 430, 400));
+        dialog.setScene(new Scene(form, 480, 420));
+        dialog.setMinWidth(440);
         dialog.showAndWait();
     }
 

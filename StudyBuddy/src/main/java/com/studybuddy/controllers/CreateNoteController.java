@@ -7,7 +7,9 @@ import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.FileStorageService;
 import com.studybuddy.services.NoteService;
+import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -20,120 +22,57 @@ import java.io.File;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
-/**
- * Controller for CreateNoteDialog.fxml.
- *
- * fx:id → field mapping (all injections verified against FXML):
- *   titleField          → TextField
- *   departmentComboBox  → ComboBox<Department>   (cascades → semester)
- *   semesterComboBox    → ComboBox<Semester>     (cascades → subject)
- *   subjectComboBox     → ComboBox<Subject>
- *   sourceField         → ComboBox<String>
- *   dateField           → DatePicker
- *   descriptionField    → TextArea
- *   fileTextField       → TextField
- *   privateRadio        → RadioButton
- *   shareRadio          → RadioButton
- *   uploadResourceBtn   → VBox  (wrapper shown/hidden when "Share" is selected)
- */
 public class CreateNoteController {
 
-    // ── Injected from FXML ─────────────────────────────────────────────────────
-
-    @FXML private TextField        titleField;
-
-    /** Cascading top-level: selecting a department repopulates semesterComboBox. */
+    @FXML private TextField titleField;
     @FXML private ComboBox<Department> departmentComboBox;
-
-    /** Cascading mid-level: selecting a semester repopulates subjectComboBox. */
     @FXML private ComboBox<Semester> semesterComboBox;
-
-    /** Cascading leaf: populated after a semester is chosen. */
     @FXML private ComboBox<Subject> subjectComboBox;
-
     @FXML private ComboBox<String> sourceField;
-
-    @FXML private DatePicker       dateField;
-    @FXML private TextArea         descriptionField;
-    @FXML private TextField        fileTextField;
-
-    @FXML private RadioButton      privateRadio;
-    @FXML private RadioButton      shareRadio;
-
-    /**
-     * FXML declares this as a VBox that wraps the "Upload Resource" button.
-     * The controller shows/hides the whole wrapper rather than the inner button.
-     */
-    @FXML private VBox             uploadResourceBtn;
-
-    // ── Services ───────────────────────────────────────────────────────────────
+    @FXML private DatePicker dateField;
+    @FXML private TextArea descriptionField;
+    @FXML private TextField fileTextField;
+    @FXML private RadioButton privateRadio;
+    @FXML private RadioButton shareRadio;
+    @FXML private VBox uploadResourceBtn;
 
     private final NoteService noteService = new NoteService();
     private final AcademicService academicService = AcademicService.getInstance();
     private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
-
-    // ── State ──────────────────────────────────────────────────────────────────
-
     private File selectedFile;
-
-    // ── Initialise ────────────────────────────────────────────────────────────
 
     @FXML
     public void initialize() {
-
-        // ── Source options (static) ────────────────────────────────────────────
         sourceField.setItems(FXCollections.observableArrayList(
                 "Textbook", "Lecture", "Online Course", "Research Paper",
                 "Notes", "Video Tutorial", "Other"
         ));
-
-        // ── Date defaults to today ─────────────────────────────────────────────
         dateField.setValue(LocalDate.now());
 
-        // ── Disable by default ──────────────────────────────────────────────────
-        if (semesterComboBox != null) {
-            semesterComboBox.setDisable(true);
-        }
-        if (subjectComboBox != null) {
-            subjectComboBox.setDisable(true);
-        }
+        departmentComboBox.setItems(AcademicFilterHelper.departmentsForFilter(academicService));
+        departmentComboBox.setValue(AcademicFilterHelper.allDepartments());
+        semesterComboBox.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
+        semesterComboBox.setValue(AcademicFilterHelper.allSemesters());
+        semesterComboBox.setDisable(true);
+        subjectComboBox.setDisable(true);
 
-        // ── Load Departments from SQL Server ───────────────────────────────────
-        loadDepartments();
-
-        // ── Cascading: Department → Semester → Subject ────────────────────────
-        departmentComboBox.setOnAction(e -> {
-            Department selectedDept = departmentComboBox.getValue();
-            semesterComboBox.getItems().clear();
-            subjectComboBox.getItems().clear();
-            semesterComboBox.setValue(null);
-            subjectComboBox.setValue(null);
-            semesterComboBox.setDisable(selectedDept == null);
-            subjectComboBox.setDisable(true);
-            
-            if (selectedDept != null) {
-                loadSemesters(selectedDept.getId());
-            }
-        });
+        AcademicFilterHelper.wireCascade(academicService, departmentComboBox, semesterComboBox, subjectComboBox,
+                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semesterComboBox.getValue(), subjectComboBox));
 
         semesterComboBox.setOnAction(e -> {
-            Semester selectedSem = semesterComboBox.getValue();
-            subjectComboBox.getItems().clear();
-            subjectComboBox.setValue(null);
-            subjectComboBox.setDisable(selectedSem == null);
-            
-            if (selectedSem != null) {
-                loadSubjects(selectedSem.getId());
+            Semester sem = semesterComboBox.getValue();
+            if (!AcademicFilterHelper.isAllSemesters(sem)) {
+                AcademicFilterHelper.loadSubjectsForSemester(academicService, sem, subjectComboBox);
+            } else {
+                subjectComboBox.getItems().clear();
+                subjectComboBox.setValue(null);
             }
         });
 
-        // ── Visibility toggle: show/hide the Upload Resource VBox wrapper ──────
         ToggleGroup visibilityGroup = new ToggleGroup();
         privateRadio.setToggleGroup(visibilityGroup);
         shareRadio.setToggleGroup(visibilityGroup);
-
         visibilityGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
             boolean share = (newVal == shareRadio);
             if (uploadResourceBtn != null) {
@@ -141,47 +80,11 @@ public class CreateNoteController {
                 uploadResourceBtn.setManaged(share);
             }
         });
-
-        // Start hidden
         if (uploadResourceBtn != null) {
             uploadResourceBtn.setVisible(false);
             uploadResourceBtn.setManaged(false);
         }
     }
-
-    // ── Data Loading Methods ───────────────────────────────────────────────────
-
-    private void loadDepartments() {
-        try {
-            List<Department> departments = academicService.getAllActiveDepartments();
-            departmentComboBox.setItems(FXCollections.observableArrayList(departments));
-        } catch (Exception e) {
-            System.err.println("Error loading departments: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private void loadSemesters(int departmentId) {
-        try {
-            List<Semester> semesters = academicService.getSemestersByDepartment(departmentId);
-            semesterComboBox.setItems(FXCollections.observableArrayList(semesters));
-        } catch (Exception e) {
-            System.err.println("Error loading semesters: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private void loadSubjects(int semesterId) {
-        try {
-            List<Subject> subjects = academicService.getSubjectsBySemester(semesterId);
-            subjectComboBox.setItems(FXCollections.observableArrayList(subjects));
-        } catch (Exception e) {
-            System.err.println("Error loading subjects: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // ── File picker ───────────────────────────────────────────────────────────
 
     @FXML
     public void selectFile() {
@@ -199,65 +102,62 @@ public class CreateNoteController {
         }
     }
 
-    // ── Save Note ─────────────────────────────────────────────────────────────
-
     @FXML
     public void saveNote() {
-        if (!validateInputs()) {
+        if (!validateInputs()) return;
+        if (App.getCurrentUser() == null) {
+            showAlert(Alert.AlertType.WARNING, "Login Required", "Please log in to upload notes.");
             return;
         }
 
         try {
             Note note = new Note();
-
-            note.setId(0);
             note.setTitle(titleField.getText().trim());
-            
-            // Store the subject name for backward compatibility (legacy subject field)
+
+            Department dept = departmentComboBox.getValue();
+            Semester sem = semesterComboBox.getValue();
             Subject selectedSubject = subjectComboBox.getValue();
+
+            note.setDepartmentId(AcademicFilterHelper.resolveDepartmentId(dept));
+            note.setSemesterId(AcademicFilterHelper.resolveSemesterId(sem));
+
             if (selectedSubject != null) {
                 note.setSubject(selectedSubject.getName());
                 note.setSubjectId(selectedSubject.getId());
+            } else if (!AcademicFilterHelper.isAllSemesters(sem)) {
+                note.setSubject("General");
+            } else {
+                note.setSubject("All Departments");
             }
-            
+
             note.setSource(sourceField.getValue());
-
-            note.setUploadDate(
-                    dateField.getValue().format(
-                            DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            );
-
-            note.setDescription(descriptionField.getText() != null
-                    ? descriptionField.getText().trim() : "");
+            note.setUploadDate(dateField.getValue().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            note.setDescription(descriptionField.getText() != null ? descriptionField.getText().trim() : "");
             note.setPrivate(privateRadio.isSelected());
 
             if (selectedFile != null) {
+                FileStorageService storage = FileStorageService.getInstance();
+                storage.validateFile(selectedFile);
+                note.setFilePath(storage.storeFile(selectedFile, "notes"));
                 note.setFileName(selectedFile.getName());
-                note.setFilePath(selectedFile.getAbsolutePath());
-                String name = selectedFile.getName();
-                String ext  = name.contains(".")
-                        ? name.substring(name.lastIndexOf('.') + 1)
+                String ext = selectedFile.getName().contains(".")
+                        ? selectedFile.getName().substring(selectedFile.getName().lastIndexOf('.') + 1).toUpperCase()
                         : "TXT";
-                note.setFileType(ext.toUpperCase());
+                note.setFileType(ext);
             } else {
                 note.setFileName("No File");
                 note.setFileType("TXT");
             }
 
-            note.setUserId(App.getCurrentUser() != null
-                    ? App.getCurrentUser().getId() : 1);
-
-            boolean isAdmin = App.getCurrentUser() != null && "admin".equalsIgnoreCase(App.getCurrentUser().getRole());
+            note.setUserId(App.getCurrentUser().getId());
+            boolean isAdmin = "admin".equalsIgnoreCase(App.getCurrentUser().getRole());
             noteService.createNote(note, isAdmin);
 
-            // Log activity
             if (App.getCurrentUser() != null) {
                 UserActivity activity = new UserActivity(
                     App.getCurrentUser().getId(),
-                    App.getCurrentUser().getFullName() != null ? App.getCurrentUser().getFullName() : App.getCurrentUser().getName(),
-                    "UPLOAD_NOTE",
-                    "NOTE",
-                    note.getTitle()
+                    App.getCurrentUser().getDisplayFullName(),
+                    "UPLOAD_NOTE", "NOTE", note.getTitle()
                 );
                 try {
                     activityDAO.logActivity(activity);
@@ -266,35 +166,25 @@ public class CreateNoteController {
                 }
             }
 
-            // Publish events
             EventBus.getInstance().publish(new EventBus.NotesChangedEvent());
             EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
-
             showAlert(Alert.AlertType.INFORMATION, "Success", "Note saved successfully!");
             closeDialog();
-
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to save note: " + e.getMessage());
         }
     }
 
-    // ── Upload Resource (inner button inside uploadResourceBtn VBox) ──────────
-
     @FXML
     public void uploadResource() {
-        // Save the note first, then it will be queued for admin moderation
         saveNote();
     }
-
-    // ── Cancel ────────────────────────────────────────────────────────────────
 
     @FXML
     public void cancel() {
         closeDialog();
     }
-
-    // ── Validation ────────────────────────────────────────────────────────────
 
     private boolean validateInputs() {
         if (titleField.getText() == null || titleField.getText().trim().isEmpty()) {
@@ -302,15 +192,15 @@ public class CreateNoteController {
             return false;
         }
         if (departmentComboBox.getValue() == null) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please select a Department.");
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please select a Department (or All Departments).");
             return false;
         }
         if (semesterComboBox.getValue() == null) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please select a Semester.");
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please select a Semester (or All Semesters).");
             return false;
         }
-        if (subjectComboBox.getValue() == null) {
-            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please select a Subject.");
+        if (!AcademicFilterHelper.isAllSemesters(semesterComboBox.getValue()) && subjectComboBox.getValue() == null) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please select a Subject when a specific semester is chosen.");
             return false;
         }
         if (sourceField.getValue() == null) {
@@ -319,8 +209,6 @@ public class CreateNoteController {
         }
         return true;
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void closeDialog() {
         Stage stage = (Stage) titleField.getScene().getWindow();

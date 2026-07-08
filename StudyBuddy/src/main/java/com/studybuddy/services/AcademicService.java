@@ -104,4 +104,54 @@ public class AcademicService {
                 .sorted()
                 .collect(java.util.stream.Collectors.toList());
     }
+
+    // ── Department CRUD ───────────────────────────────────────────────────────
+
+    public List<Department> getAllDepartments() {
+        return departmentDAO.getAllDepartments();
+    }
+
+    public int createDepartment(Department dept) throws java.sql.SQLException {
+        if (departmentDAO.codeExists(dept.getCode(), null)) {
+            throw new IllegalArgumentException("Department code already exists.");
+        }
+        return departmentDAO.createDepartment(dept);
+    }
+
+    public boolean updateDepartment(Department dept) throws java.sql.SQLException {
+        if (departmentDAO.codeExists(dept.getCode(), dept.getId())) {
+            throw new IllegalArgumentException("Department code already exists.");
+        }
+        return departmentDAO.updateDepartment(dept);
+    }
+
+    public boolean deleteDepartment(int id) throws java.sql.SQLException {
+        return departmentDAO.deleteDepartment(id);
+    }
+
+    public boolean setDepartmentActive(int id, boolean active) throws java.sql.SQLException {
+        return departmentDAO.setDepartmentActive(id, active);
+    }
+
+    // ── Semester CRUD ─────────────────────────────────────────────────────────
+
+    public List<Semester> getAllSemesters() {
+        return semesterDAO.getAllSemesters();
+    }
+
+    public int createSemester(Semester semester) throws java.sql.SQLException {
+        return semesterDAO.createSemester(semester);
+    }
+
+    public boolean updateSemester(Semester semester) throws java.sql.SQLException {
+        return semesterDAO.updateSemester(semester);
+    }
+
+    public boolean deleteSemester(int id) throws java.sql.SQLException {
+        return semesterDAO.deleteSemester(id);
+    }
+
+    public boolean setSemesterActive(int id, boolean active) throws java.sql.SQLException {
+        return semesterDAO.setSemesterActive(id, active);
+    }
 }

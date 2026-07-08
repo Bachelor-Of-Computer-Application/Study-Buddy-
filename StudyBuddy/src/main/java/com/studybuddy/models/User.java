@@ -298,6 +298,14 @@ public class User {
         this.points = points;
     }
 
+    /** Display name: fullName when set, otherwise login name. */
+    public String getDisplayFullName() {
+        if (fullName != null && !fullName.isBlank()) {
+            return fullName.trim();
+        }
+        return name != null ? name : "";
+    }
+
     // ===========================
     // toString Method
     // ===========================

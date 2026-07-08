@@ -182,30 +182,101 @@ public class NoteDAO {
         // id is excluded — SQL Server auto-generates it via IDENTITY(1,1)
         String status = autoApprove ? "Approved" : "Pending";
         String sql = "INSERT INTO Notes " +
-                "(title, subject, subjectId, source, uploadDate, fileType, fileName, filePath, description, userId, isPrivate, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "(title, subject, subjectId, departmentId, semesterId, source, uploadDate, fileType, fileName, filePath, description, userId, isPrivate, status, tags, downloads) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1,  note.getTitle());
             stmt.setString(2,  note.getSubject());
-            
-            // Handle subjectId - NULL if not set (backward compatibility)
+
             if (note.getSubjectId() > 0) {
                 stmt.setInt(3, note.getSubjectId());
             } else {
                 stmt.setNull(3, java.sql.Types.INTEGER);
             }
-            
-            stmt.setString(4,  note.getSource());
-            stmt.setString(5,  note.getUploadDate());    // SQL column: uploadDate
-            stmt.setString(6,  note.getFileType());      // SQL column: fileType
-            stmt.setString(7,  note.getFileName());      // SQL column: fileName
-            stmt.setString(8,  note.getFilePath());      // SQL column: filePath
-            stmt.setString(9,  note.getDescription());
-            stmt.setInt(10,    note.getUserId());         // SQL column: userId
-            stmt.setBoolean(11, note.isPrivate());        // SQL column: isPrivate
-            stmt.setString(12, status);
+            setNullableInt(stmt, 4, note.getDepartmentId());
+            setNullableInt(stmt, 5, note.getSemesterId());
+            stmt.setString(6,  note.getSource());
+            stmt.setString(7,  note.getUploadDate());
+            stmt.setString(8,  note.getFileType());
+            stmt.setString(9,  note.getFileName());
+            stmt.setString(10, note.getFilePath());
+            stmt.setString(11, note.getDescription());
+            stmt.setInt(12,    note.getUserId());
+            stmt.setBoolean(13, note.isPrivate());
+            stmt.setString(14, status);
+            stmt.setString(15, note.getTags());
+            stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Updates an existing note's metadata (not file path unless provided).
+     */
+    public boolean updateNote(Note note) throws SQLException {
+        String sql = "UPDATE Notes SET title = ?, subject = ?, subjectId = ?, departmentId = ?, semesterId = ?, source = ?, " +
+                "fileType = ?, fileName = ?, filePath = ?, description = ?, isPrivate = ?, " +
+                "status = ?, tags = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, note.getTitle());
+            stmt.setString(2, note.getSubject());
+            if (note.getSubjectId() > 0) {
+                stmt.setInt(3, note.getSubjectId());
+            } else {
+                stmt.setNull(3, java.sql.Types.INTEGER);
+            }
+            setNullableInt(stmt, 4, note.getDepartmentId());
+            setNullableInt(stmt, 5, note.getSemesterId());
+            stmt.setString(6, note.getSource());
+            stmt.setString(7, note.getFileType());
+            stmt.setString(8, note.getFileName());
+            stmt.setString(9, note.getFilePath());
+            stmt.setString(10, note.getDescription());
+            stmt.setBoolean(11, note.isPrivate());
+            stmt.setString(12, note.getStatus());
+            stmt.setString(13, note.getTags());
+            stmt.setInt(14, note.getId());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public boolean duplicateExists(String title, int userId, Integer excludeId) throws SQLException {
+        String sql = excludeId != null
+                ? "SELECT COUNT(*) FROM Notes WHERE title = ? AND userId = ? AND id <> ? AND status <> 'Deleted'"
+                : "SELECT COUNT(*) FROM Notes WHERE title = ? AND userId = ? AND status <> 'Deleted'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, title);
+            stmt.setInt(2, userId);
+            if (excludeId != null) {
+                stmt.setInt(3, excludeId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    public void incrementDownloads(int noteId) throws SQLException {
+        String sql = "UPDATE Notes SET downloads = ISNULL(downloads, 0) + 1 WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, noteId);
+            stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Hard delete a note by ID.
+     */
+    public void hardDeleteNote(int id) throws SQLException {
+        String sql = "DELETE FROM Notes WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
             stmt.executeUpdate();
         }
     }
@@ -324,10 +395,10 @@ public class NoteDAO {
             sql.append("AND (n.title LIKE ? OR n.subject LIKE ? OR n.source LIKE ?) ");
         }
         if (departmentId != null) {
-            sql.append("AND d.id = ? ");
+            sql.append("AND (COALESCE(n.departmentId, d.id) = ? OR (n.departmentId IS NULL AND n.subjectId IS NULL)) ");
         }
         if (semesterId != null) {
-            sql.append("AND sem.id = ? ");
+            sql.append("AND (COALESCE(n.semesterId, sem.id) = ? OR (n.semesterId IS NULL AND n.subjectId IS NULL)) ");
         }
         if (subjectId != null) {
             sql.append("AND s.id = ? ");
@@ -391,6 +462,9 @@ public class NoteDAO {
         } catch (SQLException ignored) { 
             // Column doesn't exist or is NULL - maintain backward compatibility
         }
+
+        readNullableIntColumn(rs, "departmentId", note::setDepartmentId);
+        readNullableIntColumn(rs, "semesterId", note::setSemesterId);
         
         note.setSource(rs.getString("source"));
         note.setUploadDate(rs.getString("uploadDate"));    // SQL column: uploadDate
@@ -402,6 +476,11 @@ public class NoteDAO {
         note.setPrivate(rs.getBoolean("isPrivate"));       // SQL column: isPrivate
         // Safely read status — column may not exist in older DB versions
         try { note.setStatus(rs.getString("status")); } catch (SQLException ignored) { note.setStatus("Pending"); }
+        try { note.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
+        try {
+            int dl = rs.getInt("downloads");
+            if (!rs.wasNull()) note.setDownloads(dl);
+        } catch (SQLException ignored) {}
 
         // Load user info (full name, department, semester)
         try {
@@ -426,5 +505,25 @@ public class NoteDAO {
             note.setUserSemester(null);
         }
         return note;
+    }
+
+    private static void setNullableInt(PreparedStatement stmt, int index, Integer value) throws SQLException {
+        if (value == null || value == 0) {
+            stmt.setNull(index, java.sql.Types.INTEGER);
+        } else {
+            stmt.setInt(index, value);
+        }
+    }
+
+    private static void readNullableIntColumn(ResultSet rs, String column,
+                                              java.util.function.Consumer<Integer> setter) {
+        try {
+            int val = rs.getInt(column);
+            if (!rs.wasNull()) {
+                setter.accept(val);
+            }
+        } catch (SQLException ignored) {
+            // column may not exist before migration
+        }
     }
 }

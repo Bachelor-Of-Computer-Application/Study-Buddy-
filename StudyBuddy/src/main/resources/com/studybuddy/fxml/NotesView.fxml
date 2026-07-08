@@ -7,10 +7,9 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
 
 <BorderPane fx:id="mainBorderPane" styleClass="root-pane"
     stylesheets="@../css/theme.css, @../css/notes.css"
@@ -42,25 +41,25 @@
                     <VBox spacing="12" styleClass="filter-bar">
                         <Label text="FILTER LIBRARY" styleClass="filter-label"/>
                         <HBox alignment="CENTER_LEFT" spacing="12">
-                            <VBox spacing="5">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
                                 <Label text="Department" styleClass="filter-label"/>
-                                <ComboBox fx:id="departmentFilter" prefWidth="180"
-                                          promptText="All Departments" styleClass="field-box"/>
+                                <ComboBox fx:id="departmentFilter" maxWidth="Infinity"
+                                          minWidth="120" prefWidth="180" styleClass="field-box"/>
                             </VBox>
-                            <VBox spacing="5">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
                                 <Label text="Semester" styleClass="filter-label"/>
-                                <ComboBox fx:id="semesterFilter" prefWidth="140"
-                                          promptText="All Semesters" styleClass="field-box"/>
+                                <ComboBox fx:id="semesterFilter" maxWidth="Infinity"
+                                          minWidth="100" prefWidth="140" styleClass="field-box"/>
                             </VBox>
-                            <VBox spacing="5">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
                                 <Label text="Subject" styleClass="filter-label"/>
-                                <ComboBox fx:id="subjectFilter" prefWidth="220"
-                                          promptText="All Subjects" styleClass="field-box"/>
+                                <ComboBox fx:id="subjectFilter" maxWidth="Infinity"
+                                          minWidth="120" prefWidth="220" styleClass="field-box"/>
                             </VBox>
-                            <VBox spacing="5">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
                                 <Label text="Source" styleClass="filter-label"/>
-                                <ComboBox fx:id="sourceFilter" prefWidth="220"
-                                          promptText="All Sources" styleClass="field-box"/>
+                                <ComboBox fx:id="sourceFilter" maxWidth="Infinity"
+                                          minWidth="120" prefWidth="220" styleClass="field-box"/>
                             </VBox>
                             <Region HBox.hgrow="ALWAYS"/>
                             <VBox alignment="BOTTOM_LEFT" spacing="5">
@@ -96,11 +95,16 @@
 
                     <!-- ── Empty State (shown/hidden by controller) ─── -->
                     <VBox fx:id="emptyState" alignment="CENTER" managed="false"
-                          spacing="12" styleClass="empty-state" visible="false">
-                        <Label styleClass="empty-icon" text="📖"/>
-                        <Label styleClass="empty-text" text="No notes found."/>
-                        <Label style="-fx-font-size:12px;-fx-text-fill:#94a3b8;"
-                               text="Create your first note using the button above."/>
+                          spacing="16" styleClass="empty-state-premium" visible="false">
+                        <ImageView fitHeight="120" fitWidth="120" preserveRatio="true" styleClass="empty-state-illustration">
+                            <image>
+                                <Image url="@../images/man_on_lapto.png"/>
+                            </image>
+                        </ImageView>
+                        <Label styleClass="empty-state-text" text="No notes yet"/>
+                        <Label styleClass="empty-state-sub"
+                               text="Create your first notebook or study guide to get started."/>
+                        <Button onAction="#showCreateNoteDialog" styleClass="btn-primary" text="＋  Create Note"/>
                     </VBox>
 
                 </VBox>

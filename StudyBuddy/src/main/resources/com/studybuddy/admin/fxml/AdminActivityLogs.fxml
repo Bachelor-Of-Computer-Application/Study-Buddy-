@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="16" stylesheets="@../css/admin-dashboard.css"
+<VBox spacing="16" stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
       xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.studybuddy.admin.controllers.AdminActivityLogsController"
       styleClass="admin-panel-bg">
@@ -29,7 +29,7 @@
                    prefWidth="280"/>
         <Button text="Search" styleClass="primary-btn" onAction="#handleSearch"/>
 
-        <Separator orientation="VERTICAL" style="-fx-padding: 0 4;"/>
+        <Separator orientation="VERTICAL" styleClass="filter-separator"/>
 
         <!-- Date range filter -->
         <Label text="From:" styleClass="input-label"/>
@@ -55,13 +55,13 @@
         </columns>
         <placeholder>
             <Label text="No activity logs found. Actions you perform are recorded here automatically."
-                   style="-fx-text-fill:#94a3b8; -fx-font-size:13px;" wrapText="true"/>
+                   styleClass="admin-logs-empty" wrapText="true"/>
         </placeholder>
     </TableView>
 
     <!-- Info note -->
     <Label text="ℹ  Every admin action (user edits, approvals, deletions, logins) is automatically logged here. Requires the ActivityLogs table in your database."
            wrapText="true"
-           style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+           styleClass="admin-logs-hint"/>
 
 </VBox>

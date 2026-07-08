@@ -9,17 +9,20 @@ import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.StatisticsService;
 import com.studybuddy.services.UserService;
 import com.studybuddy.utils.EventBus;
+import com.studybuddy.utils.ImageLoader;
 import com.studybuddy.utils.ValidationUtil;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
@@ -28,8 +31,13 @@ import java.util.List;
 
 public class ProfileController {
 
+    @FXML private TabPane profileTabPane;
+    @FXML private Button uploadAvatarBtn;
+    @FXML private Button removeAvatarBtn;
     @FXML private BorderPane rootPane;
     @FXML private ImageView profileImageView;
+    @FXML private StackPane avatarStackPane;
+    @FXML private VBox avatarHoverOverlay;
     @FXML private Label displayNameLabel;
     @FXML private Label usernameSubLabel;
     @FXML private Label pointsBadgeLabel;
@@ -89,8 +97,9 @@ public class ProfileController {
     private final AcademicService academicService = AcademicService.getInstance();
     private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
     private final com.studybuddy.services.TaskService taskService = new com.studybuddy.services.TaskService();
+    private final ImageLoader imageLoader = ImageLoader.getInstance();
     private User currentUser;
-    private File selectedAvatarFile;
+    private static final double PROFILE_AVATAR_SIZE = 100;
 
     @FXML
     public void initialize() {
@@ -172,7 +181,8 @@ public class ProfileController {
 
         loadProfileData();
         loadActivityLog();
-        
+        setupAvatarInteractions();
+
         // Subscribe to EventBus events
         EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> {
             loadProfileData();
@@ -187,16 +197,63 @@ public class ProfileController {
             loadActivityLog();
         });
         EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> {
+            refreshCurrentUserFromDB();
             loadProfileData();
             loadActivityLog();
         });
+    }
+
+    private void setupAvatarInteractions() {
+        imageLoader.configureCircularAvatar(profileImageView, PROFILE_AVATAR_SIZE);
+        if (avatarStackPane != null) {
+            avatarStackPane.setOnMouseClicked(this::handleAvatarAreaClick);
+            avatarStackPane.setOnMouseEntered(e -> {
+                if (avatarHoverOverlay != null) {
+                    avatarHoverOverlay.setVisible(true);
+                    avatarHoverOverlay.setManaged(true);
+                }
+            });
+            avatarStackPane.setOnMouseExited(e -> {
+                if (avatarHoverOverlay != null) {
+                    avatarHoverOverlay.setVisible(false);
+                    avatarHoverOverlay.setManaged(false);
+                }
+            });
+        }
+        if (avatarHoverOverlay != null) {
+            avatarHoverOverlay.setVisible(false);
+            avatarHoverOverlay.setManaged(false);
+        }
+    }
+
+    private void handleAvatarAreaClick(MouseEvent event) {
+        handleUploadAvatar();
+    }
+
+    private void refreshAvatarDisplay() {
+        String path = currentUser != null ? currentUser.getProfileImagePath() : null;
+        imageLoader.applyAvatarToView(profileImageView, path, PROFILE_AVATAR_SIZE);
+        if (avatarPathLabel != null) {
+            if (path != null && !path.isBlank()) {
+                avatarPathLabel.setText(new File(path).getName());
+            } else {
+                avatarPathLabel.setText("Using default avatar");
+            }
+        }
+        if (removeAvatarBtn != null) {
+            removeAvatarBtn.setDisable(path == null || path.isBlank());
+        }
+    }
+
+    private void publishProfileImageChanged() {
+        EventBus.getInstance().publish(new EventBus.ProfileChangedEvent());
     }
 
     private void loadProfileData() {
         if (currentUser == null) return;
 
         // Header / Summary Card
-        displayNameLabel.setText(currentUser.getFullName() != null ? currentUser.getFullName() : currentUser.getName());
+        displayNameLabel.setText(currentUser.getDisplayFullName());
         usernameSubLabel.setText("@" + (currentUser.getUsername() != null ? currentUser.getUsername() : "username"));
         pointsBadgeLabel.setText(currentUser.getPoints() + " pts");
         userRoleLabel.setText("🎓 Role: " + (currentUser.getRole() != null ? currentUser.getRole() : "Student"));
@@ -207,7 +264,7 @@ public class ProfileController {
         }
 
         // 1. Overview Tab Labels
-        ovFullName.setText(currentUser.getFullName() != null ? currentUser.getFullName() : "-");
+        ovFullName.setText(currentUser.getDisplayFullName());
         ovUsername.setText(currentUser.getUsername() != null ? currentUser.getUsername() : "-");
         ovEmail.setText(currentUser.getEmail() != null ? currentUser.getEmail() : "-");
         ovPhone.setText(currentUser.getPhoneNumber() != null ? currentUser.getPhoneNumber() : "-");
@@ -280,13 +337,7 @@ public class ProfileController {
         systemNotificationsCheck.setSelected(currentUser.isSystemNotifications());
 
         // Avatar Image
-        try {
-            if (currentUser.getProfileImagePath() != null && new File(currentUser.getProfileImagePath()).exists()) {
-                profileImageView.setImage(new Image(new File(currentUser.getProfileImagePath()).toURI().toString()));
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to load user avatar: " + e.getMessage());
-        }
+        refreshAvatarDisplay();
     }
 
     private void loadActivityLog() {
@@ -338,20 +389,73 @@ public class ProfileController {
 
     @FXML
     public void handleUploadAvatar() {
+        if (!requireLoggedIn()) return;
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Profile Picture");
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Images (JPG, PNG, WebP)", "*.jpg", "*.jpeg", "*.png", "*.webp")
         );
         File file = fileChooser.showOpenDialog(rootPane.getScene().getWindow());
-        if (file != null) {
-            selectedAvatarFile = file;
-            avatarPathLabel.setText(file.getName());
+        if (file == null) {
+            return;
+        }
+
+        try {
+            imageLoader.validateProfileImageFile(file);
+            String previousPath = currentUser.getProfileImagePath();
+            String savedPath = imageLoader.saveProfileImage(file, currentUser.getId());
+            boolean updated = userService.updateProfileImagePath(currentUser.getId(), savedPath);
+            if (!updated) {
+                imageLoader.deleteProfileImageFile(savedPath);
+                showAlert(Alert.AlertType.ERROR, "Error", "Could not save profile picture to your account.");
+                return;
+            }
+            if (previousPath != null && !previousPath.equals(savedPath)) {
+                imageLoader.deleteProfileImageFile(previousPath);
+            }
+            refreshCurrentUserFromDB();
+            refreshAvatarDisplay();
+            publishProfileImageChanged();
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Profile picture updated.");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Invalid Image", e.getMessage());
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to update profile picture: " + e.getMessage());
         }
     }
 
     @FXML
+    public void handleRemoveAvatar() {
+        if (!requireLoggedIn()) return;
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Remove your profile picture and use the default avatar?",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setTitle("Remove Photo");
+        confirm.setHeaderText(null);
+        if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) {
+            return;
+        }
+
+        String previousPath = currentUser.getProfileImagePath();
+        boolean cleared = userService.clearProfileImage(currentUser.getId());
+        if (!cleared) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not remove profile picture.");
+            return;
+        }
+        if (previousPath != null) {
+            imageLoader.deleteProfileImageFile(previousPath);
+        }
+        refreshCurrentUserFromDB();
+        refreshAvatarDisplay();
+        publishProfileImageChanged();
+        showAlert(Alert.AlertType.INFORMATION, "Success", "Profile picture removed.");
+    }
+
+    @FXML
     public void handleSavePersonal() {
+        if (!requireLoggedIn()) return;
 
         String name = fullNameField.getText().trim();
         String uname = usernameField.getText().trim();
@@ -371,12 +475,6 @@ public class ProfileController {
         currentUser.setBio(bioField.getText().trim());
         currentUser.setDepartment(departmentField.getValue() != null ? departmentField.getValue().getName() : "");
         currentUser.setSemester(semesterCombo.getValue() != null ? semesterCombo.getValue().getName() : null);
-
-        if (selectedAvatarFile != null) {
-            currentUser.setProfileImagePath(
-                    selectedAvatarFile.getAbsolutePath()
-            );
-        }
 
         boolean success = userService.updatePersonalInformation(currentUser);
         userService.updateFullName(currentUser.getId(), name);
@@ -403,12 +501,16 @@ public class ProfileController {
     @FXML
     public void handleResetPersonal() {
         loadProfileData();
-        selectedAvatarFile = null;
-        avatarPathLabel.setText("No file chosen");
+        if (avatarPathLabel != null) {
+            avatarPathLabel.setText(currentUser != null && currentUser.getProfileImagePath() != null
+                    ? new File(currentUser.getProfileImagePath()).getName()
+                    : "Using default avatar");
+        }
     }
 
     @FXML
     public void handleSaveStudyPreferences() {
+        if (!requireLoggedIn()) return;
         currentUser.setPreferredSubjects(preferredSubjectsField.getText().trim());
         currentUser.setStudyGoals(studyGoalsField.getText().trim());
         currentUser.setLearningInterests(learningInterestsField.getText().trim());
@@ -426,6 +528,7 @@ public class ProfileController {
 
     @FXML
     public void handleSaveAccount() {
+        if (!requireLoggedIn()) return;
         String email = emailField.getText().trim();
 
         if (email.isEmpty() || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
@@ -447,6 +550,7 @@ public class ProfileController {
 
     @FXML
     public void handleSavePassword() {
+        if (!requireLoggedIn()) return;
         String currentPass = currentPasswordField.getText();
         String newPass = newPasswordField.getText();
         String confirmPass = confirmPasswordField.getText();
@@ -487,6 +591,7 @@ public class ProfileController {
 
     @FXML
     public void handleSaveNotifications() {
+        if (!requireLoggedIn()) return;
         currentUser.setEmailNotificationsEnabled(emailNotificationsCheck.isSelected());
         currentUser.setResourceUpdateNotifications(resourceNotificationsCheck.isSelected());
         currentUser.setSystemNotifications(systemNotificationsCheck.isSelected());
@@ -519,6 +624,14 @@ public class ProfileController {
             currentUser = fresh;
             App.setCurrentUser(fresh);   // keep App session in sync with SQL Server
         }
+    }
+
+    private boolean requireLoggedIn() {
+        if (currentUser != null) {
+            return true;
+        }
+        showAlert(Alert.AlertType.WARNING, "Not Logged In", "Please log in to update your profile.");
+        return false;
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

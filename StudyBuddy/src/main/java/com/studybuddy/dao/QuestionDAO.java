@@ -2,6 +2,7 @@ package com.studybuddy.dao;
 
 import com.studybuddy.models.Answer;
 import com.studybuddy.models.Question;
+import com.studybuddy.utils.DatabaseUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,26 +39,34 @@ public class QuestionDAO {
      * the hierarchy migration).
      */
     public boolean createQuestion(int userId, String text, String subject,
-                                  int subjectId, int points, String attachment) throws SQLException {
+                                  int subjectId, int points, String attachment,
+                                  Integer departmentId, Integer semesterId) throws SQLException {
         String sql = "INSERT INTO Questions " +
-                "(user_id, subject, subjectId, question_text, attachment_path, reward_points, created_at, votes, views, is_locked) " +
-                "VALUES (?, ?, ?, ?, ?, ?, GETDATE(), 0, 0, 0)";
+                "(user_id, subject, subjectId, departmentId, semesterId, question_text, attachment_path, reward_points, created_at, votes, views, is_locked) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0, 0, 0)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, subject);
-            // NULL when no subject was chosen (backward-compatible)
             if (subjectId > 0) {
                 stmt.setInt(3, subjectId);
             } else {
                 stmt.setNull(3, java.sql.Types.INTEGER);
             }
-            stmt.setString(4, text);
-            stmt.setString(5, attachment != null ? attachment : "");
-            stmt.setInt(6, points);
+            setNullableInt(stmt, 4, departmentId);
+            setNullableInt(stmt, 5, semesterId);
+            stmt.setString(6, text);
+            stmt.setString(7, attachment != null ? attachment : "");
+            stmt.setInt(8, points);
             return stmt.executeUpdate() > 0;
         }
+    }
+
+    /** Backward-compatible overload without department/semester columns. */
+    public boolean createQuestion(int userId, String text, String subject,
+                                  int subjectId, int points, String attachment) throws SQLException {
+        return createQuestion(userId, text, subject, subjectId, points, attachment, null, null);
     }
 
     // =========================
@@ -75,7 +84,7 @@ public class QuestionDAO {
         String sql = "SELECT q.question_id AS id, q.user_id, " +
                 "COALESCE(u.name, u.email, 'Unknown User') AS author_name, " +
                 "u.name, u.fullName, u.department, u.semester, " +
-                "q.subject, q.subjectId, q.question_text, COALESCE(q.tags, '') AS tags, " +
+                "q.subject, q.subjectId, q.departmentId, q.semesterId, q.question_text, COALESCE(q.tags, '') AS tags, " +
                 "q.attachment_path, " +
                 "q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(10), q.created_at, 120) AS created_at, " +
@@ -458,6 +467,186 @@ public class QuestionDAO {
     }
 
     // =========================
+    // QUESTION BANK CRUD
+    // =========================
+
+    public int createQuestionBankEntry(Question q) throws SQLException {
+        String sql = "INSERT INTO Questions (user_id, author_name, title, subject, subjectId, " +
+                "question_text, tags, attachment_path, difficulty, question_type, status, " +
+                "departmentId, semesterId, created_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, q.getUserId());
+            stmt.setString(2, q.getAuthorName());
+            stmt.setString(3, q.getTitle());
+            stmt.setString(4, q.getSubject());
+            if (q.getSubjectId() > 0) stmt.setInt(5, q.getSubjectId());
+            else stmt.setNull(5, java.sql.Types.INTEGER);
+            stmt.setString(6, q.getQuestionText());
+            stmt.setString(7, q.getTags());
+            stmt.setString(8, q.getAttachmentPath());
+            stmt.setString(9, q.getDifficulty());
+            stmt.setString(10, q.getQuestionType());
+            stmt.setString(11, q.getStatus());
+            if (q.getDepartmentId() > 0) stmt.setInt(12, q.getDepartmentId());
+            else stmt.setNull(12, java.sql.Types.INTEGER);
+            if (q.getSemesterId() > 0) stmt.setInt(13, q.getSemesterId());
+            else stmt.setNull(13, java.sql.Types.INTEGER);
+            stmt.executeUpdate();
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) return keys.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public boolean updateQuestionBankEntry(Question q) throws SQLException {
+        String sql = "UPDATE Questions SET title = ?, subject = ?, subjectId = ?, question_text = ?, " +
+                "tags = ?, attachment_path = ?, difficulty = ?, question_type = ?, status = ?, " +
+                "departmentId = ?, semesterId = ? WHERE question_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, q.getTitle());
+            stmt.setString(2, q.getSubject());
+            if (q.getSubjectId() > 0) stmt.setInt(3, q.getSubjectId());
+            else stmt.setNull(3, java.sql.Types.INTEGER);
+            stmt.setString(4, q.getQuestionText());
+            stmt.setString(5, q.getTags());
+            stmt.setString(6, q.getAttachmentPath());
+            stmt.setString(7, q.getDifficulty());
+            stmt.setString(8, q.getQuestionType());
+            stmt.setString(9, q.getStatus());
+            if (q.getDepartmentId() > 0) stmt.setInt(10, q.getDepartmentId());
+            else stmt.setNull(10, java.sql.Types.INTEGER);
+            if (q.getSemesterId() > 0) stmt.setInt(11, q.getSemesterId());
+            else stmt.setNull(11, java.sql.Types.INTEGER);
+            stmt.setInt(12, q.getId());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    public Question getQuestionById(int id) throws SQLException {
+        String sql = adminQuestionSelectSql() + "WHERE q.question_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return mapQuestionBank(rs);
+            }
+        }
+        return null;
+    }
+
+    /** All questions for the admin panel, including optional bank metadata when columns exist. */
+    public List<Question> getAllQuestionsForAdminPanel() throws SQLException {
+        String sql = adminQuestionSelectSql() + "ORDER BY q.created_at DESC";
+        List<Question> list = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) list.add(mapQuestionBank(rs));
+        }
+        return list;
+    }
+
+    public List<Question> getQuestionBankEntries() throws SQLException {
+        return getAllQuestionsForAdminPanel();
+    }
+
+    private String adminQuestionSelectSql() {
+        return "SELECT q.question_id AS id, q.user_id, " +
+                "COALESCE(u.name, u.email, q.author_name, 'Unknown') AS author_name, " +
+                "u.name, u.fullName, u.department, u.semester, " +
+                "q.subject, q.subjectId, q.question_text, COALESCE(q.tags, '') AS tags, " +
+                "q.attachment_path, q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
+                "CONVERT(varchar(19), q.created_at, 120) AS created_at, COALESCE(q.is_locked, 0) AS is_locked, " +
+                "q.title, q.difficulty, q.question_type, q.status, q.departmentId, q.semesterId, " +
+                "d.name AS departmentName, s.name AS semesterName, " +
+                "(SELECT COUNT(*) FROM Answers a WHERE a.question_id = q.question_id) AS answer_count " +
+                "FROM Questions q " +
+                "LEFT JOIN Users u ON q.user_id = u.id " +
+                "LEFT JOIN Departments d ON q.departmentId = d.id " +
+                "LEFT JOIN Semesters s ON q.semesterId = s.id ";
+    }
+
+    public List<Question> getQuestionsByUserId(int userId) throws SQLException {
+        String sql = "SELECT q.question_id AS id, q.*, u.name, u.fullName, u.department, u.semester " +
+                "FROM Questions q LEFT JOIN Users u ON q.user_id = u.id " +
+                "WHERE q.user_id = ? ORDER BY q.created_at DESC";
+        List<Question> list = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) list.add(mapQuestion(rs));
+            }
+        }
+        return list;
+    }
+
+    public boolean deleteQuestionById(int id) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                if (DatabaseUtil.tableExists(conn, "QuestionVotes")) {
+                    try (PreparedStatement ps = conn.prepareStatement("DELETE FROM QuestionVotes WHERE question_id = ?")) {
+                        ps.setInt(1, id);
+                        ps.executeUpdate();
+                    }
+                }
+                if (DatabaseUtil.tableExists(conn, "Answers")) {
+                    try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Answers WHERE question_id = ?")) {
+                        ps.setInt(1, id);
+                        ps.executeUpdate();
+                    }
+                }
+                int rows;
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Questions WHERE question_id = ?")) {
+                    ps.setInt(1, id);
+                    rows = ps.executeUpdate();
+                }
+                if (rows == 0) {
+                    conn.rollback();
+                    return false;
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    private Question mapQuestionBank(ResultSet rs) throws SQLException {
+        Question q = mapQuestion(rs);
+        try { q.setTitle(rs.getString("title")); } catch (SQLException ignored) {}
+        try { q.setDifficulty(rs.getString("difficulty")); } catch (SQLException ignored) {}
+        try { q.setQuestionType(rs.getString("question_type")); } catch (SQLException ignored) {}
+        try { q.setStatus(rs.getString("status")); } catch (SQLException ignored) {}
+        try {
+            int deptId = rs.getInt("departmentId");
+            if (!rs.wasNull()) q.setDepartmentId(deptId);
+        } catch (SQLException ignored) {}
+        try {
+            int semId = rs.getInt("semesterId");
+            if (!rs.wasNull()) q.setSemesterId(semId);
+        } catch (SQLException ignored) {}
+        try { q.setDepartmentName(rs.getString("departmentName")); } catch (SQLException ignored) {}
+        try { q.setSemesterName(rs.getString("semesterName")); } catch (SQLException ignored) {}
+        try {
+            int answerCount = rs.getInt("answer_count");
+            java.util.List<Answer> placeholder = new java.util.ArrayList<>();
+            for (int i = 0; i < answerCount; i++) placeholder.add(null);
+            q.setAnswers(placeholder);
+        } catch (SQLException ignored) {}
+        return q;
+    }
+
+    // =========================
     // HELPER — MAP ResultSet TO Question
     // =========================
 
@@ -489,6 +678,15 @@ public class QuestionDAO {
         } catch (SQLException ignored) {
             // Column not yet present in this DB — backward compatible
         }
+
+        try {
+            int deptId = rs.getInt("departmentId");
+            if (!rs.wasNull()) q.setDepartmentId(deptId);
+        } catch (SQLException ignored) {}
+        try {
+            int semId = rs.getInt("semesterId");
+            if (!rs.wasNull()) q.setSemesterId(semId);
+        } catch (SQLException ignored) {}
 
         // Load user info (full name, department, semester)
         try {
@@ -534,5 +732,13 @@ public class QuestionDAO {
                 rs.getInt("votes"),
                 rs.getString("created_at")
         );
+    }
+
+    private static void setNullableInt(PreparedStatement stmt, int index, Integer value) throws SQLException {
+        if (value == null || value == 0) {
+            stmt.setNull(index, java.sql.Types.INTEGER);
+        } else {
+            stmt.setInt(index, value);
+        }
     }
 }

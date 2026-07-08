@@ -57,8 +57,7 @@
 
                 <!-- Questions list card -->
                 <VBox spacing="12" styleClass="questions-list-card" VBox.vgrow="ALWAYS">
-                    <Label text="Active Discussion Threads"
-                           style="-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#0f172a;"/>
+                    <Label text="Active Discussion Threads" styleClass="page-section-title"/>
                     <ListView fx:id="questionsListView" styleClass="activity-list"
                               VBox.vgrow="ALWAYS"/>
                 </VBox>
@@ -76,8 +75,7 @@
                         <HBox alignment="CENTER_LEFT" spacing="14">
                             <Button onAction="#handleBackToFeed" styleClass="back-button"
                                     text="← Back to Forum"/>
-                            <Label text="Discussion Thread"
-                                   style="-fx-font-size:16px;-fx-font-weight:bold;-fx-text-fill:#0f172a;"/>
+                            <Label text="Discussion Thread" styleClass="detail-section-title"/>
                         </HBox>
 
                         <!-- Selected question details -->
@@ -92,12 +90,14 @@
                             <Label fx:id="qText" styleClass="question-text"
                                    text="Question text will appear here." wrapText="true"/>
 
-                            <HBox alignment="CENTER_LEFT" spacing="16"
-                                  style="-fx-padding:8 0 0 0;-fx-border-color:transparent transparent #f1f5f9 transparent;-fx-border-width:1 0 0 0;">
+                            <HBox alignment="CENTER_LEFT" spacing="16" styleClass="detail-meta-row">
                                 <Label fx:id="qAuthor" styleClass="meta-label" text="Asked by: —"/>
                                 <Label fx:id="qVotes"  styleClass="meta-label" text="👍 0 votes"/>
                                 <Label fx:id="qViews"  styleClass="meta-label" text="👁 0 views"/>
                                 <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnDeleteQuestion" onAction="#handleDeleteQuestion"
+                                        styleClass="cancel-button" text="🗑 Delete Question"
+                                        visible="false" managed="false"/>
                                 <Button fx:id="btnUpvoteQuestion" onAction="#handleUpvoteQuestion"
                                         styleClass="upvote-button" text="👍  Upvote"/>
                             </HBox>
@@ -105,15 +105,13 @@
 
                         <!-- Answers listing -->
                         <VBox spacing="10">
-                            <Label text="Classmate Solutions &amp; Answers"
-                                   style="-fx-font-size:14px;-fx-font-weight:bold;-fx-text-fill:#0f172a;"/>
+                            <Label text="Classmate Solutions &amp; Answers" styleClass="page-section-title"/>
                             <VBox fx:id="answersContainer" spacing="12"/>
                         </VBox>
 
                         <!-- Post Answer box -->
                         <VBox spacing="10" styleClass="detail-card">
-                            <Label text="Post Your Solution"
-                                   style="-fx-font-size:13px;-fx-font-weight:bold;-fx-text-fill:#0f172a;"/>
+                            <Label text="Post Your Solution" styleClass="page-section-title"/>
                             <TextArea fx:id="answerInput" prefHeight="100"
                                       promptText="Provide a clear, step-by-step helpful solution…"
                                       styleClass="text-area" wrapText="true"/>

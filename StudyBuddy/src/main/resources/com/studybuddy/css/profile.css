@@ -20,14 +20,42 @@
 }
 
 /* Avatar circle */
+.avatar-stack {
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
 .avatar-circle {
-    -fx-background-color:  linear-gradient(to bottom right, #4f46e5, #7c3aed);
+    -fx-background-color:  #ffffff;
     -fx-background-radius: 999px;
-    -fx-min-width:  110px; -fx-min-height: 110px;
-    -fx-pref-width: 110px; -fx-pref-height:110px;
-    -fx-max-width:  110px; -fx-max-height: 110px;
+    -fx-min-width:  100px; -fx-min-height: 100px;
+    -fx-pref-width: 100px; -fx-pref-height:100px;
+    -fx-max-width:  100px; -fx-max-height: 100px;
     -fx-alignment:  center;
+    -fx-border-color: rgba(255,255,255,0.85);
+    -fx-border-radius: 999px;
+    -fx-border-width: 3px;
     -fx-effect:     dropshadow(three-pass-box, rgba(79,70,229,0.35), 14, 0, 0, 4);
+}
+
+.avatar-hover-overlay {
+    -fx-background-color: rgba(15, 23, 42, 0.55);
+    -fx-background-radius: 999px;
+    -fx-min-width:  100px; -fx-min-height: 100px;
+    -fx-pref-width: 100px; -fx-pref-height:100px;
+    -fx-max-width:  100px; -fx-max-height: 100px;
+    -fx-alignment:  center;
+}
+
+.avatar-hover-icon {
+    -fx-font-size: 22px;
+    -fx-text-fill: #ffffff;
+}
+
+.avatar-hover-text {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
 }
 
 /* Display name + username */

@@ -3,7 +3,10 @@ package com.studybuddy.services;
 import com.studybuddy.dao.ResourceDAO;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
+import com.studybuddy.models.User;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -106,5 +109,46 @@ public class ResourceService {
             System.err.println("[ResourceService] Could not load subject names: " + e.getMessage());
             return new java.util.ArrayList<>();
         }
+    }
+
+    public Resource getResourceById(int id) throws SQLException {
+        return resourceDAO.getResourceById(id);
+    }
+
+    public int createResource(Resource resource, File file, boolean autoApprove) throws SQLException, IOException {
+        if (resourceDAO.duplicateExists(resource.getTitle(), resource.getUploadedBy(), null)) {
+            throw new IllegalArgumentException("A resource with this name already exists.");
+        }
+        FileStorageService storage = FileStorageService.getInstance();
+        if (file != null) {
+            String path = storage.storeFile(file, "resources");
+            resource.setFilePath(path);
+            resource.setFileType(extension(file.getName()));
+        }
+        resource.setStatus(autoApprove ? "Approved" : "Pending");
+        resource.setActive(autoApprove);
+        return resourceDAO.createResource(resource, autoApprove);
+    }
+
+    public boolean updateResource(Resource resource) throws SQLException {
+        return resourceDAO.updateResource(resource);
+    }
+
+    public boolean deleteResourceWithFile(int id, User user) throws SQLException {
+        Resource r = resourceDAO.getResourceById(id);
+        if (r == null) return false;
+        AuthorizationService.getInstance().requireOwnership(user, r.getUploadedBy());
+        resourceDAO.hardDeleteResource(id);
+        FileStorageService.getInstance().deleteFile(r.getFilePath());
+        return true;
+    }
+
+    public void incrementDownloads(int id) throws SQLException {
+        resourceDAO.incrementDownloads(id);
+    }
+
+    private static String extension(String name) {
+        int dot = name.lastIndexOf('.');
+        return dot >= 0 ? name.substring(dot + 1).toUpperCase() : "FILE";
     }
 }

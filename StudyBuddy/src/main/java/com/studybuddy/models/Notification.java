@@ -15,11 +15,18 @@ public class Notification {
     private String recipientType;
     /** null for ALL; dept name, semester number, or user email otherwise */
     private String recipientValue;
-    /** 'LOW', 'NORMAL', 'HIGH', 'URGENT' */
+    /** 'LOW', 'NORMAL', 'HIGH', 'URGENT', 'Critical' */
     private String priority;
     private int sentBy;
     private LocalDateTime sentAt;
     private boolean isRead;
+    /** Announcement, Exam, Assignment, Event, Holiday, Maintenance, Emergency */
+    private String notificationType;
+    private LocalDateTime expiryDate;
+    private String attachmentPath;
+    private boolean archived;
+    private Integer departmentId;
+    private Integer semesterId;
 
     public Notification() {}
 
@@ -58,6 +65,24 @@ public class Notification {
     public void setSentBy(int sentBy) { this.sentBy = sentBy; }
     public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
     public void setRead(boolean read) { isRead = read; }
+
+    public String getNotificationType() { return notificationType; }
+    public void setNotificationType(String notificationType) { this.notificationType = notificationType; }
+
+    public LocalDateTime getExpiryDate() { return expiryDate; }
+    public void setExpiryDate(LocalDateTime expiryDate) { this.expiryDate = expiryDate; }
+
+    public String getAttachmentPath() { return attachmentPath; }
+    public void setAttachmentPath(String attachmentPath) { this.attachmentPath = attachmentPath; }
+
+    public boolean isArchived() { return archived; }
+    public void setArchived(boolean archived) { this.archived = archived; }
+
+    public Integer getDepartmentId() { return departmentId; }
+    public void setDepartmentId(Integer departmentId) { this.departmentId = departmentId; }
+
+    public Integer getSemesterId() { return semesterId; }
+    public void setSemesterId(Integer semesterId) { this.semesterId = semesterId; }
 
     /** Display-friendly recipient label */
     public String getRecipientDisplay() {

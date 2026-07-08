@@ -132,6 +132,10 @@ public class DatabaseConnection {
                 if ("close".equals(method.getName())) {
                     return null;
                 }
+                if (delegate == null) {
+                    throw new SQLException(
+                            "Database connection is unavailable. Verify SQL Server is running and credentials are correct.");
+                }
                 // isClosed() must reflect the real connection's state so callers
                 // can still guard against a genuinely closed connection.
                 return method.invoke(delegate, args);

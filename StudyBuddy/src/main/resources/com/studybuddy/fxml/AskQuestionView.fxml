@@ -6,135 +6,75 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="rootPane" styleClass="root-pane"
-    stylesheets="@../css/theme.css, @../css/ask-question.css"
-    xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1"
-    fx:controller="com.studybuddy.controllers.AskQuestionController">
-
-    <!-- ══ TOP – Minimal breadcrumb bar (preserves logoImage/homeButton/profileButton) -->
-    <top>
-        <HBox styleClass="header" alignment="CENTER_LEFT" spacing="12">
-
-            <!-- Logo (kept for controller @FXML binding) -->
-            <ImageView fx:id="logoImage" fitWidth="28" fitHeight="28"
-                       preserveRatio="true" styleClass="logo-image"/>
-
-            <Label text="Ask a Question" styleClass="breadcrumb-title"
-                   HBox.hgrow="ALWAYS"/>
-
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Home / Profile buttons kept for controller binding -->
-            <VBox alignment="CENTER" spacing="2" styleClass="nav-item">
-                <Button fx:id="homeButton" onAction="#handleHome"
-                        styleClass="icon-button" text="⌂"/>
-                <Label text="HOME" styleClass="nav-text"/>
-            </VBox>
-            <VBox alignment="CENTER" spacing="2" styleClass="nav-item">
-                <Button fx:id="profileButton" onAction="#handleProfile"
-                        styleClass="icon-button" text="👤"/>
-                <Label text="PROFILE" styleClass="nav-text"/>
-            </VBox>
-        </HBox>
-    </top>
+<BorderPane fx:id="rootPane" styleClass="root-pane" stylesheets="@../css/theme.css, @../css/ask-question.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.AskQuestionController">
 
     <!-- ══ CENTER – Main scrollable form content ══════════════════════ -->
     <center>
-        <ScrollPane fitToWidth="true" styleClass="scroll-pane-clean"
-                    hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane-clean" vbarPolicy="AS_NEEDED">
             <content>
-                <VBox alignment="TOP_CENTER" spacing="20"
-                      styleClass="content-container">
-                    <padding><Insets top="28" right="60" bottom="36" left="60"/></padding>
+                <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-container">
+                    <padding><Insets bottom="36" left="60" right="60" top="28" /></padding>
 
                     <!-- Page heading -->
-                    <VBox spacing="6" maxWidth="760">
-                        <Label fx:id="pageTitle" styleClass="page-title"
-                               text="Ask a question about your assignment"/>
-                        <Label text="Be specific and clear to get the best answers from your peers."
-                               styleClass="page-subtitle"/>
+                    <VBox maxWidth="760" spacing="6">
+                        <Label fx:id="pageTitle" styleClass="page-title" text="Ask a question about your assignment" />
+                        <Label styleClass="page-subtitle" text="Be specific and clear to get the best answers from your peers." />
                     </VBox>
 
                     <!-- ── Question editor card ─────────────────────── -->
-                    <VBox styleClass="editor-card" spacing="10" maxWidth="760">
-                        <Label text="Write your question" styleClass="editor-heading"/>
-                        <Label text="Keep it simple and clear to get the best answer"
-                               styleClass="editor-subheading"/>
-                        <TextArea fx:id="questionTextArea"
-                                  wrapText="true"
-                                  prefHeight="180"
-                                  promptText="Describe your question in detail…"
-                                  styleClass="question-text-area"/>
+                    <VBox maxWidth="760" spacing="10" styleClass="editor-card">
+                        <Label styleClass="editor-heading" text="Write your question" />
+                        <Label styleClass="editor-subheading" text="Keep it simple and clear to get the best answer" />
+                        <TextArea fx:id="questionTextArea" prefHeight="180" promptText="Describe your question in detail…" styleClass="question-text-area" wrapText="true" />
                     </VBox>
 
                     <!-- ── Attachment toolbar ───────────────────────── -->
-                    <HBox styleClass="toolbar" spacing="10" alignment="CENTER_LEFT" maxWidth="760">
-                        <Button fx:id="attachmentButton" onAction="#handleAttachment"
-                                styleClass="toolbar-button"
-                                text="📎 Attach Subject Material"/>
-                        <Button fx:id="toolsButton" onAction="#handleMath"
-                                styleClass="toolbar-button"
-                                text="🛠 Apply Special Tools"/>
-                        <Button fx:id="filesButton" onAction="#handleSymbols"
-                                styleClass="toolbar-button"
-                                text="📁 Attach Relevant Files"/>
+                    <HBox alignment="CENTER_LEFT" maxWidth="760" spacing="10" styleClass="toolbar">
+                        <Button fx:id="attachmentButton" onAction="#handleAttachment" styleClass="toolbar-button" text="📎 Attach Subject Material" />
+                        <Button fx:id="toolsButton" onAction="#handleMath" styleClass="toolbar-button" text="🛠 Apply Special Tools" />
+                        <Button fx:id="filesButton" onAction="#handleSymbols" styleClass="toolbar-button" text="📁 Attach Relevant Files" />
                         <!-- Attachment status label — bound to controller @FXML attachmentLabel -->
-                        <Label fx:id="attachmentLabel"
-                               styleClass="attachment-label"
-                               text=""
-                               style="-fx-font-size: 11px; -fx-text-fill: #64748b; -fx-font-style: italic;"/>
+                        <Label fx:id="attachmentLabel" styleClass="attachment-label" text="" />
                     </HBox>
 
                     <!-- ── Bottom controls card ────────────────────── -->
-                    <VBox styleClass="bottom-controls" spacing="16" maxWidth="760">
+                    <VBox maxWidth="760" spacing="16" styleClass="bottom-controls">
                         
                         <!-- Cascading Department → Semester → Subject -->
-                        <HBox spacing="16" alignment="CENTER_LEFT">
+                        <HBox alignment="CENTER_LEFT" spacing="16">
                             <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                <Label text="Department *" styleClass="control-label"/>
-                                <ComboBox fx:id="departmentComboBox"
-                                          promptText="Select department"
-                                          styleClass="rounded-combo-box" maxWidth="Infinity"/>
+                                <Label styleClass="control-label" text="Department *" />
+                                <ComboBox fx:id="departmentComboBox" maxWidth="Infinity" promptText="Select department" styleClass="rounded-combo-box" />
                             </VBox>
                             <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                <Label text="Semester *" styleClass="control-label"/>
-                                <ComboBox fx:id="semesterComboBox"
-                                          promptText="Select semester"
-                                          styleClass="rounded-combo-box" maxWidth="Infinity"/>
+                                <Label styleClass="control-label" text="Semester *" />
+                                <ComboBox fx:id="semesterComboBox" maxWidth="Infinity" promptText="Select semester" styleClass="rounded-combo-box" />
                             </VBox>
                             <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                <Label text="Subject *" styleClass="control-label"/>
-                                <ComboBox fx:id="subjectComboBox"
-                                          promptText="Select subject"
-                                          styleClass="rounded-combo-box" maxWidth="Infinity"/>
+                                <Label styleClass="control-label" text="Subject *" />
+                                <ComboBox fx:id="subjectComboBox" maxWidth="Infinity" promptText="Select subject" styleClass="rounded-combo-box" />
                             </VBox>
                         </HBox>
 
                         <!-- Reward points and user points -->
-                        <HBox spacing="20" alignment="CENTER_LEFT">
+                        <HBox alignment="CENTER_LEFT" spacing="20">
                             <!-- Reward points selector -->
                             <VBox spacing="6" styleClass="points-group">
-                                <Label text="Reward Points" styleClass="control-label"/>
-                                <ComboBox fx:id="rewardPointsComboBox" prefWidth="140"
-                                          promptText="0"
-                                          styleClass="rounded-combo-box"/>
+                                <Label styleClass="control-label" text="Reward Points" />
+                                <ComboBox fx:id="rewardPointsComboBox" prefWidth="140" promptText="0" styleClass="rounded-combo-box" />
                             </VBox>
 
                             <!-- Points display -->
                             <VBox spacing="6" styleClass="points-display-group">
-                                <Label text="Your Points" styleClass="control-label"/>
-                                <HBox alignment="CENTER_LEFT" spacing="6"
-                                      styleClass="points-display">
-                                    <Label fx:id="userPointsLabel" text="0" styleClass="points-value"/>
-                                    <Label text="pts" styleClass="points-unit"/>
-                                    <Label text="i" styleClass="points-info"/>
+                                <Label styleClass="control-label" text="Your Points" />
+                                <HBox alignment="CENTER_LEFT" spacing="6" styleClass="points-display">
+                                    <Label fx:id="userPointsLabel" styleClass="points-value" text="0" />
+                                    <Label styleClass="points-unit" text="pts" />
+                                    <Label styleClass="points-info" text="i" />
                                 </HBox>
                             </VBox>
                         </HBox>
@@ -142,10 +82,7 @@
 
                     <!-- ── Submit button ────────────────────────────── -->
                     <HBox alignment="CENTER">
-                        <Button fx:id="submitButton"
-                                text="ASK YOUR QUESTION  →"
-                                onAction="#handleSubmit"
-                                styleClass="submit-button"/>
+                        <Button fx:id="submitButton" onAction="#handleSubmit" styleClass="submit-button" text="ASK YOUR QUESTION  →" />
                     </HBox>
 
                 </VBox>

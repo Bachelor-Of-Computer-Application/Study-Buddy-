@@ -10,11 +10,9 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
 
 <BorderPane fx:id="rootPane" styleClass="root-pane"
     stylesheets="@../css/theme.css, @../css/resources.css"
@@ -43,13 +41,14 @@
                 <!-- Filter bar -->
                 <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
                     <TextField fx:id="searchField" promptText="🔍  Search resources by title…"
-                               prefWidth="220" styleClass="search-field"/>
+                               minWidth="160" prefWidth="220" maxWidth="Infinity"
+                               HBox.hgrow="ALWAYS" styleClass="search-field"/>
                     <ComboBox fx:id="departmentFilter" promptText="Department"
-                              prefWidth="155" styleClass="combo-box"/>
+                              minWidth="130" prefWidth="155" maxWidth="200" styleClass="combo-box"/>
                     <ComboBox fx:id="semesterFilter" promptText="Semester"
-                              prefWidth="130" styleClass="combo-box"/>
+                              minWidth="110" prefWidth="130" maxWidth="180" styleClass="combo-box"/>
                     <ComboBox fx:id="subjectFilter" promptText="Subject"
-                              prefWidth="155" styleClass="combo-box"/>
+                              minWidth="120" prefWidth="155" maxWidth="200" styleClass="combo-box"/>
                     <Button onAction="#applyFilters" text="Search"
                             styleClass="save-button"/>
                     <Button onAction="#clearFilters" text="Reset"
@@ -74,14 +73,17 @@
                                     <FlowPane fx:id="resourcesFlowPane" hgap="16" vgap="16"
                                               styleClass="notes-grid"/>
                                     <!-- Empty state -->
-                                    <VBox fx:id="emptyState" alignment="CENTER" spacing="12"
-                                          styleClass="empty-state" visible="false"
+                                    <VBox fx:id="emptyState" alignment="CENTER" spacing="16"
+                                          styleClass="empty-state-premium" visible="false"
                                           managed="false">
-                                        <Label text="📂" style="-fx-font-size:48px;"/>
-                                        <Label text="No approved resources found."
-                                               style="-fx-font-size:15px;-fx-font-weight:bold;-fx-text-fill:#475569;"/>
-                                        <Label text="Be the first to upload one!"
-                                               style="-fx-font-size:12px;-fx-text-fill:#94a3b8;"/>
+                                        <ImageView fitHeight="100" fitWidth="100" preserveRatio="true" styleClass="empty-state-illustration">
+                                            <image>
+                                                <Image url="@../images/upload.png"/>
+                                            </image>
+                                        </ImageView>
+                                        <Label text="No approved resources found" styleClass="empty-state-text"/>
+                                        <Label text="Upload a PDF or document to share with your peers." styleClass="empty-state-sub"/>
+                                        <Button onAction="#handleUploadResource" styleClass="btn-primary" text="📤  Upload Resource"/>
                                     </VBox>
                                 </VBox>
                             </content>
@@ -94,11 +96,12 @@
                             <padding><Insets top="4" right="0" bottom="0" left="0"/></padding>
                             <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
                                 <columns>
-                                    <TableColumn fx:id="titleCol"    text="Title"         prefWidth="220"/>
-                                    <TableColumn fx:id="subjectCol"  text="Subject"        prefWidth="140"/>
-                                    <TableColumn fx:id="fileNameCol" text="File Name"      prefWidth="180"/>
-                                    <TableColumn fx:id="dateCol"     text="Uploaded Date"  prefWidth="140"/>
-                                    <TableColumn fx:id="statusCol"   text="Status"         prefWidth="120"/>
+                                    <TableColumn fx:id="titleCol"    text="Title"         prefWidth="200" minWidth="120"/>
+                                    <TableColumn fx:id="subjectCol"  text="Subject"        prefWidth="120" minWidth="80"/>
+                                    <TableColumn fx:id="fileNameCol" text="File Name"      prefWidth="140" minWidth="100"/>
+                                    <TableColumn fx:id="dateCol"     text="Uploaded Date"  prefWidth="120" minWidth="90"/>
+                                    <TableColumn fx:id="statusCol"   text="Status"         prefWidth="90" minWidth="70"/>
+                                    <TableColumn fx:id="actionsCol"  text="Actions"        prefWidth="120" minWidth="100"/>
                                 </columns>
                             </TableView>
                         </VBox>

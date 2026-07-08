@@ -269,6 +269,11 @@
     -fx-text-fill: #475569;
 }
 
+.empty-state-sub {
+    -fx-font-size:  12px;
+    -fx-text-fill:  #94a3b8;
+}
+
 /* ── Status badges ───────────────────────────────────────────────────── */
 .badge-approved {
     -fx-background-color: #d1fae5;

@@ -35,11 +35,15 @@
             <padding><Insets top="32" right="20" bottom="32" left="20"/></padding>
 
             <!-- Avatar -->
-            <StackPane styleClass="avatar-circle">
-                <ImageView fx:id="profileImageView" fitHeight="100" fitWidth="100"
-                           preserveRatio="true">
-                    <image><Image url="@../images/student.png"/></image>
-                </ImageView>
+            <StackPane fx:id="avatarStackPane" styleClass="avatar-stack">
+                <StackPane styleClass="avatar-circle">
+                    <ImageView fx:id="profileImageView" pickOnBounds="true"/>
+                </StackPane>
+                <VBox fx:id="avatarHoverOverlay" alignment="CENTER" spacing="4"
+                      styleClass="avatar-hover-overlay" mouseTransparent="true">
+                    <Label text="📷" styleClass="avatar-hover-icon"/>
+                    <Label text="Change Photo" styleClass="avatar-hover-text"/>
+                </VBox>
             </StackPane>
 
             <!-- Name + username -->
@@ -156,7 +160,9 @@
                             <HBox alignment="CENTER_LEFT" spacing="12">
                                 <Button fx:id="uploadAvatarBtn" onAction="#handleUploadAvatar"
                                         styleClass="secondary-btn" text="📷 Choose Image…"/>
-                                <Label fx:id="avatarPathLabel" styleClass="help-text" text="No file chosen"/>
+                                <Button fx:id="removeAvatarBtn" onAction="#handleRemoveAvatar"
+                                        styleClass="secondary-btn" text="🗑 Remove Photo"/>
+                                <Label fx:id="avatarPathLabel" styleClass="help-text" text="Using default avatar"/>
                             </HBox>
                         </VBox>
                         <VBox spacing="6">

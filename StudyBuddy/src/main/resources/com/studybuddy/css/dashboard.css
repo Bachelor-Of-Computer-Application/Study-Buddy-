@@ -42,18 +42,31 @@
 /* ── Hero Banner ─────────────────────────────────────────────────────── */
 .hero-banner {
     -fx-background-color:  linear-gradient(to right, #4f46e5, #7c3aed);
-    -fx-background-radius: 14px;
-    -fx-padding:           24 28 24 28;
+    -fx-background-radius: 16px;
+    -fx-padding:           24 32 24 32;
     -fx-effect:            dropshadow(three-pass-box, rgba(79,70,229,0.30), 14, 0, 0, 4);
 }
 .welcome-label {
-    -fx-font-size:   22px;
+    -fx-font-size:   24px;
     -fx-font-weight: bold;
     -fx-text-fill:   #ffffff;
 }
 .hero-sub {
-    -fx-font-size: 13px;
-    -fx-text-fill: rgba(255,255,255,0.85);
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255,255,255,0.88);
+}
+
+.hero-avatar-wrap {
+    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-background-radius: 999px;
+    -fx-min-width:  88px; -fx-min-height: 88px;
+    -fx-pref-width: 88px; -fx-pref-height: 88px;
+    -fx-max-width:  88px; -fx-max-height: 88px;
+    -fx-alignment:  center;
+    -fx-border-color: rgba(255,255,255,0.45);
+    -fx-border-radius: 999px;
+    -fx-border-width: 3px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 8, 0, 0, 2);
 }
 
 /* ── Quick action buttons ────────────────────────────────────────────── */

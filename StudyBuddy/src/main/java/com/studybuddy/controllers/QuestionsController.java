@@ -6,8 +6,11 @@ import com.studybuddy.models.Department;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
+import com.studybuddy.models.User;
 import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.AuthorizationService;
 import com.studybuddy.services.QuestionService;
+import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 
 import javafx.collections.FXCollections;
@@ -18,13 +21,16 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +48,8 @@ import java.util.stream.Collectors;
  */
 public class QuestionsController {
 
+    @FXML private BorderPane rootPane;
+    @FXML private StackPane stackContainer;
     @FXML private TextField searchField;
     @FXML private ComboBox<Department> departmentFilter;
     @FXML private ComboBox<Semester> semesterFilter;
@@ -65,19 +73,21 @@ public class QuestionsController {
     @FXML private TextArea answerInput;
     @FXML private VBox relatedQuestionsContainer;
 
+    @FXML private Button btnDeleteQuestion;
+
     private final QuestionService questionService = new QuestionService();
     private final com.studybuddy.dao.QuestionDAO questionDAO = new com.studybuddy.dao.QuestionDAO();
     private final AcademicService academicService = AcademicService.getInstance();
+    private final AuthorizationService authService = AuthorizationService.getInstance();
+    private User currentUser;
     private List<Question> allQuestions = new ArrayList<>();
     private Question selectedQuestion;
 
     @FXML
     public void initialize() {
-        // Populate subject filter from canonical Subjects table (not hardcoded)
-        loadFilterDepartments();
-        loadSubjects();
+        currentUser = App.getCurrentUser();
+        AcademicFilterHelper.setupFilterBar(academicService, departmentFilter, semesterFilter, subjectFilter);
 
-        // Selection listener: navigate directly to detail view
         questionsListView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 selectedQuestion = newVal;
@@ -87,86 +97,32 @@ public class QuestionsController {
         });
 
         loadQuestions();
-        
-        // Subscribe to EventBus events
         EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> loadQuestions());
         EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> loadQuestions());
     }
-    
-    private void loadFilterDepartments() {
-        if (departmentFilter != null) {
-            semesterFilter.setDisable(true);
-            try {
-                departmentFilter.setItems(FXCollections.observableArrayList(
-                        academicService.getAllActiveDepartments()));
-            } catch (Exception e) {
-                System.err.println("[QuestionsController] Dept filter load failed: " + e.getMessage());
-            }
-
-            departmentFilter.setOnAction(e -> {
-                Department dept = departmentFilter.getValue();
-                if (semesterFilter != null) {
-                    semesterFilter.getItems().clear();
-                    semesterFilter.setValue(null);
-                    semesterFilter.setDisable(dept == null);
-                }
-                subjectFilter.getItems().clear();
-                subjectFilter.setValue(null);
-
-                if (dept != null && semesterFilter != null) {
-                    try {
-                        semesterFilter.setItems(FXCollections.observableArrayList(
-                                academicService.getSemestersByDepartment(dept.getId())));
-                    } catch (Exception ex) {
-                        System.err.println("[QuestionsController] Sem filter load failed: " + ex.getMessage());
-                    }
-                } else {
-                    loadSubjects();
-                }
-            });
-
-            if (semesterFilter != null) {
-                semesterFilter.setOnAction(e -> {
-                    Semester sem = semesterFilter.getValue();
-                    subjectFilter.getItems().clear();
-                    subjectFilter.setValue(null);
-                    if (sem != null) {
-                        try {
-                            List<String> semSubjects = academicService
-                                    .getSubjectsBySemester(sem.getId())
-                                    .stream()
-                                    .map(Subject::getName)
-                                    .collect(java.util.stream.Collectors.toList());
-                            subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
-                        } catch (Exception ex) {
-                            System.err.println("[QuestionsController] Sub filter load failed: " + ex.getMessage());
-                        }
-                    } else {
-                        loadSubjects();
-                    }
-                });
-            }
-        }
-    }
-    
-    private void loadSubjects() {
-        List<String> subjects = questionService.getAvailableSubjects();
-        subjectFilter.setItems(FXCollections.observableArrayList(subjects));
-    }
-
-    // =========================
-    // LOAD QUESTIONS via DAO (MVC — no inline SQL)
-    // =========================
 
     private void loadQuestions() {
         try {
             allQuestions = questionDAO.getAllQuestions();
+            allQuestions = filterVisibleQuestions(allQuestions);
         } catch (Exception e) {
             allQuestions = new ArrayList<>();
             System.err.println("[QuestionsController] Failed to load questions: " + e.getMessage());
-            e.printStackTrace();
         }
         questionsListView.setItems(FXCollections.observableArrayList(allQuestions));
+    }
+
+    private List<Question> filterVisibleQuestions(List<Question> questions) {
+        List<Subject> allSubjects = academicService.getAllActiveSubjects();
+        Map<Integer, Subject> subjectMap = allSubjects.stream()
+                .collect(Collectors.toMap(Subject::getId, s -> s, (a, b) -> a));
+        return questions.stream()
+                .filter(q -> AcademicFilterHelper.isVisibleToUser(
+                        q.getDepartmentId() > 0 ? q.getDepartmentId() : null,
+                        q.getSemesterId() > 0 ? q.getSemesterId() : null,
+                        q.getSubjectId() > 0 ? q.getSubjectId() : null,
+                        subjectMap, currentUser, academicService))
+                .collect(Collectors.toList());
     }
 
     // =========================
@@ -203,6 +159,12 @@ public class QuestionsController {
         
         qVotes.setText("👍 " + q.getVotes() + " votes");
         qViews.setText("👁️ " + q.getViews() + " views");
+
+        if (btnDeleteQuestion != null) {
+            boolean canDelete = authService.canDeleteQuestion(currentUser, q);
+            btnDeleteQuestion.setVisible(canDelete);
+            btnDeleteQuestion.setManaged(canDelete);
+        }
 
         if (q.isLocked()) {
             btnUpvoteQuestion.setDisable(true);
@@ -241,7 +203,7 @@ public class QuestionsController {
 
         if (q.getAnswers().isEmpty()) {
             Label noAnsLabel = new Label("No answers posted yet. Be the first to reply!");
-            noAnsLabel.setStyle("-fx-font-style: italic; -fx-text-fill: #64748b; -fx-padding: 10;");
+            noAnsLabel.getStyleClass().add("hint-text");
             answersContainer.getChildren().add(noAnsLabel);
             return;
         }
@@ -251,27 +213,27 @@ public class QuestionsController {
         for (Answer ans : q.getAnswers()) {
             VBox ansCard = new VBox(8);
             ansCard.setPadding(new Insets(12));
-            ansCard.setStyle("-fx-background-color: #f8fafc; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-width: 1px; -fx-border-radius: 10;");
+            ansCard.getStyleClass().add("answer-card");
 
             HBox header = new HBox(10);
             Label author = new Label(nullSafe(ans.getAuthorName()));
-            author.setStyle("-fx-font-weight: bold; -fx-text-fill: #1f2937; -fx-font-size: 13px;");
+            author.getStyleClass().add("answer-author");
             Label date = new Label(nullSafe(ans.getCreatedAt()));
-            date.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
+            date.getStyleClass().add("answer-date");
             header.getChildren().addAll(author, date);
 
             Label text = new Label(nullSafe(ans.getAnswerText()));
             text.setWrapText(true);
-            text.setStyle("-fx-font-size: 13px; -fx-text-fill: #334155;");
+            text.getStyleClass().add("answer-body");
 
             HBox footer = new HBox(10);
             footer.setAlignment(Pos.CENTER_RIGHT);
 
             Label votes = new Label("👍 " + ans.getVotes() + " votes");
-            votes.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
+            votes.getStyleClass().add("answer-votes");
 
             Button upvoteBtn = new Button("👍 Upvote");
-            upvoteBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #4f46e5; -fx-padding: 2 8; -fx-font-size: 11px; -fx-cursor: hand;");
+            upvoteBtn.getStyleClass().add("btn-action-upvote");
             upvoteBtn.setOnAction(e -> {
                 try {
                     boolean ok = questionDAO.updateAnswerVotes(ans.getId(), 1);
@@ -290,8 +252,8 @@ public class QuestionsController {
             // This prevents any user from seeing edit/delete buttons on another
             // user's answer simply because they share the same display name.
             if (ans.getUserId() > 0 && ans.getUserId() == currentUserId) {
-                Button deleteBtn = new Button("🗑️ Delete");
-                deleteBtn.setStyle("-fx-background-color: #fef2f2; -fx-text-fill: #ef4444; -fx-padding: 2 8; -fx-font-size: 11px; -fx-cursor: hand;");
+                Button deleteBtn = new Button("🗑 Delete");
+                deleteBtn.getStyleClass().add("btn-action-delete");
                 deleteBtn.setOnAction(e -> {
                     Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                             "Delete this answer?", ButtonType.YES, ButtonType.NO);
@@ -311,7 +273,7 @@ public class QuestionsController {
                 });
 
                 Button editBtn = new Button("✏️ Edit");
-                editBtn.setStyle("-fx-background-color: #f0fdf4; -fx-text-fill: #22c55e; -fx-padding: 2 8; -fx-font-size: 11px; -fx-cursor: hand;");
+                editBtn.getStyleClass().add("btn-action-edit");
                 editBtn.setOnAction(e -> {
                     TextInputDialog dialog = new TextInputDialog(ans.getAnswerText());
                     dialog.setTitle("Edit Answer");
@@ -357,14 +319,14 @@ public class QuestionsController {
 
         if (related.isEmpty()) {
             Label label = new Label("No related questions found.");
-            label.setStyle("-fx-font-style: italic; -fx-text-fill: #64748b; -fx-font-size: 12px;");
+            label.getStyleClass().add("hint-text-italic");
             relatedQuestionsContainer.getChildren().add(label);
             return;
         }
 
         for (Question q : related) {
             Hyperlink link = new Hyperlink("[" + nullSafe(q.getSubject()).toUpperCase() + "] " + nullSafe(q.getQuestionText()));
-            link.setStyle("-fx-font-size: 13px; -fx-text-fill: #3b82f6;");
+            link.getStyleClass().add("link-label");
             link.setOnAction(e -> {
                 selectedQuestion = q;
                 displayQuestionDetails(q);
@@ -402,37 +364,51 @@ public class QuestionsController {
     // =========================
 
     @FXML
+    public void handleDeleteQuestion() {
+        if (selectedQuestion == null || currentUser == null) return;
+        if (!authService.canDeleteQuestion(currentUser, selectedQuestion)) {
+            showError("You can only delete your own questions.");
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Delete this question permanently?", ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) return;
+        try {
+            questionService.deleteQuestion(selectedQuestion.getId(), currentUser);
+            EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            handleBackToFeed();
+            loadQuestions();
+            Alert ok = new Alert(Alert.AlertType.INFORMATION, "Question deleted successfully.");
+            ok.setHeaderText(null);
+            ok.showAndWait();
+        } catch (Exception e) {
+            showError("Delete failed: " + e.getMessage());
+        }
+    }
+
+    @FXML
     public void applyFilters() {
         String query = searchField.getText().trim().toLowerCase();
         Department dept = departmentFilter.getValue();
         Semester sem = semesterFilter.getValue();
         String subject = subjectFilter.getValue();
-        
+
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
-        java.util.Map<Integer, Subject> subjectMap = allSubjects.stream()
-                .collect(java.util.stream.Collectors.toMap(Subject::getId, s -> s, (s1, unused) -> s1));
+        Map<Integer, Subject> subjectMap = allSubjects.stream()
+                .collect(Collectors.toMap(Subject::getId, s -> s, (s1, unused) -> s1));
 
         List<Question> filtered = allQuestions.stream()
                 .filter(q -> (query.isEmpty()
                         || nullSafe(q.getQuestionText()).toLowerCase().contains(query)
                         || nullSafe(q.getTags()).toLowerCase().contains(query))
                         && (subject == null || nullSafe(q.getSubject()).equalsIgnoreCase(subject)))
-                .filter(q -> {
-                    if (dept == null && sem == null) return true;
-                    
-                    Subject subModel = subjectMap.get(q.getSubjectId());
-                    if (subModel == null) {
-                        return allSubjects.stream().anyMatch(s ->
-                                s.getName().equalsIgnoreCase(nullSafe(q.getSubject())) &&
-                                        (dept == null || s.getDepartmentId() == dept.getId()) &&
-                                        (sem == null || s.getSemesterId() == sem.getId())
-                        );
-                    } else {
-                        if (dept != null && subModel.getDepartmentId() != dept.getId()) return false;
-                        if (sem != null && subModel.getSemesterId() != sem.getId()) return false;
-                        return true;
-                    }
-                })
+                .filter(q -> AcademicFilterHelper.matchesDeptSemFilter(
+                        q.getDepartmentId() > 0 ? q.getDepartmentId() : null,
+                        q.getSemesterId() > 0 ? q.getSemesterId() : null,
+                        q.getSubjectId(),
+                        dept, sem, subjectMap, allSubjects, nullSafe(q.getSubject())))
                 .collect(Collectors.toList());
 
         questionsListView.setItems(FXCollections.observableArrayList(filtered));
@@ -441,14 +417,7 @@ public class QuestionsController {
     @FXML
     public void clearFilters() {
         searchField.clear();
-        if (departmentFilter != null) departmentFilter.getSelectionModel().clearSelection();
-        if (semesterFilter != null) {
-            semesterFilter.getItems().clear();
-            semesterFilter.setValue(null);
-            semesterFilter.setDisable(true);
-        }
-        subjectFilter.getSelectionModel().clearSelection();
-        loadSubjects();
+        AcademicFilterHelper.resetFilters(academicService, departmentFilter, semesterFilter, subjectFilter);
         questionsListView.setItems(FXCollections.observableArrayList(allQuestions));
     }
 
@@ -502,8 +471,15 @@ public class QuestionsController {
             return;
         }
 
-        int userId    = App.getCurrentUser() != null ? App.getCurrentUser().getId()   : 1;
-        String author = App.getCurrentUser() != null ? App.getCurrentUser().getName() : "Guest Student";
+        if (App.getCurrentUser() == null) {
+            Alert warn = new Alert(Alert.AlertType.WARNING, "Please log in to post an answer.");
+            warn.setHeaderText(null);
+            warn.showAndWait();
+            return;
+        }
+
+        int userId    = App.getCurrentUser().getId();
+        String author = App.getCurrentUser().getName();
 
         try {
             boolean saved = questionDAO.submitAnswer(

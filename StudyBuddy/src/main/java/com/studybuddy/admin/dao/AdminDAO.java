@@ -2,6 +2,7 @@ package com.studybuddy.admin.dao;
 
 import com.studybuddy.models.*;
 import com.studybuddy.utils.DatabaseUtil;
+
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Logger;
@@ -180,7 +181,7 @@ public class AdminDAO {
     public List<User> getAllUsers() {
         List<User> list = new ArrayList<>();
         String sql = """
-                SELECT id, name, email, role, status, department, semester,
+                SELECT id, name, username, fullName, email, role, status, department, semester,
                        points, created_at
                 FROM Users
                 ORDER BY created_at DESC
@@ -400,8 +401,8 @@ public class AdminDAO {
         String sql = """
                 SELECT n.id, n.title, n.subject, n.source, n.uploadDate,
                        n.fileType, n.fileName, n.filePath, n.description,
-                       n.userId, n.isPrivate, n.status,
-                       u.name AS uploaderName
+                       n.userId, n.isPrivate, n.status, n.tags, n.downloads,
+                       u.name AS uploaderName, u.fullName, u.department, u.semester
                 FROM Notes n
                 LEFT JOIN Users u ON n.userId = u.id
                 WHERE n.status != 'Deleted'
@@ -424,9 +425,13 @@ public class AdminDAO {
                 n.setUserId(rs.getInt("userId"));
                 n.setPrivate(rs.getBoolean("isPrivate"));
                 n.setStatus(rs.getString("status"));
-                // Attach uploader name using the source field as a convenient carrier
-                String uploader = rs.getString("uploaderName");
+                try { n.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
+                try { n.setDownloads(rs.getInt("downloads")); } catch (SQLException ignored) {}
+                String uploader = rs.getString("fullName");
+                if (uploader == null || uploader.isBlank()) uploader = rs.getString("uploaderName");
                 if (uploader != null) n.setSource(uploader);
+                try { n.setUserDepartment(rs.getString("department")); } catch (SQLException ignored) {}
+                try { n.setUserSemester(rs.getString("semester")); } catch (SQLException ignored) {}
                 list.add(n);
             }
         } catch (SQLException e) {
@@ -450,6 +455,42 @@ public class AdminDAO {
     /** Soft delete: set status = 'Deleted'. */
     public boolean softDeleteNote(int noteId) {
         return executeUpdate("UPDATE Notes SET status = 'Deleted' WHERE id = ?", ps -> ps.setInt(1, noteId));
+    }
+
+    /** Hard delete: remove dependent resources, then the note row. */
+    public boolean hardDeleteNote(int noteId) {
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Resources WHERE noteId = ?")) {
+                    ps.setInt(1, noteId);
+                    ps.executeUpdate();
+                }
+                int rows;
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Notes WHERE id = ?")) {
+                    ps.setInt(1, noteId);
+                    rows = ps.executeUpdate();
+                }
+                if (rows == 0) {
+                    conn.rollback();
+                    logger.warning("hardDeleteNote: no note found with id=" + noteId);
+                    return false;
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                logger.log(java.util.logging.Level.SEVERE,
+                        "hardDeleteNote failed for noteId=" + noteId, e);
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            logger.log(java.util.logging.Level.SEVERE,
+                    "hardDeleteNote connection failed for noteId=" + noteId, e);
+            return false;
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -523,6 +564,15 @@ public class AdminDAO {
     public boolean updateResourceStatus(int resourceId, boolean active) {
         return executeUpdate("UPDATE Resources SET isActive = ? WHERE id = ?", ps -> {
             ps.setBoolean(1, active); ps.setInt(2, resourceId);
+        });
+    }
+
+    public boolean updateResourceApprovalStatus(int resourceId, String status) {
+        boolean active = "Approved".equalsIgnoreCase(status);
+        return executeUpdate("UPDATE Resources SET status = ?, isActive = ? WHERE id = ?", ps -> {
+            ps.setString(1, status);
+            ps.setBoolean(2, active);
+            ps.setInt(3, resourceId);
         });
     }
 
@@ -609,24 +659,51 @@ public class AdminDAO {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Answers WHERE question_id = ?")) {
-                    ps.setInt(1, questionId); ps.executeUpdate();
-                }
+                deleteQuestionChildrenIfPresent(conn, questionId);
+                int rows;
                 try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Questions WHERE question_id = ?")) {
-                    ps.setInt(1, questionId); ps.executeUpdate();
+                    ps.setInt(1, questionId);
+                    rows = ps.executeUpdate();
+                }
+                if (rows == 0) {
+                    conn.rollback();
+                    logger.warning("deleteQuestion: no question found with id=" + questionId);
+                    return false;
                 }
                 conn.commit();
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                logger.warning("deleteQuestion failed: " + e.getMessage());
+                logger.log(java.util.logging.Level.SEVERE,
+                        "deleteQuestion failed for questionId=" + questionId, e);
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            logger.warning("deleteQuestion connection failed: " + e.getMessage());
+            logger.log(java.util.logging.Level.SEVERE,
+                    "deleteQuestion connection failed for questionId=" + questionId, e);
             return false;
+        }
+    }
+
+    /** Deletes optional child rows when their tables exist (backward-compatible with older schemas). */
+    private void deleteQuestionChildrenIfPresent(Connection conn, int questionId) throws SQLException {
+        if (DatabaseUtil.tableExists(conn, "QuestionVotes")) {
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM QuestionVotes WHERE question_id = ?")) {
+                ps.setInt(1, questionId);
+                ps.executeUpdate();
+            }
+        } else {
+            logger.fine("deleteQuestion: skipping QuestionVotes (table not present)");
+        }
+        if (DatabaseUtil.tableExists(conn, "Answers")) {
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Answers WHERE question_id = ?")) {
+                ps.setInt(1, questionId);
+                ps.executeUpdate();
+            }
+        } else {
+            logger.fine("deleteQuestion: skipping Answers (table not present)");
         }
     }
 
@@ -897,6 +974,8 @@ public class AdminDAO {
 
     private User mapUserFull(ResultSet rs) throws SQLException {
         User u = mapUserBasic(rs);
+        try { u.setUsername(rs.getString("username")); } catch (SQLException ignored) {}
+        try { u.setFullName(rs.getString("fullName")); } catch (SQLException ignored) {}
         try { u.setDepartment(rs.getString("department")); } catch (SQLException ignored) {}
         try { u.setSemester(rs.getString("semester")); } catch (SQLException ignored) {}
         try { u.setPoints(rs.getInt("points")); } catch (SQLException ignored) {}

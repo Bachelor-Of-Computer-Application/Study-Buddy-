@@ -19,6 +19,14 @@ public class Question {
     private boolean isLocked;
     private List<Answer> answers = new ArrayList<>();
 
+    // Question bank fields
+    private String title;
+    private String difficulty;
+    private String questionType;
+    private String status = "Draft";
+    private int departmentId;
+    private int semesterId;
+
     // Transient display fields for user info
     private String userFullName;
     private String userDepartment;
@@ -110,6 +118,33 @@ public class Question {
     public void setUserSemester(String userSemester) {
         this.userSemester = userSemester;
     }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+
+    public String getQuestionType() { return questionType; }
+    public void setQuestionType(String questionType) { this.questionType = questionType; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public int getDepartmentId() { return departmentId; }
+    public void setDepartmentId(int departmentId) { this.departmentId = departmentId; }
+
+    public int getSemesterId() { return semesterId; }
+    public void setSemesterId(int semesterId) { this.semesterId = semesterId; }
+
+    private String departmentName;
+    private String semesterName;
+
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+
+    public String getSemesterName() { return semesterName; }
+    public void setSemesterName(String semesterName) { this.semesterName = semesterName; }
 
     @Override
     public String toString() {

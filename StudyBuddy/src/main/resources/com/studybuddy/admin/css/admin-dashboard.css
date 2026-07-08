@@ -60,6 +60,12 @@
 .search-field:focused {
     -fx-border-color: #dc2626;
 }
+.sidebar-search-field {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #94a3b8;
+    -fx-border-color: #334155;
+    -fx-prompt-text-fill: #64748b;
+}
 
 /* Nav section label */
 .nav-section-label {
@@ -150,7 +156,7 @@
    ADMIN CONTENT AREA
    ══════════════════════════════════════════════════════════════════════ */
 .admin-content-area {
-    -fx-background-color: #f1f5f9;
+    -fx-background-color: #f8fafc;
 }
 
 /* ── Sub-panel shared classes ────────────────────────────────────────── */
@@ -603,3 +609,44 @@
 .notification-title { -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0f172a; }
 .notification-body  { -fx-font-size: 13px; -fx-text-fill: #374151; -fx-wrap-text: true; }
 .notification-meta  { -fx-font-size: 11px; -fx-text-fill: #94a3b8; }
+
+/* Phase 2 — admin polish helpers */
+.login-brand-separator .line {
+    -fx-background-color: rgba(255,255,255,0.2);
+    -fx-border-color: rgba(255,255,255,0.2);
+}
+.login-footer-text {
+    -fx-font-size:  11px;
+    -fx-text-fill:  #94a3b8;
+    -fx-alignment:  center;
+}
+.btn-promote {
+    -fx-background-color: #7c3aed;
+}
+.btn-promote:hover {
+    -fx-background-color: #6d28d9;
+}
+.chart-ctrl-btn {
+    -fx-font-size: 11px;
+    -fx-padding:   5 10;
+}
+.page-info-label {
+    -fx-font-weight: bold;
+}
+.admin-settings-bg {
+    -fx-background-color: #f8fafc;
+}
+.admin-reports-bg {
+    -fx-background-color: #f8fafc;
+}
+.admin-logs-hint {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 12px;
+}
+.filter-separator {
+    -fx-padding: 0 4;
+}
+.admin-logs-empty {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+}
