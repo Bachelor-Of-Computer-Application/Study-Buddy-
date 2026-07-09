@@ -8,8 +8,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="javafx-jmods-26.0" level="project" />
+    <orderEntry type="library" exported="" name="mssql-jdbc-13.4.0.jre11" level="project" />
     <orderEntry type="library" exported="" name="lib" level="project" />
+    <orderEntry type="library" exported="" name="javafx-jmods-26.0" level="project" />
     <orderEntry type="library" exported="" name="jars" level="project" />
+    <orderEntry type="library" exported="" name="mssql-jdbc-13.4.0.jre12" level="project" />
   </component>
 </module>

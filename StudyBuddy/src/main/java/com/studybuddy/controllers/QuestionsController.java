@@ -236,7 +236,9 @@ public class QuestionsController {
             upvoteBtn.getStyleClass().add("btn-action-upvote");
             upvoteBtn.setOnAction(e -> {
                 try {
-                    boolean ok = questionDAO.updateAnswerVotes(ans.getId(), 1);
+                    int userId = App.getCurrentUser().getId();
+
+                    boolean ok = questionDAO.updateAnswerVotes(ans.getId(), userId);
                     if (ok) {
                         ans.setVotes(ans.getVotes() + 1);
                         votes.setText("👍 " + ans.getVotes() + " votes");
@@ -441,20 +443,36 @@ public class QuestionsController {
             e.printStackTrace();
         }
     }
-
     @FXML
     public void handleUpvoteQuestion() {
-        if (selectedQuestion == null) return;
+        if (selectedQuestion == null) {
+            return;
+        }
+
         try {
-            boolean ok = questionDAO.updateQuestionVotes(selectedQuestion.getId(), 1);
+            int userId = App.getCurrentUser().getId();
+
+            System.out.println("Current User ID = " + userId);
+
+            boolean ok = questionDAO.updateQuestionVotes(
+                    selectedQuestion.getId(),
+                    userId
+            );
+
             if (ok) {
                 selectedQuestion.setVotes(selectedQuestion.getVotes() + 1);
                 qVotes.setText("👍 " + selectedQuestion.getVotes() + " votes");
             } else {
-                showError("Failed to upvote question.");
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Vote");
+                alert.setHeaderText(null);
+                alert.setContentText("You have already voted for this question.");
+                alert.showAndWait();
             }
+
         } catch (Exception e) {
-            showError("Upvote error: " + e.getMessage());
+            showError("Failed to upvote question: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

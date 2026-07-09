@@ -324,15 +324,42 @@ public class QuestionDAO {
      * Updates vote count on a question.
      * FIXED: Uses question_id (the actual PK column) in WHERE clause.
      */
-    public boolean updateQuestionVotes(int questionId, int delta) throws SQLException {
-        // WHERE uses question_id — the actual Questions PK column
-        String sql = "UPDATE Questions SET votes = COALESCE(votes, 0) + ? WHERE question_id = ?";
+    public boolean updateQuestionVotes(int questionId, int userId) throws SQLException {
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, delta);
-            stmt.setInt(2, questionId);
-            return stmt.executeUpdate() > 0;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+
+            // Check if this user already voted
+            String checkSql =
+                    "SELECT 1 FROM QuestionVotes WHERE question_id=? AND user_id=?";
+
+            PreparedStatement check = conn.prepareStatement(checkSql);
+            check.setInt(1, questionId);
+            check.setInt(2, userId);
+
+            ResultSet rs = check.executeQuery();
+
+            if (rs.next()) {
+                // already voted
+                return false;
+            }
+
+            // Save vote
+            String insertSql =
+                    "INSERT INTO QuestionVotes(question_id,user_id,vote_type) VALUES(?,?,1)";
+
+            PreparedStatement insert = conn.prepareStatement(insertSql);
+            insert.setInt(1, questionId);
+            insert.setInt(2, userId);
+            insert.executeUpdate();
+
+            // Increase question vote
+            String updateSql =
+                    "UPDATE Questions SET votes=COALESCE(votes,0)+1 WHERE question_id=?";
+
+            PreparedStatement update = conn.prepareStatement(updateSql);
+            update.setInt(1, questionId);
+
+            return update.executeUpdate() > 0;
         }
     }
 
@@ -340,15 +367,41 @@ public class QuestionDAO {
      * Updates vote count on an answer.
      * FIXED: Uses answer_id (the actual PK column) in WHERE clause.
      */
-    public boolean updateAnswerVotes(int answerId, int delta) throws SQLException {
-        // WHERE uses answer_id — the actual Answers PK column
-        String sql = "UPDATE Answers SET votes = COALESCE(votes, 0) + ? WHERE answer_id = ?";
+    public boolean updateAnswerVotes(int answerId, int userId) throws SQLException {
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, delta);
-            stmt.setInt(2, answerId);
-            return stmt.executeUpdate() > 0;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+
+            // Check if the user has already voted
+            String checkSql =
+                    "SELECT 1 FROM AnswerVotes WHERE answer_id=? AND user_id=?";
+
+            PreparedStatement check = conn.prepareStatement(checkSql);
+            check.setInt(1, answerId);
+            check.setInt(2, userId);
+
+            ResultSet rs = check.executeQuery();
+
+            if (rs.next()) {
+                return false;
+            }
+
+            // Save vote
+            String insertSql =
+                    "INSERT INTO AnswerVotes(answer_id,user_id,vote_type) VALUES(?,?,1)";
+
+            PreparedStatement insert = conn.prepareStatement(insertSql);
+            insert.setInt(1, answerId);
+            insert.setInt(2, userId);
+            insert.executeUpdate();
+
+            // Increase answer votes
+            String updateSql =
+                    "UPDATE Answers SET votes = COALESCE(votes,0)+1 WHERE answer_id=?";
+
+            PreparedStatement update = conn.prepareStatement(updateSql);
+            update.setInt(1, answerId);
+
+            return update.executeUpdate() > 0;
         }
     }
 

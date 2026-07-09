@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Study Buddy – Auth Pages (Login & Register)  ·  auth.css
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Root ────────────────────────────────────────────────────────────── */
+.root-pane {
+    -fx-background-color: #f8fafc;
+    -fx-font-family: "Segoe UI";
+}
+
+/* ── Left branding panel ─────────────────────────────────────────────── */
+.auth-left-panel {
+    -fx-background-color: linear-gradient(to bottom right, #4f46e5, #7c3aed);
+    -fx-min-width: 440px;
+    -fx-pref-width: 440px;
+}
+.auth-brand-icon {
+    -fx-font-size: 56px;
+}
+.auth-logo-image {
+    /* drop-shadow applied via theme.css .auth-left-panel .app-brand-logo */
+}
+.auth-brand-title {
+    -fx-font-size:   32px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #ffffff;
+    -fx-font-family: "Segoe UI";
+}
+.auth-brand-sub {
+    -fx-font-size:  14px;
+    -fx-text-fill:  rgba(255,255,255,0.80);
+    -fx-wrap-text:  true;
+    -fx-text-alignment: center;
+}
+.auth-feature-item {
+    -fx-font-size:  13px;
+    -fx-text-fill:  rgba(255,255,255,0.90);
+}
+
+/* ── Right form panel ────────────────────────────────────────────────── */
+.auth-right-panel {
+    -fx-background-color: #ffffff;
+}
+.auth-form-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 16px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     16px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.08), 20, 0, 0, 6);
+    -fx-padding:           40;
+    -fx-max-width:         420px;
+}
+.auth-page-title {
+    -fx-font-size:   26px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+}
+.auth-page-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+}
+
+/* ── Form controls ───────────────────────────────────────────────────── */
+.auth-field-label {
+    -fx-font-size:   12px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #374151;
+}
+.auth-text-field {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     10px;
+    -fx-background-radius: 10px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           12 14 12 14;
+    -fx-font-size:         14px;
+    -fx-text-fill:         #0f172a;
+    -fx-prompt-text-fill:  #9ca3af;
+    -fx-pref-height:       46px;
+}
+.auth-text-field:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color:     #4f46e5;
+    -fx-border-width:     2px;
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.2), 6, 0, 0, 0);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.auth-primary-btn {
+    -fx-background-color:  linear-gradient(to right, #4f46e5, #7c3aed);
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         14px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 10px;
+    -fx-padding:           13 0 13 0;
+    -fx-cursor:            hand;
+    -fx-effect:            dropshadow(three-pass-box, rgba(79,70,229,0.35), 8, 0, 0, 3);
+    -fx-max-width:         Infinity;
+}
+.auth-primary-btn:hover {
+    -fx-background-color: linear-gradient(to right, #3730a3, #6d28d9);
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.55), 12, 0, 0, 4);
+}
+.auth-primary-btn:pressed {
+    -fx-background-color: #312e81;
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.2), 4, 0, 0, 1);
+}
+
+.auth-secondary-btn {
+    -fx-background-color:  transparent;
+    -fx-text-fill:         #4f46e5;
+    -fx-font-size:         13px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 10px;
+    -fx-border-color:      #c7d2fe;
+    -fx-border-radius:     10px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           12 0 12 0;
+    -fx-cursor:            hand;
+    -fx-max-width:         Infinity;
+}
+.auth-secondary-btn:hover {
+    -fx-background-color: #eef2ff;
+    -fx-border-color:     #4f46e5;
+}
+
+/* ── Divider label ───────────────────────────────────────────────────── */
+.auth-divider-label {
+    -fx-font-size:  11px;
+    -fx-text-fill:  #9ca3af;
+}
+
+/* ── Error / warning note ────────────────────────────────────────────── */
+.auth-note {
+    -fx-font-size:  11px;
+    -fx-text-fill:  #94a3b8;
+    -fx-text-alignment: center;
+}
