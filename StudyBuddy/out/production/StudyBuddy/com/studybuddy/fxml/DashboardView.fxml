@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="rootPane" styleClass="root-pane" stylesheets="@../css/theme.css, @../css/dashboard.css"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.DashboardController">
+
+    <!-- ═══ HIDDEN BarChart – keeps @FXML binding alive, never rendered ═ -->
+    <!-- The controller's studyBarChart field is kept wired to avoid NPE.  -->
+    <top>
+        <BarChart fx:id="studyBarChart" managed="false" visible="false" prefHeight="0" prefWidth="0" legendVisible="false">
+            <xAxis>
+                <CategoryAxis label="Subjects"/>
+            </xAxis>
+            <yAxis>
+                <NumberAxis label="Hours"/>
+            </yAxis>
+        </BarChart>
+    </top>
+
+    <!-- ═══ SCROLLABLE DASHBOARD CONTENT ════════════════════════════════ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="main-scroll">
+            <content>
+                <VBox spacing="20" styleClass="main-content">
+                    <padding>
+                        <Insets top="24" right="24" bottom="28" left="24"/>
+                    </padding>
+
+                    <!-- ── Hero Banner ─────────────────────────────────── -->
+                    <HBox alignment="CENTER_LEFT" spacing="20" styleClass="hero-banner">
+                        <VBox spacing="8" HBox.hgrow="ALWAYS">
+                            <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome Back! 👋"/>
+                            <Label styleClass="hero-sub" text="Track your progress, explore notes, and ask questions."/>
+                        </VBox>
+                        <StackPane styleClass="hero-avatar-wrap">
+                            <ImageView fx:id="heroAvatarView" pickOnBounds="true"/>
+                        </StackPane>
+                    </HBox>
+
+                    <!-- ── Quick Actions ───────────────────────────────── -->
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label text="Quick Actions:" styleClass="section-label"/>
+                        <Button onAction="#handleUploadNotes" styleClass="quick-action-btn, quick-btn-note" text="📝 Create Note"/>
+                        <Button onAction="#handleUploadResourceAction" styleClass="quick-action-btn, quick-btn-resource" text="📤 Upload Resource"/>
+                        <Button onAction="#handleGoToQuestions" styleClass="quick-action-btn, quick-btn-question" text="🙋 Ask Question"/>
+                        <Button onAction="#handleGoToProfile" styleClass="quick-action-btn, quick-btn-profile" text="👤 Profile"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button onAction="#refreshDashboard" styleClass="refresh-btn" text="🔄 Refresh"/>
+                    </HBox>
+
+                    <!-- ── 5-Column Stat Cards ─────────────────────────── -->
+                    <GridPane hgap="16" vgap="16">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="20"/>
+                            <ColumnConstraints percentWidth="20"/>
+                            <ColumnConstraints percentWidth="20"/>
+                            <ColumnConstraints percentWidth="20"/>
+                            <ColumnConstraints percentWidth="20"/>
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints/>
+                        </rowConstraints>
+
+                        <!-- Card 1: Notes -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="0" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-indigo">
+                                    <Label text="📝" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="NOTES" styleClass="stat-label"/>
+                                    <Label fx:id="lblTotalNotes" styleClass="stat-value" text="0"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Created notebooks" styleClass="stat-desc"/>
+                        </VBox>
+
+                        <!-- Card 2: Resources -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="1" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-sky">
+                                    <Label text="📂" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="RESOURCES" styleClass="stat-label"/>
+                                    <Label fx:id="lblSharedResources" styleClass="stat-value" text="0"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Shared documents" styleClass="stat-desc"/>
+                        </VBox>
+
+                        <!-- Card 3: Questions -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-purple">
+                                    <Label text="🙋" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="QUESTIONS" styleClass="stat-label"/>
+                                    <Label fx:id="lblTotalQuestions" styleClass="stat-value" text="0"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Asked topics" styleClass="stat-desc"/>
+                        </VBox>
+
+                        <!-- Card 4: Tasks -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-amber">
+                                    <Label text="✅" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="TASKS" styleClass="stat-label"/>
+                                    <Label fx:id="lblTotalTasks" styleClass="stat-value" text="0"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Pending deadlines" styleClass="stat-desc"/>
+                        </VBox>
+
+                        <!-- Card 5: Progress -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="4" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-green">
+                                    <Label text="📈" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="PROGRESS" styleClass="stat-label"/>
+                                    <Label fx:id="lblProgressPercentageStat" styleClass="stat-value, stat-value-success" text="0%"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Tasks completion" styleClass="stat-desc"/>
+                        </VBox>
+                    </GridPane>
+
+                    <!-- ── Progress + Widgets Row ──────────────────────── -->
+                    <HBox alignment="TOP_LEFT" spacing="16">
+
+                        <!-- Progress Card -->
+                        <VBox spacing="14" styleClass="panel-card" prefWidth="260">
+                            <Label text="Overall Study Progress" styleClass="panel-title"/>
+                            <VBox alignment="CENTER" spacing="10">
+                                <Label fx:id="lblProgressPercentage" styleClass="progress-pct" text="0%"/>
+                                <ProgressBar fx:id="overallProgressBar" styleClass="progress-bar" progress="0" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="4">
+                                <Label text="Rank: Apprentice Scholar" styleClass="progress-meta"/>
+                                <Label text="Keep it up! 🎯" styleClass="progress-meta"/>
+                            </VBox>
+                        </VBox>
+
+                        <!-- Widget 1: Recent Notes -->
+                        <VBox spacing="10" styleClass="widget-card" HBox.hgrow="ALWAYS">
+                            <Label text="📝  Recent Notes" styleClass="widget-title"/>
+                            <HBox fx:id="recentNotesContainer" spacing="10"/>
+                        </VBox>
+
+                        <!-- Widget 2: Recent Resources -->
+                        <VBox spacing="10" styleClass="widget-card" HBox.hgrow="ALWAYS">
+                            <Label text="📂  Recent Resources" styleClass="widget-title"/>
+                            <HBox fx:id="recentResourcesContainer" spacing="10"/>
+                        </VBox>
+
+                        <!-- Widget 3: Recent Questions -->
+                        <VBox spacing="10" styleClass="widget-card" HBox.hgrow="ALWAYS">
+                            <Label text="🙋  Recent Questions" styleClass="widget-title"/>
+                            <HBox fx:id="recentQuestionsContainer" spacing="10"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- ── Recent Activity Row ─────────────────────────── -->
+                    <VBox spacing="10" styleClass="widget-card">
+                        <Label text="⚡  Recent Activity" styleClass="widget-title"/>
+                        <HBox fx:id="recentActivityContainer" spacing="10"/>
+                    </VBox>
+
+                    <!-- ── My Uploads ──────────────────────────────────── -->
+                    <VBox spacing="14" styleClass="panel-card">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="📤  My Uploads" styleClass="library-section-title"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button onAction="#refreshMyUploads" styleClass="refresh-btn" text="↻ Refresh"/>
+                        </HBox>
+                        <TabPane fx:id="myUploadsTabPane" tabClosingPolicy="UNAVAILABLE">
+                            <Tab text="My Notes">
+                                <TableView fx:id="myNotesTable" prefHeight="160">
+                                    <columns>
+                                        <TableColumn fx:id="myNoteTitleCol" text="Title" prefWidth="180"/>
+                                        <TableColumn fx:id="myNoteSubjectCol" text="Subject" prefWidth="120"/>
+                                        <TableColumn fx:id="myNoteStatusCol" text="Status" prefWidth="90"/>
+                                        <TableColumn fx:id="myNoteDateCol" text="Date" prefWidth="110"/>
+                                    </columns>
+                                    <placeholder><Label text="You haven't uploaded any notes yet." styleClass="table-empty-label"/></placeholder>
+                                </TableView>
+                                <HBox spacing="8" styleClass="table-action-row">
+                                    <Button onAction="#handleEditMyNote" styleClass="secondary-btn" text="✏ Edit"/>
+                                    <Button onAction="#handleDeleteMyNote" styleClass="danger-btn" text="🗑 Delete"/>
+                                    <Button onAction="#handleViewMyNote" styleClass="primary-btn" text="👁 View"/>
+                                    <Button onAction="#handleDownloadMyNote" styleClass="secondary-btn" text="⬇ Download"/>
+                                </HBox>
+                            </Tab>
+                            <Tab text="My Resources">
+                                <TableView fx:id="myResourcesTable" prefHeight="160">
+                                    <columns>
+                                        <TableColumn fx:id="myResTitleCol" text="Name" prefWidth="180"/>
+                                        <TableColumn fx:id="myResSubjectCol" text="Subject" prefWidth="120"/>
+                                        <TableColumn fx:id="myResStatusCol" text="Status" prefWidth="90"/>
+                                        <TableColumn fx:id="myResDateCol" text="Date" prefWidth="110"/>
+                                    </columns>
+                                    <placeholder><Label text="You haven't uploaded any resources yet." styleClass="table-empty-label"/></placeholder>
+                                </TableView>
+                                <HBox spacing="8" styleClass="table-action-row">
+                                    <Button onAction="#handleDeleteMyResource" styleClass="danger-btn" text="🗑 Delete"/>
+                                    <Button onAction="#handleViewMyResource" styleClass="primary-btn" text="👁 View"/>
+                                    <Button onAction="#handleDownloadMyResource" styleClass="secondary-btn" text="⬇ Download"/>
+                                </HBox>
+                            </Tab>
+                            <Tab text="My Questions">
+                                <TableView fx:id="myQuestionsTable" prefHeight="160">
+                                    <columns>
+                                        <TableColumn fx:id="myQTitleCol" text="Question" prefWidth="220"/>
+                                        <TableColumn fx:id="myQSubjectCol" text="Subject" prefWidth="120"/>
+                                        <TableColumn fx:id="myQDateCol" text="Date" prefWidth="110"/>
+                                    </columns>
+                                    <placeholder><Label text="You haven't asked any questions yet." styleClass="table-empty-label"/></placeholder>
+                                </TableView>
+                                <HBox spacing="8" styleClass="table-action-row">
+                                    <Button onAction="#handleDeleteMyQuestion" styleClass="danger-btn" text="🗑 Delete"/>
+                                    <Button onAction="#handleViewMyQuestion" styleClass="secondary-btn" text="👁 View"/>
+                                </HBox>
+                            </Tab>
+                        </TabPane>
+                    </VBox>
+
+                    <!-- ── Community Library ───────────────────────────── -->
+                    <VBox spacing="14" styleClass="panel-card">
+                        <Label text="Approved Community Library" styleClass="library-section-title"/>
+
+                        <!-- Filter row -->
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <ComboBox fx:id="departmentComboBox" prefWidth="160" promptText="Choose Department" styleClass="filter-combo"/>
+                            <ComboBox fx:id="semesterComboBox" prefWidth="140" promptText="Choose Semester" styleClass="filter-combo"/>
+                            <ComboBox fx:id="subjectComboBox" prefWidth="175" promptText="Choose Subject" styleClass="filter-combo"/>
+                            <ComboBox fx:id="sortComboBox" prefWidth="145" promptText="Sort By" styleClass="filter-combo"/>
+                            <TextField fx:id="noteSearchField" prefWidth="200" promptText="🔍  Search library notes…" styleClass="search-field"/>
+                            <Button onAction="#searchNotes" styleClass="filter-btn" text="Filter"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+                        <!-- Notes Flow Pane -->
+                        <ScrollPane fitToWidth="true" styleClass="scroll-pane" vbarPolicy="NEVER" prefHeight="220">
+                            <FlowPane fx:id="notesFlowPane" hgap="14" vgap="14" styleClass="notes-grid"/>
+                        </ScrollPane>
+                    </VBox>
+
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
