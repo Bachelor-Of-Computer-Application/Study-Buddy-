@@ -75,7 +75,7 @@ public class DashboardController implements Initializable {
     // Library Filtering
     @FXML private ComboBox<Department> departmentComboBox;
     @FXML private ComboBox<Semester> semesterComboBox;
-    @FXML private ComboBox<String> subjectComboBox;
+    @FXML private ComboBox<Subject> subjectComboBox;
     @FXML private ComboBox<String> sortComboBox;
     @FXML private TextField noteSearchField;
     @FXML private FlowPane notesFlowPane;
@@ -892,7 +892,12 @@ public class DashboardController implements Initializable {
         String query = noteSearchField.getText().trim();
         Department selectedDept = departmentComboBox.getValue();
         Semester selectedSem = semesterComboBox.getValue();
+<<<<<<< Updated upstream
         String selectedSubjectName = subjectComboBox.getValue();
+=======
+        Subject selectedSubjectObj = subjectComboBox.getValue();
+        String selectedSubject = selectedSubjectObj != null ? selectedSubjectObj.getName() : null;
+>>>>>>> Stashed changes
 
         Integer deptId = AcademicFilterHelper.resolveDepartmentId(selectedDept);
         Integer semId = AcademicFilterHelper.resolveSemesterId(selectedSem);
@@ -921,7 +926,6 @@ public class DashboardController implements Initializable {
             System.err.println("Error searching notes with hierarchy: " + e.getMessage());
             filtered = dashboardService.searchNotes(query);
         }
-
         displayNotes(filtered);
     }
 

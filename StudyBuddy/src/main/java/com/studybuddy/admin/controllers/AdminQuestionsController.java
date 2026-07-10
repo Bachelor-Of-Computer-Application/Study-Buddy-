@@ -46,7 +46,7 @@ public class AdminQuestionsController {
     @FXML private TextField        searchField;
     @FXML private ComboBox<Department> departmentFilter;
     @FXML private ComboBox<Semester>   semesterFilter;
-    @FXML private ComboBox<String>    subjectFilter;
+    @FXML private ComboBox<Subject>   subjectFilter;
     @FXML private ComboBox<String>    statusFilter;
 
     @FXML private TableView<Question>             questionsTable;
@@ -396,7 +396,8 @@ public class AdminQuestionsController {
         String q       = searchField.getText().trim().toLowerCase();
         Department dept = departmentFilter != null ? departmentFilter.getValue() : null;
         Semester sem = semesterFilter != null ? semesterFilter.getValue() : null;
-        String subject = subjectFilter != null ? subjectFilter.getValue() : null;
+        Subject selectedSubject = subjectFilter != null ? subjectFilter.getValue() : null;
+        String subject = selectedSubject != null ? selectedSubject.getName() : null;
         String status  = statusFilter != null ? statusFilter.getValue() : null;
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
         Map<Integer, Subject> subjectMap = allSubjects.stream()

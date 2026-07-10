@@ -53,7 +53,7 @@ public class QuestionsController {
     @FXML private TextField searchField;
     @FXML private ComboBox<Department> departmentFilter;
     @FXML private ComboBox<Semester> semesterFilter;
-    @FXML private ComboBox<String> subjectFilter;
+    @FXML private ComboBox<Subject> subjectFilter;
     @FXML private ListView<Question> questionsListView;
 
     // View Panel Wrappers
@@ -395,7 +395,8 @@ public class QuestionsController {
         String query = searchField.getText().trim().toLowerCase();
         Department dept = departmentFilter.getValue();
         Semester sem = semesterFilter.getValue();
-        String subject = subjectFilter.getValue();
+        Subject selectedSubject = subjectFilter.getValue();
+        String subject = selectedSubject != null ? selectedSubject.getName() : null;
 
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
         Map<Integer, Subject> subjectMap = allSubjects.stream()

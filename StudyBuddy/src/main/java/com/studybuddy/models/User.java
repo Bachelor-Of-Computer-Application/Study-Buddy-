@@ -29,6 +29,7 @@ public class User {
     private String phoneNumber;
     private String department;
     private String semester;
+    private String subject;   // ADD THIS
 
     // ===========================
     // Study Preferences (New for Edit Profile)
@@ -198,6 +199,9 @@ public class User {
         this.semester = semester;
     }
 
+    public String getSubject() { return subject; }
+
+    public void setSubject(String subject) { this.subject = subject; }
     // ===========================
     // Getters and Setters - Study Preferences
     // ===========================

@@ -40,7 +40,7 @@ public class NotesController implements Initializable {
     @FXML private TabPane notesTabPane;
     @FXML private ComboBox<Department> departmentFilter;
     @FXML private ComboBox<Semester> semesterFilter;
-    @FXML private ComboBox<String> subjectFilter;
+    @FXML private ComboBox<Subject> subjectFilter;
     @FXML private ComboBox<String> sourceFilter;
     @FXML private VBox myNotesContainer;
     @FXML private VBox communityNotesContainer;
@@ -66,7 +66,13 @@ public class NotesController implements Initializable {
             currentUserId = -1;
         }
 
-        AcademicFilterHelper.setupFilterBar(academicService, departmentFilter, semesterFilter, subjectFilter);
+        AcademicFilterHelper.setupFilterBar(
+                academicService,
+                departmentFilter,
+                semesterFilter,
+                subjectFilter
+        );
+
         loadSources();
         loadNotes();
 
@@ -316,7 +322,11 @@ public class NotesController implements Initializable {
     public void applyFilters() {
         Department dept = departmentFilter.getValue();
         Semester sem = semesterFilter.getValue();
-        String subject = subjectFilter.getValue();
+        Subject selectedSubject = subjectFilter.getValue();
+
+        String subject = selectedSubject != null
+                ? selectedSubject.getName()
+                : null;
         String source = sourceFilter.getValue();
 
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
@@ -366,4 +376,71 @@ public class NotesController implements Initializable {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+
+// ADD HERE
+
+    private void loadDepartments(){
+
+        List<Department> departments =
+                academicService.getAllActiveDepartments();
+
+        departmentFilter.setItems(
+                FXCollections.observableArrayList(departments)
+        );
+    }
+
+
+
+    private void setupDropdownActions(){
+
+        departmentFilter.setOnAction(e -> {
+
+            Department department = departmentFilter.getValue();
+
+            semesterFilter.getItems().clear();
+            subjectFilter.getItems().clear();
+
+
+            if(department != null){
+
+                List<Semester> semesters =
+                        academicService.getSemestersByDepartment(
+                                department.getId()
+                        );
+
+                semesterFilter.setItems(
+                        FXCollections.observableArrayList(semesters)
+                );
+            }
+
+        });
+
+
+
+        semesterFilter.setOnAction(e -> {
+
+            Semester semester = semesterFilter.getValue();
+
+            subjectFilter.getItems().clear();
+
+
+            if(semester != null){
+
+                List<Subject> subjects =
+                        academicService.getSubjectsBySemester(
+                                semester.getId()
+                        );
+
+                subjectFilter.setItems(
+                        FXCollections.observableArrayList(subjects)
+                );
+
+            }
+
+        });
+
+    }
+
 }
+

@@ -1,5 +1,5 @@
 package com.studybuddy.utils;
-
+import com.studybuddy.utils.SceneManager;
 import com.studybuddy.App;
 import com.studybuddy.models.User;
 import javafx.fxml.FXMLLoader;

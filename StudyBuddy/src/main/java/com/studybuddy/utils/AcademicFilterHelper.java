@@ -94,7 +94,7 @@ public final class AcademicFilterHelper {
             AcademicService academic,
             ComboBox<Department> deptBox,
             ComboBox<Semester> semBox,
-            ComboBox<?> subjectBox,
+            ComboBox<Subject> subjectBox,
             Runnable onSubjectsReset) {
 
         if (deptBox == null) return;
@@ -167,7 +167,15 @@ public final class AcademicFilterHelper {
             Department dept,
             Semester sem,
             ComboBox<Subject> subjectBox) {
+<<<<<<< Updated upstream
         if (subjectBox == null || academic == null) {
+=======
+        if (subjectBox == null) {
+            return;
+        }
+        if (isAllSemesters(sem)) {
+            subjectBox.getItems().clear();
+>>>>>>> Stashed changes
             return;
         }
         try {
@@ -296,7 +304,7 @@ public final class AcademicFilterHelper {
             AcademicService academic,
             ComboBox<Department> deptBox,
             ComboBox<Semester> semBox,
-            ComboBox<String> subjectBox) {
+            ComboBox<Subject> subjectBox) {
 
         deptBox.setItems(departmentsForFilter(academic));
         deptBox.setValue(allDepartments());
@@ -308,19 +316,35 @@ public final class AcademicFilterHelper {
         if (semBox != null) {
             semBox.setItems(semestersForFilter(academic, allDepartments()));
             semBox.setValue(allSemesters());
+<<<<<<< Updated upstream
             semBox.setDisable(false);
         }
 
         refreshSubjects.run();
+=======
+            semBox.setDisable(true);
+        }
+
+        if (subjectBox != null) {
+            subjectBox.setItems(
+                    FXCollections.observableArrayList(
+                            academic.getAllActiveSubjects()
+                    )
+            );
+        }
+>>>>>>> Stashed changes
     }
 
     private static void refreshSubjectFilter(
             AcademicService academic,
             ComboBox<Department> deptBox,
             ComboBox<Semester> semBox,
-            ComboBox<String> subjectBox) {
+            ComboBox<Subject> subjectBox) {
+
         if (subjectBox == null) return;
+
         subjectBox.getSelectionModel().clearSelection();
+<<<<<<< Updated upstream
         Department dept = deptBox != null ? deptBox.getValue() : null;
         Semester sem = semBox != null ? semBox.getValue() : null;
         try {
@@ -332,6 +356,37 @@ public final class AcademicFilterHelper {
                             .toList()));
         } catch (Exception ex) {
             System.err.println("[AcademicFilterHelper] Subject filter failed: " + ex.getMessage());
+=======
+
+        Semester sem = semBox != null ? semBox.getValue() : null;
+
+
+        if (sem != null && !isAllSemesters(sem)) {
+
+            try {
+
+                subjectBox.setItems(
+                        FXCollections.observableArrayList(
+                                academic.getSubjectsBySemester(sem.getId())
+                        )
+                );
+
+            } catch(Exception e){
+
+                System.err.println(
+                        "[AcademicFilterHelper] Subject loading failed: "
+                                + e.getMessage()
+                );
+            }
+
+        } else {
+
+            subjectBox.setItems(
+                    FXCollections.observableArrayList(
+                            academic.getAllActiveSubjects()
+                    )
+            );
+>>>>>>> Stashed changes
         }
     }
 
@@ -339,7 +394,7 @@ public final class AcademicFilterHelper {
             AcademicService academic,
             ComboBox<Department> deptBox,
             ComboBox<Semester> semBox,
-            ComboBox<String> subjectBox) {
+            ComboBox<Subject> subjectBox) {
         if (deptBox != null) {
             deptBox.setValue(allDepartments());
         }
@@ -350,7 +405,11 @@ public final class AcademicFilterHelper {
         }
         if (subjectBox != null) {
             subjectBox.getSelectionModel().clearSelection();
+<<<<<<< Updated upstream
             refreshSubjectFilter(academic, deptBox, semBox, subjectBox);
+=======
+            subjectBox.setItems(FXCollections.observableArrayList(academic.getAllActiveSubjects()));
+>>>>>>> Stashed changes
         }
     }
 }

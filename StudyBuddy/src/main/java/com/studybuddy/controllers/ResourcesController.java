@@ -60,7 +60,7 @@ public class ResourcesController {
     @FXML private TextField               searchField;
     @FXML private ComboBox<Department>    departmentFilter;
     @FXML private ComboBox<Semester>      semesterFilter;
-    @FXML private ComboBox<String>        subjectFilter;
+    @FXML private ComboBox<Subject>       subjectFilter;
 
     // ── Community library ─────────────────────────────────────────────────────
     @FXML private FlowPane resourcesFlowPane;
@@ -96,7 +96,7 @@ public class ResourcesController {
      * Called on initialize and whenever the cascade is reset.
      */
     public void loadSubjectFilter() {
-        List<String> subjects = resourceService.getAllSubjectNames();
+        List<Subject> subjects = academicService.getAllActiveSubjects();
         subjectFilter.setItems(FXCollections.observableArrayList(subjects));
     }
 
@@ -162,11 +162,8 @@ public class ResourcesController {
                 if (sem != null) {
                     try {
                         // Narrow subject filter to chosen semester
-                        List<String> semSubjects = academicService
-                                .getSubjectsBySemester(sem.getId())
-                                .stream()
-                                .map(Subject::getName)
-                                .collect(Collectors.toList());
+                        List<Subject> semSubjects = academicService
+                                .getSubjectsBySemester(sem.getId());
                         subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
                     } catch (Exception ex) {
                         System.err.println("[ResourcesController] Sub filter load failed: " + ex.getMessage());
@@ -370,7 +367,8 @@ public class ResourcesController {
         String query = searchField.getText().trim().toLowerCase();
         Department dept = departmentFilter.getValue();
         Semester sem = semesterFilter.getValue();
-        String subject = subjectFilter.getValue();
+        Subject selectedSubject = subjectFilter.getValue();
+        String subject = selectedSubject != null ? selectedSubject.getName() : null;
 
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
         Map<Integer, Subject> subjectMap = allSubjects.stream()
@@ -479,10 +477,15 @@ public class ResourcesController {
         semCombo.setDisable(false);
 
         AcademicFilterHelper.wireCascade(academicService, deptCombo, semCombo, subCombo,
+<<<<<<< Updated upstream
                 () -> {
                     AcademicFilterHelper.loadSubjects(academicService, deptCombo.getValue(), semCombo.getValue(), subCombo);
                 });
         AcademicFilterHelper.loadSubjects(academicService, deptCombo.getValue(), semCombo.getValue(), subCombo);
+=======
+                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semCombo.getValue(), subCombo));
+
+>>>>>>> Stashed changes
 
         // ── Submit button ────────────────────────────────────────────────────
         Button submitBtn = new Button("Submit for Approval");

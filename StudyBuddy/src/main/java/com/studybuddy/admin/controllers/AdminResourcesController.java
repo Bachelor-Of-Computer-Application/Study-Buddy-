@@ -48,7 +48,7 @@ public class AdminResourcesController {
     @FXML private TextField           searchField;
     @FXML private ComboBox<Department> departmentFilter;
     @FXML private ComboBox<Semester>   semesterFilter;
-    @FXML private ComboBox<String>     subjectFilter;
+    @FXML private ComboBox<Subject>    subjectFilter;
     @FXML private ComboBox<String>     statusFilter;
 
     @FXML private TableView<Resource>              resourcesTable;
@@ -101,12 +101,17 @@ public class AdminResourcesController {
             uploadSemesterCombo.setDisable(false);
         }
         AcademicFilterHelper.wireCascade(academicService, uploadDepartmentCombo, uploadSemesterCombo, uploadSubjectCombo,
+<<<<<<< Updated upstream
                 () -> AcademicFilterHelper.loadSubjects(academicService,
                         uploadDepartmentCombo.getValue(), uploadSemesterCombo.getValue(),
                         uploadSubjectCombo));
         AcademicFilterHelper.loadSubjects(academicService,
                 uploadDepartmentCombo.getValue(), uploadSemesterCombo.getValue(),
                 uploadSubjectCombo);
+=======
+                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, uploadSemesterCombo.getValue(), uploadSubjectCombo));
+
+>>>>>>> Stashed changes
     }
 
     @FXML public void handleSelectUploadFile() {
@@ -285,7 +290,8 @@ public class AdminResourcesController {
         String q       = searchField.getText().trim().toLowerCase();
         Department dept = departmentFilter.getValue();
         Semester sem = semesterFilter.getValue();
-        String subject = subjectFilter.getValue();
+        Subject selectedSubject = subjectFilter.getValue();
+        String subject = selectedSubject != null ? selectedSubject.getName() : null;
         String status  = statusFilter.getValue();
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
         Map<Integer, Subject> subjectMap = allSubjects.stream()

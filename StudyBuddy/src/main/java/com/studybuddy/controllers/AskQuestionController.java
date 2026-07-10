@@ -68,10 +68,15 @@ public class AskQuestionController implements Initializable {
         semesterComboBox.setValue(AcademicFilterHelper.allSemesters());
 
         AcademicFilterHelper.wireCascade(academicService, departmentComboBox, semesterComboBox, subjectComboBox,
+<<<<<<< Updated upstream
                 () -> {
                     AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox);
                 });
         AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox);
+=======
+                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semesterComboBox.getValue(), subjectComboBox));
+
+>>>>>>> Stashed changes
         loadUserPoints();
 
         if (rewardPointsComboBox != null) {
