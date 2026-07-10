@@ -57,15 +57,8 @@ public class CreateNoteController {
         semesterComboBox.setDisable(false);
 
         AcademicFilterHelper.wireCascade(academicService, departmentComboBox, semesterComboBox, subjectComboBox,
-<<<<<<< Updated upstream
-                () -> {
-                    AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox);
-                });
+                () -> AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox));
         AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox);
-=======
-                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semesterComboBox.getValue(), subjectComboBox));
-
->>>>>>> Stashed changes
 
         ToggleGroup visibilityGroup = new ToggleGroup();
         privateRadio.setToggleGroup(visibilityGroup);

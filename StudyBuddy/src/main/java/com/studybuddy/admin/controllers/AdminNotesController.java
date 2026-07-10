@@ -47,7 +47,7 @@ public class AdminNotesController {
     @FXML private TextField searchField;
     @FXML private ComboBox<Department> departmentFilter;
     @FXML private ComboBox<Semester> semesterFilter;
-    @FXML private ComboBox<String> subjectFilter;
+    @FXML private ComboBox<Subject> subjectFilter;
     @FXML private ComboBox<String> statusFilter;
     @FXML private ComboBox<String> visibilityFilter;
 
@@ -277,13 +277,14 @@ public class AdminNotesController {
         String q = searchField.getText().trim().toLowerCase();
         Department dept = departmentFilter.getValue();
         Semester sem = semesterFilter.getValue();
-        String subject = subjectFilter.getValue();
+        Subject selectedSubject = subjectFilter != null ? subjectFilter.getValue() : null;
+        String subjectName = selectedSubject != null ? selectedSubject.getName() : null;
         String status = statusFilter.getValue();
         String visibility = visibilityFilter != null ? visibilityFilter.getValue() : null;
 
         filteredList = masterList.stream()
             .filter(n -> q.isEmpty() || contains(q, n.getTitle(), n.getSubject(), n.getFileName(), n.getSource()))
-            .filter(n -> subject == null || subject.isEmpty() || nullSafe(n.getSubject()).equalsIgnoreCase(subject))
+            .filter(n -> subjectName == null || subjectName.isEmpty() || nullSafe(n.getSubject()).equalsIgnoreCase(subjectName))
             .filter(n -> status == null || status.isEmpty() || nullSafe(n.getStatus()).equalsIgnoreCase(status))
             .filter(n -> {
                 List<Subject> allSubjects = academicService.getAllActiveSubjects();

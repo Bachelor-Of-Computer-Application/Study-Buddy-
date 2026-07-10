@@ -892,12 +892,8 @@ public class DashboardController implements Initializable {
         String query = noteSearchField.getText().trim();
         Department selectedDept = departmentComboBox.getValue();
         Semester selectedSem = semesterComboBox.getValue();
-<<<<<<< Updated upstream
-        String selectedSubjectName = subjectComboBox.getValue();
-=======
         Subject selectedSubjectObj = subjectComboBox.getValue();
-        String selectedSubject = selectedSubjectObj != null ? selectedSubjectObj.getName() : null;
->>>>>>> Stashed changes
+        String selectedSubjectName = selectedSubjectObj != null ? selectedSubjectObj.getName() : null;
 
         Integer deptId = AcademicFilterHelper.resolveDepartmentId(selectedDept);
         Integer semId = AcademicFilterHelper.resolveSemesterId(selectedSem);

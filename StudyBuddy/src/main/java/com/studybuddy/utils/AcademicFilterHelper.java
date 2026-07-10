@@ -167,15 +167,12 @@ public final class AcademicFilterHelper {
             Department dept,
             Semester sem,
             ComboBox<Subject> subjectBox) {
-<<<<<<< Updated upstream
         if (subjectBox == null || academic == null) {
-=======
-        if (subjectBox == null) {
             return;
         }
-        if (isAllSemesters(sem)) {
+        if (sem == null || isAllSemesters(sem)) {
             subjectBox.getItems().clear();
->>>>>>> Stashed changes
+            subjectBox.setDisable(false);
             return;
         }
         try {
@@ -184,6 +181,27 @@ public final class AcademicFilterHelper {
             subjectBox.setDisable(dept == null);
         } catch (Exception e) {
             System.err.println("[AcademicFilterHelper] Failed to load subjects: " + e.getMessage());
+        }
+    }
+
+    public static void loadSubjectsForSemester(
+            AcademicService academic,
+            Semester sem,
+            ComboBox<Subject> subjectBox) {
+        if (subjectBox == null || academic == null) {
+            return;
+        }
+        if (sem == null || isAllSemesters(sem)) {
+            subjectBox.getItems().clear();
+            subjectBox.setDisable(true);
+            return;
+        }
+        try {
+            List<Subject> subjects = academic.getSubjectsBySemester(sem.getId());
+            subjectBox.setItems(FXCollections.observableArrayList(subjects));
+            subjectBox.setDisable(false);
+        } catch (Exception e) {
+            System.err.println("[AcademicFilterHelper] Failed to load semester subjects: " + e.getMessage());
         }
     }
 
@@ -310,29 +328,15 @@ public final class AcademicFilterHelper {
         deptBox.setValue(allDepartments());
 
         Runnable refreshSubjects = () -> refreshSubjectFilter(academic, deptBox, semBox, subjectBox);
-
         wireCascade(academic, deptBox, semBox, subjectBox, refreshSubjects);
 
         if (semBox != null) {
             semBox.setItems(semestersForFilter(academic, allDepartments()));
             semBox.setValue(allSemesters());
-<<<<<<< Updated upstream
             semBox.setDisable(false);
         }
 
         refreshSubjects.run();
-=======
-            semBox.setDisable(true);
-        }
-
-        if (subjectBox != null) {
-            subjectBox.setItems(
-                    FXCollections.observableArrayList(
-                            academic.getAllActiveSubjects()
-                    )
-            );
-        }
->>>>>>> Stashed changes
     }
 
     private static void refreshSubjectFilter(
@@ -344,50 +348,9 @@ public final class AcademicFilterHelper {
         if (subjectBox == null) return;
 
         subjectBox.getSelectionModel().clearSelection();
-<<<<<<< Updated upstream
         Department dept = deptBox != null ? deptBox.getValue() : null;
         Semester sem = semBox != null ? semBox.getValue() : null;
-        try {
-            subjectBox.setItems(FXCollections.observableArrayList(
-                    academic.getSubjects(resolveDepartmentId(dept), resolveSemesterId(sem)).stream()
-                            .map(Subject::getName)
-                            .distinct()
-                            .sorted()
-                            .toList()));
-        } catch (Exception ex) {
-            System.err.println("[AcademicFilterHelper] Subject filter failed: " + ex.getMessage());
-=======
-
-        Semester sem = semBox != null ? semBox.getValue() : null;
-
-
-        if (sem != null && !isAllSemesters(sem)) {
-
-            try {
-
-                subjectBox.setItems(
-                        FXCollections.observableArrayList(
-                                academic.getSubjectsBySemester(sem.getId())
-                        )
-                );
-
-            } catch(Exception e){
-
-                System.err.println(
-                        "[AcademicFilterHelper] Subject loading failed: "
-                                + e.getMessage()
-                );
-            }
-
-        } else {
-
-            subjectBox.setItems(
-                    FXCollections.observableArrayList(
-                            academic.getAllActiveSubjects()
-                    )
-            );
->>>>>>> Stashed changes
-        }
+        loadSubjects(academic, dept, sem, subjectBox);
     }
 
     public static void resetFilters(
@@ -405,11 +368,7 @@ public final class AcademicFilterHelper {
         }
         if (subjectBox != null) {
             subjectBox.getSelectionModel().clearSelection();
-<<<<<<< Updated upstream
             refreshSubjectFilter(academic, deptBox, semBox, subjectBox);
-=======
-            subjectBox.setItems(FXCollections.observableArrayList(academic.getAllActiveSubjects()));
->>>>>>> Stashed changes
         }
     }
 }

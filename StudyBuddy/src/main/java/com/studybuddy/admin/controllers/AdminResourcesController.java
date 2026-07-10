@@ -101,17 +101,12 @@ public class AdminResourcesController {
             uploadSemesterCombo.setDisable(false);
         }
         AcademicFilterHelper.wireCascade(academicService, uploadDepartmentCombo, uploadSemesterCombo, uploadSubjectCombo,
-<<<<<<< Updated upstream
                 () -> AcademicFilterHelper.loadSubjects(academicService,
                         uploadDepartmentCombo.getValue(), uploadSemesterCombo.getValue(),
                         uploadSubjectCombo));
         AcademicFilterHelper.loadSubjects(academicService,
                 uploadDepartmentCombo.getValue(), uploadSemesterCombo.getValue(),
                 uploadSubjectCombo);
-=======
-                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, uploadSemesterCombo.getValue(), uploadSubjectCombo));
-
->>>>>>> Stashed changes
     }
 
     @FXML public void handleSelectUploadFile() {

@@ -477,15 +477,8 @@ public class ResourcesController {
         semCombo.setDisable(false);
 
         AcademicFilterHelper.wireCascade(academicService, deptCombo, semCombo, subCombo,
-<<<<<<< Updated upstream
-                () -> {
-                    AcademicFilterHelper.loadSubjects(academicService, deptCombo.getValue(), semCombo.getValue(), subCombo);
-                });
+                () -> AcademicFilterHelper.loadSubjects(academicService, deptCombo.getValue(), semCombo.getValue(), subCombo));
         AcademicFilterHelper.loadSubjects(academicService, deptCombo.getValue(), semCombo.getValue(), subCombo);
-=======
-                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semCombo.getValue(), subCombo));
-
->>>>>>> Stashed changes
 
         // ── Submit button ────────────────────────────────────────────────────
         Button submitBtn = new Button("Submit for Approval");
