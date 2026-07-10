@@ -30,6 +30,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -175,7 +180,7 @@ public class ResourcesController {
 
     private void setupHistoryTableColumns() {
         if (historyTable != null) {
-            historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         }
         if (titleCol   != null) titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         if (subjectCol != null) subjectCol.setCellValueFactory(new PropertyValueFactory<>("subject"));
@@ -457,12 +462,10 @@ public class ResourcesController {
 
         ComboBox<Semester> semCombo = new ComboBox<>();
         semCombo.setPromptText("Select Semester");
-        semCombo.setDisable(true);
         semCombo.setPrefWidth(280);
 
         ComboBox<Subject> subCombo = new ComboBox<>();
         subCombo.setPromptText("Select Subject");
-        subCombo.setDisable(true);
         subCombo.setPrefWidth(280);
 
         TextArea descTxt = new TextArea();
@@ -473,11 +476,13 @@ public class ResourcesController {
         deptCombo.setValue(AcademicFilterHelper.allDepartments());
         semCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
         semCombo.setValue(AcademicFilterHelper.allSemesters());
-        semCombo.setDisable(true);
+        semCombo.setDisable(false);
 
         AcademicFilterHelper.wireCascade(academicService, deptCombo, semCombo, subCombo,
-                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semCombo.getValue(), subCombo));
-        semCombo.setOnAction(ev -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semCombo.getValue(), subCombo));
+                () -> {
+                    AcademicFilterHelper.loadSubjects(academicService, deptCombo.getValue(), semCombo.getValue(), subCombo);
+                });
+        AcademicFilterHelper.loadSubjects(academicService, deptCombo.getValue(), semCombo.getValue(), subCombo);
 
         // ── Submit button ────────────────────────────────────────────────────
         Button submitBtn = new Button("Submit for Approval");
@@ -522,7 +527,10 @@ public class ResourcesController {
 
             try {
                 boolean isAdmin = "admin".equalsIgnoreCase(App.getCurrentUser().getRole());
-                resourceService.shareAsResource(noteToShare, file.getAbsolutePath(), isAdmin);
+                // Use FileStorageService to store the file properly
+                com.studybuddy.services.FileStorageService storage = com.studybuddy.services.FileStorageService.getInstance();
+                String storedPath = storage.storeFile(file, "resources");
+                resourceService.shareAsResource(noteToShare, storedPath, isAdmin);
                 
                 // Log activity
                 if (App.getCurrentUser() != null) {
@@ -536,7 +544,7 @@ public class ResourcesController {
                     try {
                         activityDAO.logActivity(activity);
                     } catch (SQLException ex) {
-                        ex.printStackTrace();
+                        showAlert(Alert.AlertType.WARNING, "Activity Log Failed", "Could not log upload activity: " + ex.getMessage());
                     }
                 }
                 
@@ -602,11 +610,40 @@ public class ResourcesController {
     }
 
     private void handleDownload(Resource r) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Download");
-        alert.setHeaderText("Download Success");
-        alert.setContentText("'" + r.getTitle() + "' has been downloaded successfully.");
-        alert.showAndWait();
+        if (r == null || r.getFilePath() == null || r.getFilePath().isBlank()) {
+            showAlert(Alert.AlertType.ERROR, "Download Error", "No file available for download.");
+            return;
+        }
+
+        Path sourcePath = Paths.get(r.getFilePath());
+        if (!Files.exists(sourcePath)) {
+            showAlert(Alert.AlertType.ERROR, "Download Error", "Source file not found on server.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        String fileName = r.getFilePath().substring(Math.max(0, Math.max(r.getFilePath().lastIndexOf('/'), r.getFilePath().lastIndexOf('\\')) + 1));
+        if (fileName.isBlank()) {
+            fileName = r.getTitle() + ".pdf";
+        }
+        fileChooser.setInitialFileName(fileName);
+        fileChooser.setTitle("Save Resource As");
+        File destFile = fileChooser.showSaveDialog(searchField.getScene().getWindow());
+
+        if (destFile == null) {
+            return; // user canceled
+        }
+
+        try {
+            Files.copy(sourcePath, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            showAlert(Alert.AlertType.INFORMATION, "Download Success", 
+                "'" + r.getTitle() + "' has been downloaded successfully.");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Download Error", 
+                "Failed to download file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private String nullSafe(String s) { return s != null ? s : ""; }

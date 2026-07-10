@@ -108,16 +108,16 @@ public class AdminNotesController {
         if (uploadSemesterCombo != null) {
             uploadSemesterCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
             uploadSemesterCombo.setValue(AcademicFilterHelper.allSemesters());
-            uploadSemesterCombo.setDisable(true);
+            uploadSemesterCombo.setDisable(false);
         }
-        if (uploadSubjectCombo != null) uploadSubjectCombo.setDisable(true);
 
         AcademicFilterHelper.wireCascade(academicService, uploadDepartmentCombo, uploadSemesterCombo, uploadSubjectCombo,
-                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, uploadSemesterCombo.getValue(), uploadSubjectCombo));
-        if (uploadSemesterCombo != null) {
-            uploadSemesterCombo.setOnAction(e -> AcademicFilterHelper.loadSubjectsForSemester(
-                    academicService, uploadSemesterCombo.getValue(), uploadSubjectCombo));
-        }
+                () -> AcademicFilterHelper.loadSubjects(academicService,
+                        uploadDepartmentCombo.getValue(), uploadSemesterCombo.getValue(),
+                        uploadSubjectCombo));
+        AcademicFilterHelper.loadSubjects(academicService,
+                uploadDepartmentCombo.getValue(), uploadSemesterCombo.getValue(),
+                uploadSubjectCombo);
     }
 
     @FXML
@@ -212,9 +212,15 @@ public class AdminNotesController {
         if (uploadSemesterCombo != null) {
             uploadSemesterCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
             uploadSemesterCombo.setValue(AcademicFilterHelper.allSemesters());
-            uploadSemesterCombo.setDisable(true);
+            uploadSemesterCombo.setDisable(false);
         }
-        if (uploadSubjectCombo != null) { uploadSubjectCombo.getItems().clear(); uploadSubjectCombo.setValue(null); uploadSubjectCombo.setDisable(true); }
+        if (uploadSubjectCombo != null) {
+            uploadSubjectCombo.getSelectionModel().clearSelection();
+            AcademicFilterHelper.loadSubjects(academicService,
+                    uploadDepartmentCombo != null ? uploadDepartmentCombo.getValue() : null,
+                    uploadSemesterCombo != null ? uploadSemesterCombo.getValue() : null,
+                    uploadSubjectCombo);
+        }
         if (uploadVisibilityCombo != null) uploadVisibilityCombo.setValue("Public");
         if (uploadStatusCombo != null) uploadStatusCombo.setValue("Approved");
         selectedFile = null;
@@ -366,19 +372,24 @@ public class AdminNotesController {
         } else {
             uploadDepartmentCombo.setValue(AcademicFilterHelper.allDepartments());
             uploadSemesterCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
-            uploadSemesterCombo.setDisable(true);
+            uploadSemesterCombo.setDisable(false);
         }
         Integer semId = n.getSemesterId();
         if (semId != null && semId > 0) {
             for (Semester s : uploadSemesterCombo.getItems()) {
                 if (s.getId() == semId) {
                     uploadSemesterCombo.setValue(s);
-                    AcademicFilterHelper.loadSubjectsForSemester(academicService, s, uploadSubjectCombo);
+                    AcademicFilterHelper.loadSubjects(academicService,
+                            uploadDepartmentCombo.getValue(), s,
+                            uploadSubjectCombo);
                     break;
                 }
             }
         } else {
             uploadSemesterCombo.setValue(AcademicFilterHelper.allSemesters());
+            AcademicFilterHelper.loadSubjects(academicService,
+                    uploadDepartmentCombo.getValue(), uploadSemesterCombo.getValue(),
+                    uploadSubjectCombo);
         }
         if (n.getSubjectId() > 0 && uploadSubjectCombo != null) {
             for (Subject s : uploadSubjectCombo.getItems()) {

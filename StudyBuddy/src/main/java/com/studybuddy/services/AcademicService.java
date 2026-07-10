@@ -75,6 +75,14 @@ public class AcademicService {
         return getSubjectsBySemester(semester.getId());
     }
 
+    /**
+     * Loads subjects for the given department/semester filters.
+     * {@code null} departmentId or semesterId means "All" for that dimension.
+     */
+    public List<Subject> getSubjects(Integer departmentId, Integer semesterId) {
+        return subjectDAO.getSubjectsByDepartmentAndSemester(departmentId, semesterId);
+    }
+
     public Subject getSubjectById(int id) {
         return subjectDAO.getSubjectById(id);
     }

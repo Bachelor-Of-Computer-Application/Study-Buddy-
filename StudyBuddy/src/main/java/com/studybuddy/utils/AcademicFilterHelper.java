@@ -73,12 +73,16 @@ public final class AcademicFilterHelper {
     public static ObservableList<Semester> semestersForFilter(AcademicService academic, Department dept) {
         List<Semester> items = new ArrayList<>();
         items.add(allSemesters());
-        if (!isAllDepartments(dept)) {
-            try {
+        try {
+            if (!isAllDepartments(dept)) {
                 items.addAll(academic.getSemestersByDepartment(dept.getId()));
-            } catch (Exception e) {
-                System.err.println("[AcademicFilterHelper] Failed to load semesters: " + e.getMessage());
+            } else {
+                items.addAll(academic.getAllSemesters().stream()
+                        .filter(Semester::isActive)
+                        .toList());
             }
+        } catch (Exception e) {
+            System.err.println("[AcademicFilterHelper] Failed to load semesters: " + e.getMessage());
         }
         return FXCollections.observableArrayList(items);
     }
@@ -125,10 +129,10 @@ public final class AcademicFilterHelper {
                     setText(empty || item == null ? "" : item.getName());
                 }
             });
-            semBox.setDisable(true);
+            semBox.setDisable(deptBox.getValue() == null);
         }
         if (subjectBox != null) {
-            subjectBox.setDisable(true);
+            subjectBox.setDisable(deptBox.getValue() == null);
         }
 
         deptBox.setOnAction(e -> {
@@ -136,40 +140,40 @@ public final class AcademicFilterHelper {
             if (semBox != null) {
                 semBox.setItems(semestersForFilter(academic, dept));
                 semBox.setValue(allSemesters());
-                semBox.setDisable(isAllDepartments(dept));
+                semBox.setDisable(dept == null);
             }
             if (subjectBox != null) {
                 subjectBox.getSelectionModel().clearSelection();
-                subjectBox.setDisable(true);
             }
             if (onSubjectsReset != null) onSubjectsReset.run();
         });
 
         if (semBox != null) {
             semBox.setOnAction(e -> {
-                Semester sem = semBox.getValue();
-                boolean needsSubject = !isAllSemesters(sem);
                 if (subjectBox != null) {
-                    subjectBox.setDisable(!needsSubject);
-                    if (!needsSubject) {
-                        subjectBox.getSelectionModel().clearSelection();
-                    }
+                    subjectBox.getSelectionModel().clearSelection();
                 }
                 if (onSubjectsReset != null) onSubjectsReset.run();
             });
         }
     }
 
-    public static void loadSubjectsForSemester(
+    /**
+     * Loads subjects for department/semester filters into a {@code ComboBox<Subject>}.
+     * {@code null} or {@link #ALL_ID} on department/semester means "All" for that filter.
+     */
+    public static void loadSubjects(
             AcademicService academic,
+            Department dept,
             Semester sem,
             ComboBox<Subject> subjectBox) {
-        if (subjectBox == null || isAllSemesters(sem)) {
+        if (subjectBox == null || academic == null) {
             return;
         }
         try {
-            subjectBox.setItems(FXCollections.observableArrayList(
-                    academic.getSubjectsBySemester(sem.getId())));
+            List<Subject> subjects = academic.getSubjects(resolveDepartmentId(dept), resolveSemesterId(sem));
+            subjectBox.setItems(FXCollections.observableArrayList(subjects));
+            subjectBox.setDisable(dept == null);
         } catch (Exception e) {
             System.err.println("[AcademicFilterHelper] Failed to load subjects: " + e.getMessage());
         }
@@ -297,41 +301,37 @@ public final class AcademicFilterHelper {
         deptBox.setItems(departmentsForFilter(academic));
         deptBox.setValue(allDepartments());
 
-        Runnable refreshSubjects = () -> refreshSubjectFilter(academic, semBox, subjectBox);
+        Runnable refreshSubjects = () -> refreshSubjectFilter(academic, deptBox, semBox, subjectBox);
 
         wireCascade(academic, deptBox, semBox, subjectBox, refreshSubjects);
 
         if (semBox != null) {
             semBox.setItems(semestersForFilter(academic, allDepartments()));
             semBox.setValue(allSemesters());
-            semBox.setDisable(true);
-            semBox.setOnAction(e -> refreshSubjects.run());
+            semBox.setDisable(false);
         }
 
-        if (subjectBox != null) {
-            subjectBox.setItems(FXCollections.observableArrayList(academic.getAllSubjectNames()));
-        }
+        refreshSubjects.run();
     }
 
     private static void refreshSubjectFilter(
             AcademicService academic,
+            ComboBox<Department> deptBox,
             ComboBox<Semester> semBox,
             ComboBox<String> subjectBox) {
         if (subjectBox == null) return;
         subjectBox.getSelectionModel().clearSelection();
+        Department dept = deptBox != null ? deptBox.getValue() : null;
         Semester sem = semBox != null ? semBox.getValue() : null;
-        if (sem != null && !isAllSemesters(sem)) {
-            try {
-                subjectBox.setItems(FXCollections.observableArrayList(
-                        academic.getSubjectsBySemester(sem.getId()).stream()
-                                .map(Subject::getName)
-                                .sorted()
-                                .toList()));
-            } catch (Exception ex) {
-                System.err.println("[AcademicFilterHelper] Subject filter failed: " + ex.getMessage());
-            }
-        } else {
-            subjectBox.setItems(FXCollections.observableArrayList(academic.getAllSubjectNames()));
+        try {
+            subjectBox.setItems(FXCollections.observableArrayList(
+                    academic.getSubjects(resolveDepartmentId(dept), resolveSemesterId(sem)).stream()
+                            .map(Subject::getName)
+                            .distinct()
+                            .sorted()
+                            .toList()));
+        } catch (Exception ex) {
+            System.err.println("[AcademicFilterHelper] Subject filter failed: " + ex.getMessage());
         }
     }
 
@@ -346,11 +346,11 @@ public final class AcademicFilterHelper {
         if (semBox != null) {
             semBox.setItems(semestersForFilter(academic, allDepartments()));
             semBox.setValue(allSemesters());
-            semBox.setDisable(true);
+            semBox.setDisable(false);
         }
         if (subjectBox != null) {
             subjectBox.getSelectionModel().clearSelection();
-            subjectBox.setItems(FXCollections.observableArrayList(academic.getAllSubjectNames()));
+            refreshSubjectFilter(academic, deptBox, semBox, subjectBox);
         }
     }
 }

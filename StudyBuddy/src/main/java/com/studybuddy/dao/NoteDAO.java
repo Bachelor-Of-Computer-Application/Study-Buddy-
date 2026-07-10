@@ -206,7 +206,11 @@ public class NoteDAO {
             stmt.setInt(12,    note.getUserId());
             stmt.setBoolean(13, note.isPrivate());
             stmt.setString(14, status);
-            stmt.setString(15, note.getTags());
+            if (note.getTags() != null) {
+                stmt.setString(15, note.getTags());
+            } else {
+                stmt.setNull(15, java.sql.Types.VARCHAR);
+            }
             stmt.executeUpdate();
         }
     }

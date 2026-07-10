@@ -24,6 +24,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -287,12 +289,27 @@ public class NotesController implements Initializable {
     }
 
     private void openNote(Note note) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Note File Preview");
-        alert.setHeaderText(note.getTitle());
-        alert.setContentText("Format: " + note.getFileType() + "\nSource: " + nullSafe(note.getSource())
-                + "\nDescription: " + nullSafe(note.getDescription()));
-        alert.showAndWait();
+        if (note == null || note.getFilePath() == null || note.getFilePath().isBlank()) {
+            showError("No file attached to this note.");
+            return;
+        }
+
+        File file = new File(note.getFilePath());
+        if (!file.exists()) {
+            showError("Note file not found.");
+            return;
+        }
+
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(file);
+            } else {
+                showError("Unable to open file on this system.");
+            }
+        } catch (IOException e) {
+            showError("Failed to open file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML

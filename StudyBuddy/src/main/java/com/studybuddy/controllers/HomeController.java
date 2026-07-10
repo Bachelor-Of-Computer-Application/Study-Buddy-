@@ -100,6 +100,9 @@ public class HomeController {
         checkUserNotifications();
         refreshSidebarAvatar();
 
+        // Automatically load DashboardView by default
+        goToDashboard();
+
         EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> {
             currentUser = App.getCurrentUser();
             refreshSidebarAvatar();

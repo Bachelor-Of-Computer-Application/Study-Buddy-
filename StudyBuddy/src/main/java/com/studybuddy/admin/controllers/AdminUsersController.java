@@ -70,7 +70,7 @@ public class AdminUsersController {
         loadData();
         searchField.textProperty().addListener((obs, o, n) -> applyFilters());
         if (usersTable != null) {
-            usersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            usersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         }
     }
 

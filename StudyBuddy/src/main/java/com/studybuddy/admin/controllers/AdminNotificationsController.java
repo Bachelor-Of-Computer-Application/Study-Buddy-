@@ -66,7 +66,7 @@ public class AdminNotificationsController {
             historyTypeFilter.setOnAction(e -> applyHistoryFilters());
         }
         if (historyTable != null) {
-            historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         }
     }
 

@@ -33,16 +33,20 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import com.studybuddy.models.Question;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.QuestionService;
 import com.studybuddy.services.AuthorizationService;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,6 +131,8 @@ public class DashboardController implements Initializable {
 
         // Subscribe to EventBus events
         EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> refreshDashboard());
+        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (_event) -> refreshDashboard());
+        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> refreshDashboard());
         EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> refreshDashboard());
         EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> refreshHeroAvatar());
         refreshHeroAvatar();
@@ -212,10 +218,57 @@ public class DashboardController implements Initializable {
 
     @FXML public void handleEditMyNote() { handleUploadNotes(); }
 
-    @FXML public void handleViewMyNote() { openFile(myNotesTable.getSelectionModel().getSelectedItem() != null
-            ? myNotesTable.getSelectionModel().getSelectedItem().getFilePath() : null); }
+    @FXML public void handleViewMyNote() { 
+        Note note = myNotesTable.getSelectionModel().getSelectedItem();
+        if (note == null) {
+            return;
+        }
+        openFile(note.getFilePath()); 
+    }
 
-    @FXML public void handleDownloadMyNote() { handleViewMyNote(); }
+    @FXML public void handleDownloadMyNote() { 
+        Note note = myNotesTable.getSelectionModel().getSelectedItem();
+        if (note == null) {
+            return;
+        }
+        downloadFile(note.getFilePath(), note.getTitle(), note.getFileType());
+    }
+
+    private void downloadFile(String filePath, String title, String fileType) {
+        if (filePath == null || filePath.isBlank()) {
+            showAlert("Error", "No file available for download.");
+            return;
+        }
+
+        Path sourcePath = Paths.get(filePath);
+        if (!Files.exists(sourcePath)) {
+            showAlert("Error", "Source file not found on server.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        String fileName = filePath.substring(Math.max(0, Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\')) + 1));
+        if (fileName.isBlank()) {
+            String ext = (fileType != null && !fileType.isBlank()) ? "." + fileType.toLowerCase() : ".pdf";
+            fileName = title + ext;
+        }
+        fileChooser.setInitialFileName(fileName);
+        fileChooser.setTitle("Save As");
+        File destFile = fileChooser.showSaveDialog(rootPane.getScene().getWindow());
+
+        if (destFile == null) {
+            return; // user canceled
+        }
+
+        try {
+            Files.copy(sourcePath, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            showAlert("Download Success", "'" + title + "' has been downloaded successfully.");
+        } catch (IOException e) {
+            showAlert("Download Error", "Failed to download file: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     @FXML public void handleDeleteMyResource() {
         Resource r = myResourcesTable.getSelectionModel().getSelectedItem();
@@ -239,7 +292,13 @@ public class DashboardController implements Initializable {
         if (r != null) openFile(r.getFilePath());
     }
 
-    @FXML public void handleDownloadMyResource() { handleViewMyResource(); }
+    @FXML public void handleDownloadMyResource() { 
+        Resource r = myResourcesTable.getSelectionModel().getSelectedItem();
+        if (r == null) {
+            return;
+        }
+        downloadFile(r.getFilePath(), r.getTitle(), r.getFileType());
+    }
 
     @FXML public void handleDeleteMyQuestion() {
         Question q = myQuestionsTable.getSelectionModel().getSelectedItem();
@@ -480,18 +539,18 @@ public class DashboardController implements Initializable {
         String query = noteSearchField.getText().trim();
         Department selectedDept = departmentComboBox.getValue();
         Semester selectedSem = semesterComboBox.getValue();
-        String selectedSubject = subjectComboBox.getValue();
+        String selectedSubjectName = subjectComboBox.getValue();
 
         Integer deptId = AcademicFilterHelper.resolveDepartmentId(selectedDept);
         Integer semId = AcademicFilterHelper.resolveSemesterId(selectedSem);
 
         // Find subjectId if subject selected
         Integer subjectId = null;
-        if (selectedSubject != null && selectedSem != null) {
+        if (selectedSubjectName != null) {
             try {
-                List<Subject> subjects = academicService.getSubjectsBySemester(selectedSem.getId());
+                List<Subject> subjects = academicService.getSubjects(deptId, semId);
                 for (Subject subj : subjects) {
-                    if (subj.getName().equalsIgnoreCase(selectedSubject)) {
+                    if (subj.getName().equalsIgnoreCase(selectedSubjectName)) {
                         subjectId = subj.getId();
                         break;
                     }
@@ -566,13 +625,17 @@ public class DashboardController implements Initializable {
             Stage dialog = new Stage();
             dialog.setTitle("Create New Note");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(dialogContent));
-            dialog.setResizable(false);
+            Scene scene = new Scene(dialogContent, 750, 800);
+            dialog.setScene(scene);
+            dialog.setResizable(true);
+            dialog.setMinWidth(650);
+            dialog.setMinHeight(700);
             dialog.showAndWait();
             
             refreshDashboard();
         } catch (IOException e) {
             showAlert("Error", "Failed to open create note dialog: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

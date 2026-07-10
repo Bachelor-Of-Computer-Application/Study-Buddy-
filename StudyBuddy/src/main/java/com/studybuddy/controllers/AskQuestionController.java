@@ -68,9 +68,10 @@ public class AskQuestionController implements Initializable {
         semesterComboBox.setValue(AcademicFilterHelper.allSemesters());
 
         AcademicFilterHelper.wireCascade(academicService, departmentComboBox, semesterComboBox, subjectComboBox,
-                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, semesterComboBox.getValue(), subjectComboBox));
-        semesterComboBox.setOnAction(e -> AcademicFilterHelper.loadSubjectsForSemester(
-                academicService, semesterComboBox.getValue(), subjectComboBox));
+                () -> {
+                    AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox);
+                });
+        AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox);
         loadUserPoints();
 
         if (rewardPointsComboBox != null) {
@@ -311,10 +312,10 @@ public class AskQuestionController implements Initializable {
         departmentComboBox.setValue(AcademicFilterHelper.allDepartments());
         semesterComboBox.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
         semesterComboBox.setValue(AcademicFilterHelper.allSemesters());
-        semesterComboBox.setDisable(true);
+        semesterComboBox.setDisable(false);
         subjectComboBox.getItems().clear();
         subjectComboBox.setValue(null);
-        subjectComboBox.setDisable(true);
+        AcademicFilterHelper.loadSubjects(academicService, departmentComboBox.getValue(), semesterComboBox.getValue(), subjectComboBox);
         rewardPointsComboBox.getSelectionModel().select(0);
         selectedAttachmentPath = null;
         if (attachmentLabel != null) attachmentLabel.setText("");

@@ -90,7 +90,7 @@ public class AdminQuestionsController {
         loadData();
         searchField.textProperty().addListener((obs, o, n) -> applyFilters());
         if (questionsTable != null) {
-            questionsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            questionsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         }
 
         // When question selected → load detail, answers, and bank edit form
@@ -133,11 +133,16 @@ public class AdminQuestionsController {
         if (bankSemCombo != null) {
             bankSemCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
             bankSemCombo.setValue(AcademicFilterHelper.allSemesters());
-            bankSemCombo.setDisable(true);
+            bankSemCombo.setDisable(false);
         }
-        if (bankSubjectCombo != null) bankSubjectCombo.setDisable(true);
+        if (bankSubjectCombo != null) bankSubjectCombo.setDisable(false);
         AcademicFilterHelper.wireCascade(academicService, bankDeptCombo, bankSemCombo, bankSubjectCombo,
-                () -> AcademicFilterHelper.loadSubjectsForSemester(academicService, bankSemCombo.getValue(), bankSubjectCombo));
+                () -> AcademicFilterHelper.loadSubjects(academicService,
+                        bankDeptCombo.getValue(), bankSemCombo.getValue(),
+                        bankSubjectCombo));
+        AcademicFilterHelper.loadSubjects(academicService,
+                bankDeptCombo.getValue(), bankSemCombo.getValue(),
+                bankSubjectCombo);
     }
 
     @FXML public void handleSelectBankAttachment() {
@@ -291,7 +296,7 @@ public class AdminQuestionsController {
                     if (bankSemCombo != null) {
                         bankSemCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
                         bankSemCombo.setValue(AcademicFilterHelper.allSemesters());
-                        bankSemCombo.setDisable(true);
+                        bankSemCombo.setDisable(false);
                     }
                 }
             }
@@ -303,7 +308,9 @@ public class AdminQuestionsController {
                             bankSemCombo.setValue(s);
                             bankSemCombo.setDisable(false);
                             if (bankSubjectCombo != null) {
-                                AcademicFilterHelper.loadSubjectsForSemester(academicService, s, bankSubjectCombo);
+                                AcademicFilterHelper.loadSubjects(academicService,
+                                        bankDeptCombo.getValue(), s,
+                                        bankSubjectCombo);
                                 bankSubjectCombo.setDisable(false);
                             }
                             break;
@@ -312,8 +319,10 @@ public class AdminQuestionsController {
                 } else {
                     bankSemCombo.setValue(AcademicFilterHelper.allSemesters());
                     if (bankSubjectCombo != null) {
-                        bankSubjectCombo.getSelectionModel().clearSelection();
-                        bankSubjectCombo.setDisable(true);
+                        AcademicFilterHelper.loadSubjects(academicService,
+                                bankDeptCombo.getValue(), bankSemCombo.getValue(),
+                                bankSubjectCombo);
+                        bankSubjectCombo.setDisable(false);
                     }
                 }
             }
@@ -364,12 +373,14 @@ public class AdminQuestionsController {
         if (bankSemCombo != null) {
             bankSemCombo.setItems(AcademicFilterHelper.semestersForFilter(academicService, AcademicFilterHelper.allDepartments()));
             bankSemCombo.setValue(AcademicFilterHelper.allSemesters());
-            bankSemCombo.setDisable(true);
+            bankSemCombo.setDisable(false);
         }
         if (bankSubjectCombo != null) {
-            bankSubjectCombo.getItems().clear();
             bankSubjectCombo.getSelectionModel().clearSelection();
-            bankSubjectCombo.setDisable(true);
+            AcademicFilterHelper.loadSubjects(academicService,
+                    bankDeptCombo != null ? bankDeptCombo.getValue() : null,
+                    bankSemCombo != null ? bankSemCombo.getValue() : null,
+                    bankSubjectCombo);
         }
         if (bankDifficultyCombo != null) bankDifficultyCombo.getSelectionModel().clearSelection();
         if (bankTypeCombo != null) bankTypeCombo.getSelectionModel().clearSelection();
