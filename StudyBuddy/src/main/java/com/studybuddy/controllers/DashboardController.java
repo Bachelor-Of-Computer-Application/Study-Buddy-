@@ -1,3 +1,4 @@
+
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
@@ -25,10 +26,10 @@ import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -80,21 +81,22 @@ public class DashboardController implements Initializable {
     @FXML private FlowPane notesFlowPane;
 
     // My Uploads
-    @FXML private TabPane myUploadsTabPane;
-    @FXML private TableView<Note> myNotesTable;
-    @FXML private TableColumn<Note, String> myNoteTitleCol;
-    @FXML private TableColumn<Note, String> myNoteSubjectCol;
-    @FXML private TableColumn<Note, String> myNoteStatusCol;
-    @FXML private TableColumn<Note, String> myNoteDateCol;
-    @FXML private TableView<Resource> myResourcesTable;
-    @FXML private TableColumn<Resource, String> myResTitleCol;
-    @FXML private TableColumn<Resource, String> myResSubjectCol;
-    @FXML private TableColumn<Resource, String> myResStatusCol;
-    @FXML private TableColumn<Resource, String> myResDateCol;
-    @FXML private TableView<Question> myQuestionsTable;
-    @FXML private TableColumn<Question, String> myQTitleCol;
-    @FXML private TableColumn<Question, String> myQSubjectCol;
-    @FXML private TableColumn<Question, String> myQDateCol;
+    @FXML private Button tabMyNotes;
+    @FXML private Button tabMyResources;
+    @FXML private Button tabMyQuestions;
+    @FXML private FlowPane myUploadsFlowPane;
+    @FXML private TextField myUploadsSearchField;
+    @FXML private Label summaryTotal;
+    @FXML private Label summaryApproved;
+    @FXML private Label summaryPending;
+    @FXML private Label summaryRejected;
+    
+    private enum UploadTab { NOTES, RESOURCES, QUESTIONS }
+    private UploadTab activeTab = UploadTab.NOTES;
+    
+    private Note selectedNote;
+    private Resource selectedResource;
+    private Question selectedQuestion;
 
     private final AcademicService academicService = AcademicService.getInstance();
 
@@ -125,7 +127,6 @@ public class DashboardController implements Initializable {
         currentUser = App.getCurrentUser();
 
         initializeComboBoxes();
-        setupMyUploadsTables();
         refreshDashboard();
         setupListeners();
 
@@ -160,54 +161,404 @@ public class DashboardController implements Initializable {
         refreshMyUploads();
     }
 
-    private void setupMyUploadsTables() {
-        if (myNoteTitleCol != null) myNoteTitleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
-        if (myNoteSubjectCol != null) myNoteSubjectCol.setCellValueFactory(new PropertyValueFactory<>("subject"));
-        if (myNoteStatusCol != null) myNoteStatusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-        if (myNoteDateCol != null) myNoteDateCol.setCellValueFactory(new PropertyValueFactory<>("uploadDate"));
-        if (myResTitleCol != null) myResTitleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
-        if (myResSubjectCol != null) myResSubjectCol.setCellValueFactory(new PropertyValueFactory<>("subject"));
-        if (myResStatusCol != null) myResStatusCol.setCellValueFactory(cell ->
-                new javafx.beans.property.SimpleStringProperty(
-                        cell.getValue().getStatus() != null ? cell.getValue().getStatus()
-                                : (cell.getValue().isActive() ? "Approved" : "Pending")));
-        if (myResDateCol != null) myResDateCol.setCellValueFactory(new PropertyValueFactory<>("uploadDate"));
-        if (myQTitleCol != null) myQTitleCol.setCellValueFactory(cell ->
-                new javafx.beans.property.SimpleStringProperty(
-                        cell.getValue().getTitle() != null ? cell.getValue().getTitle()
-                                : cell.getValue().getQuestionText()));
-        if (myQSubjectCol != null) myQSubjectCol.setCellValueFactory(new PropertyValueFactory<>("subject"));
-        if (myQDateCol != null) myQDateCol.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
+    @FXML public void handleMyUploadsTabChange(javafx.event.ActionEvent event) {
+        Button source = (Button) event.getSource();
+        if (source == tabMyNotes) {
+            activeTab = UploadTab.NOTES;
+            tabMyNotes.getStyleClass().remove("my-uploads-tab");
+            tabMyNotes.getStyleClass().add("my-uploads-tab-active");
+            tabMyResources.getStyleClass().remove("my-uploads-tab-active");
+            tabMyResources.getStyleClass().add("my-uploads-tab");
+            tabMyQuestions.getStyleClass().remove("my-uploads-tab-active");
+            tabMyQuestions.getStyleClass().add("my-uploads-tab");
+        } else if (source == tabMyResources) {
+            activeTab = UploadTab.RESOURCES;
+            tabMyResources.getStyleClass().remove("my-uploads-tab");
+            tabMyResources.getStyleClass().add("my-uploads-tab-active");
+            tabMyNotes.getStyleClass().remove("my-uploads-tab-active");
+            tabMyNotes.getStyleClass().add("my-uploads-tab");
+            tabMyQuestions.getStyleClass().remove("my-uploads-tab-active");
+            tabMyQuestions.getStyleClass().add("my-uploads-tab");
+        } else if (source == tabMyQuestions) {
+            activeTab = UploadTab.QUESTIONS;
+            tabMyQuestions.getStyleClass().remove("my-uploads-tab");
+            tabMyQuestions.getStyleClass().add("my-uploads-tab-active");
+            tabMyNotes.getStyleClass().remove("my-uploads-tab-active");
+            tabMyNotes.getStyleClass().add("my-uploads-tab");
+            tabMyResources.getStyleClass().remove("my-uploads-tab-active");
+            tabMyResources.getStyleClass().add("my-uploads-tab");
+        }
+        
+        selectedNote = null;
+        selectedResource = null;
+        selectedQuestion = null;
+        
+        refreshMyUploads();
     }
 
     @FXML public void refreshMyUploads() {
         if (currentUser == null) return;
+        myUploadsFlowPane.getChildren().clear();
+        String searchText = myUploadsSearchField.getText().trim().toLowerCase();
+        
+        int total = 0, approved = 0, pending = 0, rejected = 0;
+        
         try {
-            if (myNotesTable != null) {
-                myNotesTable.setItems(FXCollections.observableArrayList(
-                        noteService.getNotesByUserId(currentUser.getId())));
+            if (activeTab == UploadTab.NOTES) {
+                List<Note> notes = noteService.getNotesByUserId(currentUser.getId());
+                for (Note note : notes) {
+                    if (searchText.isEmpty() || 
+                        note.getTitle().toLowerCase().contains(searchText) ||
+                        note.getSubject().toLowerCase().contains(searchText)) {
+                        myUploadsFlowPane.getChildren().add(createMyUploadNoteCard(note));
+                    }
+                    total++;
+                    if ("Approved".equalsIgnoreCase(note.getStatus())) approved++;
+                    else if ("Pending".equalsIgnoreCase(note.getStatus())) pending++;
+                    else if ("Rejected".equalsIgnoreCase(note.getStatus())) rejected++;
+                }
+            } else if (activeTab == UploadTab.RESOURCES) {
+                List<Resource> resources = resourceService.getResourcesByUser(currentUser.getId());
+                for (Resource res : resources) {
+                    if (searchText.isEmpty() || 
+                        res.getTitle().toLowerCase().contains(searchText) ||
+                        res.getSubject().toLowerCase().contains(searchText)) {
+                        myUploadsFlowPane.getChildren().add(createMyUploadResourceCard(res));
+                    }
+                    total++;
+                    String status = res.getStatus() != null ? res.getStatus() : (res.isActive() ? "Approved" : "Pending");
+                    if ("Approved".equalsIgnoreCase(status)) approved++;
+                    else if ("Pending".equalsIgnoreCase(status)) pending++;
+                    else if ("Rejected".equalsIgnoreCase(status)) rejected++;
+                }
+            } else if (activeTab == UploadTab.QUESTIONS) {
+                List<Question> questions = questionService.getQuestionsByUserId(currentUser.getId());
+                for (Question q : questions) {
+                    String title = q.getTitle() != null ? q.getTitle() : q.getQuestionText();
+                    if (searchText.isEmpty() || 
+                        title.toLowerCase().contains(searchText) ||
+                        q.getSubject().toLowerCase().contains(searchText)) {
+                        myUploadsFlowPane.getChildren().add(createMyUploadQuestionCard(q));
+                    }
+                    total++;
+                    // Questions don't have status, count all as "Approved" for summary
+                    approved++;
+                }
             }
-            if (myResourcesTable != null) {
-                myResourcesTable.setItems(FXCollections.observableArrayList(
-                        resourceService.getResourcesByUser(currentUser.getId())));
-            }
-            if (myQuestionsTable != null) {
-                myQuestionsTable.setItems(FXCollections.observableArrayList(
-                        questionService.getQuestionsByUserId(currentUser.getId())));
-            }
+            
+            // Update summary
+            summaryTotal.setText(String.valueOf(total));
+            summaryApproved.setText(String.valueOf(approved));
+            summaryPending.setText(String.valueOf(pending));
+            summaryRejected.setText(String.valueOf(rejected));
+            
         } catch (SQLException e) {
             System.err.println("Failed to load my uploads: " + e.getMessage());
         }
     }
+    
+    private VBox createMyUploadNoteCard(Note note) {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("upload-card");
+        if (selectedNote != null && selectedNote.getId() == note.getId()) {
+            card.getStyleClass().add("upload-card-selected");
+        }
+        
+        // Header with icon and title
+        HBox header = new HBox(10);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label icon = new Label("📝");
+        icon.getStyleClass().add("upload-card-icon");
+        Label title = new Label(note.getTitle());
+        title.getStyleClass().add("upload-card-title");
+        title.setWrapText(true);
+        title.setMaxWidth(300);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        header.getChildren().addAll(icon, title, spacer);
+        
+        // Badges
+        HBox badges = new HBox(8);
+        badges.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label deptBadge = new Label(note.getUserDepartment() != null ? note.getUserDepartment() : "N/A");
+        deptBadge.getStyleClass().addAll("badge", "badge-info");
+        
+        Label semBadge = new Label(note.getUserSemester() != null ? note.getUserSemester() : "N/A");
+        semBadge.getStyleClass().addAll("badge", "badge-info");
+        
+        Label subjBadge = new Label(note.getSubject());
+        subjBadge.getStyleClass().addAll("badge", "badge-purple");
+        
+        badges.getChildren().addAll(deptBadge, semBadge, subjBadge);
+        
+        // Metadata
+        HBox metadata = new HBox(15);
+        metadata.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label dateLabel = new Label("📅 " + (note.getUploadDate() != null ? note.getUploadDate() : "N/A"));
+        dateLabel.getStyleClass().add("upload-card-meta");
+        metadata.getChildren().addAll(dateLabel);
+        
+        // Status
+        String status = note.getStatus() != null ? note.getStatus() : "Pending";
+        Label statusLabel = new Label("⚡ " + status);
+        if ("Approved".equalsIgnoreCase(status)) {
+            statusLabel.getStyleClass().addAll("badge", "badge-success");
+        } else if ("Pending".equalsIgnoreCase(status)) {
+            statusLabel.getStyleClass().addAll("badge", "badge-warning");
+        } else {
+            statusLabel.getStyleClass().addAll("badge", "badge-danger");
+        }
+        
+        // Action buttons
+        HBox actions = new HBox(8);
+        actions.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        
+        Button viewBtn = new Button("👁");
+        viewBtn.getStyleClass().add("upload-action-btn");
+        viewBtn.setOnAction(e -> {
+            selectedNote = note;
+            handleViewMyNote();
+        });
+        
+        Button downloadBtn = new Button("⬇");
+        downloadBtn.getStyleClass().add("upload-action-btn");
+        downloadBtn.setOnAction(e -> {
+            selectedNote = note;
+            handleDownloadMyNote();
+        });
+        
+        Button editBtn = new Button("✏");
+        editBtn.getStyleClass().add("upload-action-btn");
+        editBtn.setOnAction(e -> {
+            selectedNote = note;
+            handleEditMyNote();
+        });
+        
+        Button deleteBtn = new Button("🗑");
+        deleteBtn.getStyleClass().addAll("upload-action-btn", "upload-action-btn-danger");
+        deleteBtn.setOnAction(e -> {
+            selectedNote = note;
+            handleDeleteMyNote();
+        });
+        
+        actions.getChildren().addAll(viewBtn, downloadBtn, editBtn, deleteBtn);
+        
+        HBox bottomRow = new HBox(10);
+        bottomRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Region bottomSpacer = new Region();
+        HBox.setHgrow(bottomSpacer, javafx.scene.layout.Priority.ALWAYS);
+        bottomRow.getChildren().addAll(statusLabel, bottomSpacer, actions);
+        
+        card.getChildren().addAll(header, badges, metadata, bottomRow);
+        
+        // Make card selectable
+        card.setOnMouseClicked(e -> {
+            selectedNote = note;
+            selectedResource = null;
+            selectedQuestion = null;
+            refreshMyUploads();
+        });
+        
+        return card;
+    }
+    
+    private VBox createMyUploadResourceCard(Resource res) {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("upload-card");
+        if (selectedResource != null && selectedResource.getId() == res.getId()) {
+            card.getStyleClass().add("upload-card-selected");
+        }
+        
+        // Header with icon and title
+        HBox header = new HBox(10);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label icon = new Label("📂");
+        icon.getStyleClass().add("upload-card-icon");
+        Label title = new Label(res.getTitle());
+        title.getStyleClass().add("upload-card-title");
+        title.setWrapText(true);
+        title.setMaxWidth(300);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        header.getChildren().addAll(icon, title, spacer);
+        
+        // Badges
+        HBox badges = new HBox(8);
+        badges.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label deptBadge = new Label(res.getUserDepartment() != null ? res.getUserDepartment() : "N/A");
+        deptBadge.getStyleClass().addAll("badge", "badge-info");
+        
+        Label semBadge = new Label(res.getUserSemester() != null ? res.getUserSemester() : "N/A");
+        semBadge.getStyleClass().addAll("badge", "badge-info");
+        
+        Label subjBadge = new Label(res.getSubject());
+        subjBadge.getStyleClass().addAll("badge", "badge-purple");
+        
+        badges.getChildren().addAll(deptBadge, semBadge, subjBadge);
+        
+        // Metadata
+        HBox metadata = new HBox(15);
+        metadata.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label dateLabel = new Label("📅 " + (res.getUploadDate() != null ? res.getUploadDate() : "N/A"));
+        dateLabel.getStyleClass().add("upload-card-meta");
+        Label sizeLabel = new Label("� " + res.getDownloads() + " downloads");
+        sizeLabel.getStyleClass().add("upload-card-meta");
+        metadata.getChildren().addAll(dateLabel, sizeLabel);
+        
+        // Status
+        String status = res.getStatus() != null ? res.getStatus() : (res.isActive() ? "Approved" : "Pending");
+        Label statusLabel = new Label("⚡ " + status);
+        if ("Approved".equalsIgnoreCase(status)) {
+            statusLabel.getStyleClass().addAll("badge", "badge-success");
+        } else if ("Pending".equalsIgnoreCase(status)) {
+            statusLabel.getStyleClass().addAll("badge", "badge-warning");
+        } else {
+            statusLabel.getStyleClass().addAll("badge", "badge-danger");
+        }
+        
+        // Action buttons
+        HBox actions = new HBox(8);
+        actions.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        
+        Button viewBtn = new Button("👁");
+        viewBtn.getStyleClass().add("upload-action-btn");
+        viewBtn.setOnAction(e -> {
+            selectedResource = res;
+            handleViewMyResource();
+        });
+        
+        Button downloadBtn = new Button("⬇");
+        downloadBtn.getStyleClass().add("upload-action-btn");
+        downloadBtn.setOnAction(e -> {
+            selectedResource = res;
+            handleDownloadMyResource();
+        });
+        
+        Button deleteBtn = new Button("🗑");
+        deleteBtn.getStyleClass().addAll("upload-action-btn", "upload-action-btn-danger");
+        deleteBtn.setOnAction(e -> {
+            selectedResource = res;
+            handleDeleteMyResource();
+        });
+        
+        actions.getChildren().addAll(viewBtn, downloadBtn, deleteBtn);
+        
+        HBox bottomRow = new HBox(10);
+        bottomRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Region bottomSpacer = new Region();
+        HBox.setHgrow(bottomSpacer, javafx.scene.layout.Priority.ALWAYS);
+        bottomRow.getChildren().addAll(statusLabel, bottomSpacer, actions);
+        
+        card.getChildren().addAll(header, badges, metadata, bottomRow);
+        
+        // Make card selectable
+        card.setOnMouseClicked(e -> {
+            selectedResource = res;
+            selectedNote = null;
+            selectedQuestion = null;
+            refreshMyUploads();
+        });
+        
+        return card;
+    }
+    
+    private VBox createMyUploadQuestionCard(Question q) {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("upload-card");
+        if (selectedQuestion != null && selectedQuestion.getId() == q.getId()) {
+            card.getStyleClass().add("upload-card-selected");
+        }
+        
+        // Header with icon and title
+        HBox header = new HBox(10);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label icon = new Label("🙋");
+        icon.getStyleClass().add("upload-card-icon");
+        String titleText = q.getTitle() != null ? q.getTitle() : q.getQuestionText();
+        Label title = new Label(titleText);
+        title.getStyleClass().add("upload-card-title");
+        title.setWrapText(true);
+        title.setMaxWidth(300);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        header.getChildren().addAll(icon, title, spacer);
+        
+        // Badges
+        HBox badges = new HBox(8);
+        badges.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label deptBadge = new Label(q.getDepartmentName() != null ? q.getDepartmentName() : "N/A");
+        deptBadge.getStyleClass().addAll("badge", "badge-info");
+        
+        Label semBadge = new Label(q.getSemesterName() != null ? q.getSemesterName() : "N/A");
+        semBadge.getStyleClass().addAll("badge", "badge-info");
+        
+        Label subjBadge = new Label(q.getSubject());
+        subjBadge.getStyleClass().addAll("badge", "badge-purple");
+        
+        badges.getChildren().addAll(deptBadge, semBadge, subjBadge);
+        
+        // Metadata
+        HBox metadata = new HBox(15);
+        metadata.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label dateLabel = new Label("📅 " + (q.getCreatedAt() != null ? q.getCreatedAt() : "N/A"));
+        dateLabel.getStyleClass().add("upload-card-meta");
+        metadata.getChildren().addAll(dateLabel);
+        
+        // Status (questions don't have status, use approved)
+        Label statusLabel = new Label("⚡ Approved");
+        statusLabel.getStyleClass().addAll("badge", "badge-success");
+        
+        // Action buttons
+        HBox actions = new HBox(8);
+        actions.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        
+        Button viewBtn = new Button("👁");
+        viewBtn.getStyleClass().add("upload-action-btn");
+        viewBtn.setOnAction(e -> {
+            selectedQuestion = q;
+            handleViewMyQuestion();
+        });
+        
+        Button deleteBtn = new Button("🗑");
+        deleteBtn.getStyleClass().addAll("upload-action-btn", "upload-action-btn-danger");
+        deleteBtn.setOnAction(e -> {
+            selectedQuestion = q;
+            handleDeleteMyQuestion();
+        });
+        
+        actions.getChildren().addAll(viewBtn, deleteBtn);
+        
+        HBox bottomRow = new HBox(10);
+        bottomRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Region bottomSpacer = new Region();
+        HBox.setHgrow(bottomSpacer, javafx.scene.layout.Priority.ALWAYS);
+        bottomRow.getChildren().addAll(statusLabel, bottomSpacer, actions);
+        
+        card.getChildren().addAll(header, badges, metadata, bottomRow);
+        
+        // Make card selectable
+        card.setOnMouseClicked(e -> {
+            selectedQuestion = q;
+            selectedNote = null;
+            selectedResource = null;
+            refreshMyUploads();
+        });
+        
+        return card;
+    }
 
     @FXML public void handleDeleteMyNote() {
-        Note n = myNotesTable.getSelectionModel().getSelectedItem();
+        Note n = selectedNote;
         if (n == null) { showAlert("Select", "Select a note to delete."); return; }
         if (!authService.canDeleteNote(currentUser, n)) { showAlert("Denied", "You can only delete your own notes."); return; }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete note '" + n.getTitle() + "'?", ButtonType.YES, ButtonType.NO);
         if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) return;
         try {
             noteService.deleteNoteWithFile(n.getId(), currentUser);
+            selectedNote = null;
             refreshMyUploads();
             refreshDashboard();
             EventBus.getInstance().publish(new EventBus.NotesChangedEvent());
@@ -219,7 +570,7 @@ public class DashboardController implements Initializable {
     @FXML public void handleEditMyNote() { handleUploadNotes(); }
 
     @FXML public void handleViewMyNote() { 
-        Note note = myNotesTable.getSelectionModel().getSelectedItem();
+        Note note = selectedNote;
         if (note == null) {
             return;
         }
@@ -227,7 +578,7 @@ public class DashboardController implements Initializable {
     }
 
     @FXML public void handleDownloadMyNote() { 
-        Note note = myNotesTable.getSelectionModel().getSelectedItem();
+        Note note = selectedNote;
         if (note == null) {
             return;
         }
@@ -271,13 +622,14 @@ public class DashboardController implements Initializable {
     }
 
     @FXML public void handleDeleteMyResource() {
-        Resource r = myResourcesTable.getSelectionModel().getSelectedItem();
+        Resource r = selectedResource;
         if (r == null) { showAlert("Select", "Select a resource."); return; }
         if (!authService.canDeleteResource(currentUser, r)) { showAlert("Denied", "You can only delete your own resources."); return; }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete resource?", ButtonType.YES, ButtonType.NO);
         if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) return;
         try {
             resourceService.deleteResourceWithFile(r.getId(), currentUser);
+            selectedResource = null;
             EventBus.getInstance().publish(new EventBus.ResourcesChangedEvent());
             EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
             refreshMyUploads();
@@ -288,12 +640,12 @@ public class DashboardController implements Initializable {
     }
 
     @FXML public void handleViewMyResource() {
-        Resource r = myResourcesTable.getSelectionModel().getSelectedItem();
+        Resource r = selectedResource;
         if (r != null) openFile(r.getFilePath());
     }
 
     @FXML public void handleDownloadMyResource() { 
-        Resource r = myResourcesTable.getSelectionModel().getSelectedItem();
+        Resource r = selectedResource;
         if (r == null) {
             return;
         }
@@ -301,13 +653,14 @@ public class DashboardController implements Initializable {
     }
 
     @FXML public void handleDeleteMyQuestion() {
-        Question q = myQuestionsTable.getSelectionModel().getSelectedItem();
+        Question q = selectedQuestion;
         if (q == null) return;
         if (!authService.canDeleteQuestion(currentUser, q)) { showAlert("Denied", "You can only delete your own questions."); return; }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete this question?", ButtonType.YES, ButtonType.NO);
         if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) return;
         try {
             questionService.deleteQuestion(q.getId(), currentUser);
+            selectedQuestion = null;
             refreshMyUploads();
             EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
             EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
@@ -317,7 +670,7 @@ public class DashboardController implements Initializable {
     }
 
     @FXML public void handleViewMyQuestion() {
-        Question q = myQuestionsTable.getSelectionModel().getSelectedItem();
+        Question q = selectedQuestion;
         if (q != null) showAlert("Question", q.getQuestionText());
     }
 
@@ -685,6 +1038,10 @@ public class DashboardController implements Initializable {
         });
 
         subjectComboBox.setOnAction(e -> searchNotes());
+        
+        myUploadsSearchField.textProperty().addListener((obs, old, newVal) -> {
+            refreshMyUploads();
+        });
     }
 
     private void showAlert(String title, String message) {

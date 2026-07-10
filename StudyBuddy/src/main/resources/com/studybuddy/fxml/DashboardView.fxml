@@ -199,61 +199,88 @@
                     </VBox>
 
                     <!-- ── My Uploads ──────────────────────────────────── -->
-                    <VBox spacing="14" styleClass="panel-card">
-                        <HBox alignment="CENTER_LEFT" spacing="10">
+                    <VBox spacing="16" styleClass="panel-card">
+                        <!-- Header -->
+                        <HBox alignment="CENTER_LEFT" spacing="12">
                             <Label text="📤  My Uploads" styleClass="library-section-title"/>
                             <Region HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="myUploadsSearchField" prefWidth="220" promptText="🔍  Search your uploads..." styleClass="search-field"/>
                             <Button onAction="#refreshMyUploads" styleClass="refresh-btn" text="↻ Refresh"/>
                         </HBox>
-                        <TabPane fx:id="myUploadsTabPane" tabClosingPolicy="UNAVAILABLE">
-                            <Tab text="My Notes">
-                                <TableView fx:id="myNotesTable" prefHeight="160">
-                                    <columns>
-                                        <TableColumn fx:id="myNoteTitleCol" text="Title" prefWidth="180"/>
-                                        <TableColumn fx:id="myNoteSubjectCol" text="Subject" prefWidth="120"/>
-                                        <TableColumn fx:id="myNoteStatusCol" text="Status" prefWidth="90"/>
-                                        <TableColumn fx:id="myNoteDateCol" text="Date" prefWidth="110"/>
-                                    </columns>
-                                    <placeholder><Label text="You haven't uploaded any notes yet." styleClass="table-empty-label"/></placeholder>
-                                </TableView>
-                                <HBox spacing="8" styleClass="table-action-row">
-                                    <Button onAction="#handleEditMyNote" styleClass="secondary-btn" text="✏ Edit"/>
-                                    <Button onAction="#handleDeleteMyNote" styleClass="danger-btn" text="🗑 Delete"/>
-                                    <Button onAction="#handleViewMyNote" styleClass="primary-btn" text="👁 View"/>
-                                    <Button onAction="#handleDownloadMyNote" styleClass="secondary-btn" text="⬇ Download"/>
+                        
+                        <!-- Segmented Tabs -->
+                        <HBox spacing="8">
+                            <Button fx:id="tabMyNotes" onAction="#handleMyUploadsTabChange" styleClass="my-uploads-tab-active" text="📝 My Notes"/>
+                            <Button fx:id="tabMyResources" onAction="#handleMyUploadsTabChange" styleClass="my-uploads-tab" text="📂 My Resources"/>
+                            <Button fx:id="tabMyQuestions" onAction="#handleMyUploadsTabChange" styleClass="my-uploads-tab" text="🙋 My Questions"/>
+                        </HBox>
+                        
+                        <!-- Upload List (FlowPane for cards) -->
+                        <ScrollPane fitToWidth="true" styleClass="scroll-pane-clean" prefHeight="320">
+                            <FlowPane fx:id="myUploadsFlowPane" hgap="12" vgap="12" styleClass="my-uploads-flow"/>
+                        </ScrollPane>
+                        
+                        <!-- Bottom Summary Cards -->
+                        <GridPane hgap="12" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="25"/>
+                                <ColumnConstraints percentWidth="25"/>
+                                <ColumnConstraints percentWidth="25"/>
+                                <ColumnConstraints percentWidth="25"/>
+                            </columnConstraints>
+                            
+                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="0" spacing="8">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-indigo">
+                                        <Label text="📤" styleClass="stat-icon-sm"/>
+                                    </HBox>
+                                    <VBox spacing="2">
+                                        <Label text="TOTAL" styleClass="stat-label"/>
+                                        <Label fx:id="summaryTotal" styleClass="stat-value" text="0"/>
+                                    </VBox>
                                 </HBox>
-                            </Tab>
-                            <Tab text="My Resources">
-                                <TableView fx:id="myResourcesTable" prefHeight="160">
-                                    <columns>
-                                        <TableColumn fx:id="myResTitleCol" text="Name" prefWidth="180"/>
-                                        <TableColumn fx:id="myResSubjectCol" text="Subject" prefWidth="120"/>
-                                        <TableColumn fx:id="myResStatusCol" text="Status" prefWidth="90"/>
-                                        <TableColumn fx:id="myResDateCol" text="Date" prefWidth="110"/>
-                                    </columns>
-                                    <placeholder><Label text="You haven't uploaded any resources yet." styleClass="table-empty-label"/></placeholder>
-                                </TableView>
-                                <HBox spacing="8" styleClass="table-action-row">
-                                    <Button onAction="#handleDeleteMyResource" styleClass="danger-btn" text="🗑 Delete"/>
-                                    <Button onAction="#handleViewMyResource" styleClass="primary-btn" text="👁 View"/>
-                                    <Button onAction="#handleDownloadMyResource" styleClass="secondary-btn" text="⬇ Download"/>
+                                <Label text="Total uploads" styleClass="stat-desc"/>
+                            </VBox>
+                            
+                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="1" spacing="8">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-green">
+                                        <Label text="✅" styleClass="stat-icon-sm"/>
+                                    </HBox>
+                                    <VBox spacing="2">
+                                        <Label text="APPROVED" styleClass="stat-label"/>
+                                        <Label fx:id="summaryApproved" styleClass="stat-value stat-value-success" text="0"/>
+                                    </VBox>
                                 </HBox>
-                            </Tab>
-                            <Tab text="My Questions">
-                                <TableView fx:id="myQuestionsTable" prefHeight="160">
-                                    <columns>
-                                        <TableColumn fx:id="myQTitleCol" text="Question" prefWidth="220"/>
-                                        <TableColumn fx:id="myQSubjectCol" text="Subject" prefWidth="120"/>
-                                        <TableColumn fx:id="myQDateCol" text="Date" prefWidth="110"/>
-                                    </columns>
-                                    <placeholder><Label text="You haven't asked any questions yet." styleClass="table-empty-label"/></placeholder>
-                                </TableView>
-                                <HBox spacing="8" styleClass="table-action-row">
-                                    <Button onAction="#handleDeleteMyQuestion" styleClass="danger-btn" text="🗑 Delete"/>
-                                    <Button onAction="#handleViewMyQuestion" styleClass="secondary-btn" text="👁 View"/>
+                                <Label text="Approved items" styleClass="stat-desc"/>
+                            </VBox>
+                            
+                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-amber">
+                                        <Label text="⏳" styleClass="stat-icon-sm"/>
+                                    </HBox>
+                                    <VBox spacing="2">
+                                        <Label text="PENDING" styleClass="stat-label"/>
+                                        <Label fx:id="summaryPending" styleClass="stat-value" text="0"/>
+                                    </VBox>
                                 </HBox>
-                            </Tab>
-                        </TabPane>
+                                <Label text="Pending approval" styleClass="stat-desc"/>
+                            </VBox>
+                            
+                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-purple">
+                                        <Label text="❌" styleClass="stat-icon-sm"/>
+                                    </HBox>
+                                    <VBox spacing="2">
+                                        <Label text="REJECTED" styleClass="stat-label"/>
+                                        <Label fx:id="summaryRejected" styleClass="stat-value" text="0"/>
+                                    </VBox>
+                                </HBox>
+                                <Label text="Rejected items" styleClass="stat-desc"/>
+                            </VBox>
+                        </GridPane>
                     </VBox>
 
                     <!-- ── Community Library ───────────────────────────── -->
