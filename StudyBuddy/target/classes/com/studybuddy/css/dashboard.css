@@ -278,3 +278,102 @@
 .scroll-pane > .viewport {
     -fx-background-color: transparent;
 }
+
+/* My Uploads Tabs */
+.my-uploads-tab {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20px;
+    -fx-padding: 8 20 8 20;
+    -fx-cursor: hand;
+}
+
+.my-uploads-tab:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill: #1e293b;
+}
+
+.my-uploads-tab-active {
+    -fx-background-color: #4f46e5;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 20px;
+    -fx-padding: 8 20 8 20;
+    -fx-cursor: hand;
+}
+
+/* Upload Cards */
+.upload-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16px;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16px;
+    -fx-border-width: 1px;
+    -fx-padding: 20px;
+    -fx-effect: dropshadow(three-pass-box, rgba(15,23,42,0.05), 8, 0, 0, 2);
+    -fx-cursor: hand;
+    -fx-pref-width: 350px;
+}
+
+.upload-card:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(79,70,229,0.12), 12, 0, 0, 4);
+    -fx-border-color: #c7d2fe;
+}
+
+.upload-card-selected {
+    -fx-border-color: #4f46e5;
+    -fx-background-color: #f0f4ff;
+}
+
+.upload-card-icon {
+    -fx-font-size: 28px;
+}
+
+.upload-card-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.upload-card-meta {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+}
+
+/* Upload Action Buttons */
+.upload-action-btn {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 14px;
+    -fx-background-radius: 8px;
+    -fx-min-width: 36px;
+    -fx-min-height: 36px;
+    -fx-pref-width: 36px;
+    -fx-pref-height: 36px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.upload-action-btn:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill: #1e293b;
+}
+
+.upload-action-btn-danger {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #ef4444;
+}
+
+.upload-action-btn-danger:hover {
+    -fx-background-color: #fecaca;
+    -fx-text-fill: #dc2626;
+}
+
+/* Uploads Flow Pane */
+.my-uploads-flow {
+    -fx-hgap: 16px;
+    -fx-vgap: 16px;
+}
