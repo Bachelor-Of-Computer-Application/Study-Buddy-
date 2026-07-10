@@ -707,43 +707,69 @@ public class UserDAO {
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getInt("id"));
-        user.setName(rs.getString("name"));
-        user.setEmail(rs.getString("email"));
-        user.setPassword(rs.getString("password"));
-        user.setRole(rs.getString("role"));
+        user.setName(getOptionalString(rs, "name"));
+        user.setEmail(getOptionalString(rs, "email"));
+        user.setPassword(getOptionalString(rs, "password"));
+        user.setRole(getOptionalString(rs, "role"));
 
-        // Profile information — all SQL column names are camelCase
-        user.setFullName(rs.getString("fullName"));
-        user.setUsername(rs.getString("username"));
-        user.setBio(rs.getString("bio"));
-        user.setProfileImagePath(rs.getString("profileImagePath"));
-        user.setPhoneNumber(rs.getString("phoneNumber"));
-        user.setDepartment(rs.getString("department"));
-        user.setSemester(rs.getString("semester"));
-        user.setSubject(rs.getString("subject"));
+        // Profile information — optionally present depending on the database schema.
+        user.setFullName(getOptionalString(rs, "fullName"));
+        user.setUsername(getOptionalString(rs, "username"));
+        user.setBio(getOptionalString(rs, "bio"));
+        user.setProfileImagePath(getOptionalString(rs, "profileImagePath"));
+        user.setPhoneNumber(getOptionalString(rs, "phoneNumber"));
+        user.setDepartment(getOptionalString(rs, "department"));
+        user.setSemester(getOptionalString(rs, "semester"));
+        user.setSubject(getOptionalString(rs, "subject"));
 
         // Study preferences
-        user.setPreferredSubjects(rs.getString("preferredSubjects"));
-        user.setStudyGoals(rs.getString("studyGoals"));
-        user.setLearningInterests(rs.getString("learningInterests"));
-        user.setNotificationsEnabled(rs.getBoolean("notificationsEnabled"));
+        user.setPreferredSubjects(getOptionalString(rs, "preferredSubjects"));
+        user.setStudyGoals(getOptionalString(rs, "studyGoals"));
+        user.setLearningInterests(getOptionalString(rs, "learningInterests"));
+        user.setNotificationsEnabled(getOptionalBoolean(rs, "notificationsEnabled"));
 
         // Notification settings
-        user.setEmailNotificationsEnabled(rs.getBoolean("emailNotificationsEnabled"));
-        user.setResourceUpdateNotifications(rs.getBoolean("resourceUpdateNotifications"));
-        user.setSystemNotifications(rs.getBoolean("systemNotifications"));
+        user.setEmailNotificationsEnabled(getOptionalBoolean(rs, "emailNotificationsEnabled"));
+        user.setResourceUpdateNotifications(getOptionalBoolean(rs, "resourceUpdateNotifications"));
+        user.setSystemNotifications(getOptionalBoolean(rs, "systemNotifications"));
 
         // Statistics
-        user.setAnswersCount(rs.getInt("answersCount"));
-        user.setQuestionsCount(rs.getInt("questionsCount"));
-        user.setAchievements(rs.getInt("achievements"));
-        user.setPoints(rs.getInt("points"));
+        user.setAnswersCount(getOptionalInt(rs, "answersCount", 0));
+        user.setQuestionsCount(getOptionalInt(rs, "questionsCount", 0));
+        user.setAchievements(getOptionalInt(rs, "achievements", 0));
+        user.setPoints(getOptionalInt(rs, "points", 0));
 
         // Creation timestamp
-        if (rs.getTimestamp("created_at") != null) {
-            user.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        Timestamp createdAt = getOptionalTimestamp(rs, "created_at");
+        if (createdAt != null) {
+            user.setCreatedAt(createdAt.toLocalDateTime());
         }
 
         return user;
+    }
+
+    private String getOptionalString(ResultSet rs, String columnName) throws SQLException {
+        return hasColumn(rs, columnName) ? rs.getString(columnName) : null;
+    }
+
+    private int getOptionalInt(ResultSet rs, String columnName, int defaultValue) throws SQLException {
+        return hasColumn(rs, columnName) ? rs.getInt(columnName) : defaultValue;
+    }
+
+    private boolean getOptionalBoolean(ResultSet rs, String columnName) throws SQLException {
+        return hasColumn(rs, columnName) ? rs.getBoolean(columnName) : false;
+    }
+
+    private Timestamp getOptionalTimestamp(ResultSet rs, String columnName) throws SQLException {
+        return hasColumn(rs, columnName) ? rs.getTimestamp(columnName) : null;
+    }
+
+    private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
+        try {
+            rs.findColumn(columnName);
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
     }
 }

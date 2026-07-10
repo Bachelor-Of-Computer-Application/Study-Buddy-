@@ -1,6 +1,5 @@
 package com.studybuddy.admin.dao;
 
-import com.studybuddy.models.AppSetting;
 import com.studybuddy.utils.DatabaseUtil;
 
 import java.sql.*;

@@ -17,12 +17,10 @@ public class EventBus {
         return instance;
     }
 
-    @SuppressWarnings("unchecked")
     public <T> void subscribe(Class<T> eventType, EventListener<T> listener) {
         listeners.computeIfAbsent(eventType, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> void unsubscribe(Class<T> eventType, EventListener<T> listener) {
         List<EventListener<?>> eventListeners = listeners.get(eventType);
         if (eventListeners != null) {
@@ -30,18 +28,22 @@ public class EventBus {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public <T> void publish(T event) {
         List<EventListener<?>> eventListeners = listeners.get(event.getClass());
         if (eventListeners != null) {
             for (EventListener<?> listener : eventListeners) {
                 try {
-                    ((EventListener<T>) listener).onEvent(event);
+                    publishToListener(listener, event);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void publishToListener(EventListener<?> listener, T event) {
+        ((EventListener<T>) listener).onEvent(event);
     }
 
     @FunctionalInterface

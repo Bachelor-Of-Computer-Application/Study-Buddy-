@@ -5,7 +5,6 @@ import com.studybuddy.services.AcademicService;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.User;
-import com.studybuddy.utils.PasswordHasher;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

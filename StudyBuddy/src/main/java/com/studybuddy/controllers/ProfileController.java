@@ -3,7 +3,6 @@ package com.studybuddy.controllers;
 import com.studybuddy.App;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
-import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.AcademicService;
@@ -11,7 +10,6 @@ import com.studybuddy.services.StatisticsService;
 import com.studybuddy.services.UserService;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.ImageLoader;
-import com.studybuddy.utils.ValidationUtil;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -24,7 +22,6 @@ import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -71,7 +68,6 @@ public class ProfileController {
     @FXML private TextArea bioField;
     @FXML private ComboBox<Department> departmentField;
     @FXML private ComboBox<Semester> semesterCombo;
-    @FXML private ComboBox<Subject> subjectCombo;
     @FXML private Label avatarPathLabel;
 
     // Study Interests Tab
@@ -181,27 +177,6 @@ public class ProfileController {
         });
 
 
-// ================= SUBJECT COMBOBOX SETUP =================
-
-        subjectCombo.setDisable(true);
-
-        subjectCombo.setCellFactory(param -> new javafx.scene.control.ListCell<Subject>() {
-            @Override
-            protected void updateItem(Subject item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getName());
-            }
-        });
-
-        subjectCombo.setButtonCell(new javafx.scene.control.ListCell<Subject>() {
-            @Override
-            protected void updateItem(Subject item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getName());
-            }
-        });
-
-
 // Initialize Semester Combo Box
         semesterCombo.setDisable(true);
 
@@ -212,14 +187,9 @@ public class ProfileController {
             Department selectedDept = departmentField.getValue();
 
             semesterCombo.getItems().clear();
-            subjectCombo.getItems().clear();
-
             semesterCombo.setValue(null);
-            subjectCombo.setValue(null);
 
             semesterCombo.setDisable(selectedDept == null);
-            subjectCombo.setDisable(true);
-
 
             if (selectedDept != null) {
                 try {
@@ -235,34 +205,6 @@ public class ProfileController {
                 } catch(Exception ex) {
                     ex.printStackTrace();
                 }
-            }
-        });
-
-
-// Semester → Subject loading
-        semesterCombo.setOnAction(e -> {
-
-            Semester selectedSemester = semesterCombo.getValue();
-
-            subjectCombo.getItems().clear();
-            subjectCombo.setValue(null);
-
-            if(selectedSemester != null){
-
-                List<Subject> subjects =
-                        academicService.getSubjectsBySemester(
-                                selectedSemester.getId()
-                        );
-
-                System.out.println(
-                        "Subjects loaded: " + subjects.size()
-                );
-
-                subjectCombo.setItems(
-                        FXCollections.observableArrayList(subjects)
-                );
-
-                subjectCombo.setDisable(false);
             }
         });
 
@@ -396,30 +338,8 @@ public class ProfileController {
                         // Find the Semester object with matching name
                         if (currentUser.getSemester() != null) {
                             for (Semester sem : semesterCombo.getItems()) {
-
                                 if (sem.getName().equals(currentUser.getSemester())) {
-
                                     semesterCombo.setValue(sem);
-
-                                    // Load subjects after semester selection
-                                    List<Subject> subjects =
-                                            academicService.getSubjectsBySemester(sem.getId());
-
-                                    subjectCombo.setItems(
-                                            FXCollections.observableArrayList(subjects)
-                                    );
-
-                                    subjectCombo.setDisable(false);
-
-
-                                    if(currentUser.getSubject() != null){
-                                        for(Subject sub : subjectCombo.getItems()){
-                                            if(sub.getName().equals(currentUser.getSubject())){
-                                                subjectCombo.setValue(sub);
-                                                break;
-                                            }
-                                        }
-                                    }
                                     break;
                                 }
                             }
@@ -475,7 +395,6 @@ public class ProfileController {
 
     private String formatActivityText(UserActivity activity) {
         String action = activity.getAction();
-        String targetType = activity.getTargetType();
         String targetName = activity.getTargetName();
         
         switch (action) {
@@ -584,11 +503,6 @@ public class ProfileController {
         currentUser.setBio(bioField.getText().trim());
         currentUser.setDepartment(departmentField.getValue() != null ? departmentField.getValue().getName() : "");
         currentUser.setSemester(semesterCombo.getValue() != null ? semesterCombo.getValue().getName() : null);
-        currentUser.setSubject(
-                subjectCombo.getValue() != null
-                        ? subjectCombo.getValue().getName()
-                        : null
-        );
         boolean success = userService.updatePersonalInformation(currentUser);
         userService.updateFullName(currentUser.getId(), name);
         userService.updateUsername(currentUser.getId(), uname);

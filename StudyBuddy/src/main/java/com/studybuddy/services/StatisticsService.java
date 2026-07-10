@@ -8,7 +8,6 @@ public class StatisticsService {
     private final NoteDAO noteDAO = new NoteDAO();
     private final ResourceDAO resourceDAO = new ResourceDAO();
     private final QuestionDAO questionDAO = new QuestionDAO();
-    private final UserDAO userDAO = new UserDAO();
 
     // User profile statistics
     public int getNotesUploaded(int userId) throws SQLException {

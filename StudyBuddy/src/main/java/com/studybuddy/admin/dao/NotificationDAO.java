@@ -4,7 +4,6 @@ import com.studybuddy.models.Notification;
 import com.studybuddy.utils.DatabaseUtil;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

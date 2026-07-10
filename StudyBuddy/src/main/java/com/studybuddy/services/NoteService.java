@@ -3,7 +3,6 @@ package com.studybuddy.services;
 import com.studybuddy.dao.NoteDAO;
 import com.studybuddy.dao.SubjectDAO;
 import com.studybuddy.models.Note;
-import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
 
 import java.io.File;

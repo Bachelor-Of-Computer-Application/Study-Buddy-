@@ -7,7 +7,6 @@ import com.studybuddy.models.Subject;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.QuestionService;
-import com.studybuddy.services.ResourceService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import javafx.animation.ScaleTransition;
@@ -25,7 +24,6 @@ import javafx.util.Duration;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * Controller for AskQuestionView.fxml - with cascading Department → Semester → Subject.
@@ -51,7 +49,6 @@ public class AskQuestionController implements Initializable {
     @FXML private Button profileButton;
 
     private QuestionService questionService;
-    private ResourceService resourceService;
     private AcademicService academicService;
     private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
     private String selectedAttachmentPath = null;
@@ -59,7 +56,6 @@ public class AskQuestionController implements Initializable {
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         questionService = new QuestionService();
-        resourceService = new ResourceService();
         academicService = AcademicService.getInstance();
 
         departmentComboBox.setItems(AcademicFilterHelper.departmentsForFilter(academicService));
@@ -80,69 +76,6 @@ public class AskQuestionController implements Initializable {
         setupSubmitButtonEffects();
     }
 
-    private void setupCascading() {
-        if (semesterComboBox != null) {
-            semesterComboBox.setDisable(true);
-        }
-        if (subjectComboBox != null) {
-            subjectComboBox.setDisable(true);
-        }
-
-        departmentComboBox.setOnAction(e -> {
-            Department selectedDept = departmentComboBox.getValue();
-            semesterComboBox.getItems().clear();
-            subjectComboBox.getItems().clear();
-            semesterComboBox.setValue(null);
-            subjectComboBox.setValue(null);
-            semesterComboBox.setDisable(selectedDept == null);
-            subjectComboBox.setDisable(true);
-            
-            if (selectedDept != null) {
-                loadSemesters(selectedDept.getId());
-            }
-        });
-
-        semesterComboBox.setOnAction(e -> {
-            Semester selectedSem = semesterComboBox.getValue();
-            subjectComboBox.getItems().clear();
-            subjectComboBox.setValue(null);
-            subjectComboBox.setDisable(selectedSem == null);
-            
-            if (selectedSem != null) {
-                loadSubjects(selectedSem.getId());
-            }
-        });
-    }
-
-    private void loadDepartments() {
-        try {
-            List<Department> departments = academicService.getAllActiveDepartments();
-            departmentComboBox.setItems(FXCollections.observableArrayList(departments));
-        } catch (Exception e) {
-            System.err.println("Error loading departments: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private void loadSemesters(int departmentId) {
-        try {
-            List<Semester> semesters = academicService.getSemestersByDepartment(departmentId);
-            semesterComboBox.setItems(FXCollections.observableArrayList(semesters));
-        } catch (Exception e) {
-            System.err.println("Error loading semesters: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private void loadSubjects(int semesterId) {
-        try {
-            List<Subject> subjects = academicService.getSubjectsBySemester(semesterId);
-            subjectComboBox.setItems(FXCollections.observableArrayList(subjects));
-        } catch (Exception e) {
-            System.err.println("Error loading subjects: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
 
     private void loadUserPoints() {
         int points = questionService.getUserPoints();

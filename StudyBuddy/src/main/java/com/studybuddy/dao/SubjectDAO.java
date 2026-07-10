@@ -1,10 +1,7 @@
 package com.studybuddy.dao;
 
-import com.studybuddy.dao.DatabaseConnection;
-import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
-import com.studybuddy.utils.AcademicFilterHelper;
 
 import java.sql.*;
 import java.util.ArrayList;

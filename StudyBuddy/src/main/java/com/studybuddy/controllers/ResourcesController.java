@@ -120,60 +120,6 @@ public class ResourcesController {
      * When a department is chosen, semesters load; when a semester is chosen,
      * the subject filter narrows to that semester's subjects.
      */
-    private void loadFilterDepartments() {
-        if (departmentFilter == null) return;
-        if (semesterFilter != null) {
-            semesterFilter.setDisable(true);
-        }
-        try {
-            departmentFilter.setItems(FXCollections.observableArrayList(
-                    academicService.getAllActiveDepartments()));
-        } catch (Exception e) {
-            System.err.println("[ResourcesController] Dept filter load failed: " + e.getMessage());
-        }
-
-        departmentFilter.setOnAction(e -> {
-            Department dept = departmentFilter.getValue();
-            if (semesterFilter != null) {
-                semesterFilter.getItems().clear();
-                semesterFilter.setValue(null);
-                semesterFilter.setDisable(dept == null);
-            }
-            subjectFilter.getItems().clear();
-            subjectFilter.setValue(null);
-
-            if (dept != null && semesterFilter != null) {
-                try {
-                    semesterFilter.setItems(FXCollections.observableArrayList(
-                            academicService.getSemestersByDepartment(dept.getId())));
-                } catch (Exception ex) {
-                    System.err.println("[ResourcesController] Sem filter load failed: " + ex.getMessage());
-                }
-            } else {
-                loadSubjectFilter();
-            }
-        });
-
-        if (semesterFilter != null) {
-            semesterFilter.setOnAction(e -> {
-                Semester sem = semesterFilter.getValue();
-                subjectFilter.getItems().clear();
-                subjectFilter.setValue(null);
-                if (sem != null) {
-                    try {
-                        // Narrow subject filter to chosen semester
-                        List<Subject> semSubjects = academicService
-                                .getSubjectsBySemester(sem.getId());
-                        subjectFilter.setItems(FXCollections.observableArrayList(semSubjects));
-                    } catch (Exception ex) {
-                        System.err.println("[ResourcesController] Sub filter load failed: " + ex.getMessage());
-                    }
-                } else {
-                    loadSubjectFilter(); // reset to full list
-                }
-            });
-        }
-    }
 
     private void setupHistoryTableColumns() {
         if (historyTable != null) {

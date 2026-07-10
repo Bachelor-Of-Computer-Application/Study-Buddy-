@@ -6,7 +6,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 
 import java.io.FileWriter;
@@ -126,7 +125,6 @@ public class AdminReportsController {
 
     // ── Table Setup & Data ────────────────────────────────────────────────────
 
-    @SuppressWarnings("unchecked")
     private void setupTables() {
         if (colUserName  != null) colUserName.setCellValueFactory(data ->
                 new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("name")));

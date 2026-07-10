@@ -1,7 +1,5 @@
 package com.studybuddy.models;
 
-import javafx.scene.image.Image;
-
 public class Category {
     private Integer id;
     private String name;
