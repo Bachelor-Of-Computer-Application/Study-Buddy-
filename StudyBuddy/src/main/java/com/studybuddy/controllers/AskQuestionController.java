@@ -167,7 +167,22 @@ public class AskQuestionController implements Initializable {
             if (rewardStr != null) {
                 try { rewardPoints = Integer.parseInt(rewardStr); } catch (NumberFormatException ignored) {}
             }
+            int currentPoints = questionService.getUserPoints();
 
+            if (rewardPoints > currentPoints) {
+
+                showAlert(
+                        Alert.AlertType.WARNING,
+                        "Not Enough Points",
+                        "Insufficient Balance",
+                        "You only have " + currentPoints +
+                                " points but selected a reward of " +
+                                rewardPoints + " points."
+                );
+
+                return;
+            }
+            System.out.println("Selected Reward = " + rewardPoints);
             boolean success = questionService.saveQuestion(
                     questionText, subject, subjectId, rewardPoints, selectedAttachmentPath, deptId, semId
             );
