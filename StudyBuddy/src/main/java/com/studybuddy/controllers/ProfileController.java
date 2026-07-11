@@ -206,6 +206,11 @@ public class ProfileController {
                     ex.printStackTrace();
                 }
             }
+            phoneNumberField.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (!newValue.matches("\\d*")) {
+                    phoneNumberField.setText(oldValue);
+                }
+            });
         });
 
         loadProfileData();
@@ -497,9 +502,21 @@ public class ProfileController {
             return;
         }
 
+// Phone validation
+        String phone = phoneNumberField.getText().trim();
+
+        if (!phone.matches("\\d{10}")) {
+            showAlert(
+                    Alert.AlertType.WARNING,
+                    "Validation Error",
+                    "Phone number must contain exactly 10 digits."
+            );
+            return;
+        }
+
         currentUser.setFullName(name);
         currentUser.setUsername(uname);
-        currentUser.setPhoneNumber(phoneNumberField.getText().trim());
+        currentUser.setPhoneNumber(phone);
         currentUser.setBio(bioField.getText().trim());
         currentUser.setDepartment(departmentField.getValue() != null ? departmentField.getValue().getName() : "");
         currentUser.setSemester(semesterCombo.getValue() != null ? semesterCombo.getValue().getName() : null);
