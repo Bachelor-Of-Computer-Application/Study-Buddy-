@@ -2,6 +2,7 @@ package com.studybuddy.services;
 
 import com.studybuddy.dao.UserDAO;
 import com.studybuddy.models.User;
+import com.studybuddy.utils.PasswordHasher;
 
 /**
  * Service layer for handling User profile operations.
@@ -212,9 +213,11 @@ public class UserService {
      * @return true if update successful, false otherwise
      */
     public boolean updatePassword(int userId, String newPassword) {
-        return userDAO.updatePassword(userId, newPassword);
-    }
 
+        String hashedPassword = PasswordHasher.hashPassword(newPassword);
+
+        return userDAO.updatePassword(userId, hashedPassword);
+    }
     /**
      * Verify user's current password.
      * @param userId User's ID
