@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.control.TextFormatter;
 
 public class ProfileController {
 
@@ -206,11 +207,20 @@ public class ProfileController {
                     ex.printStackTrace();
                 }
             }
-            phoneNumberField.textProperty().addListener((observable, oldValue, newValue) -> {
-                if (!newValue.matches("\\d*")) {
-                    phoneNumberField.setText(oldValue);
+            // Allow only digits and limit phone number to 10 digits
+            phoneNumberField.setTextFormatter(new TextFormatter<>(change -> {
+                System.out.println("New text: " + change.getControlNewText());
+
+                if (!change.getText().matches("[0-9]*")) {
+                    return null;
                 }
-            });
+
+                if (change.getControlNewText().length() > 10) {
+                    return null;
+                }
+
+                return change;
+            }));
         });
 
         loadProfileData();
@@ -505,11 +515,11 @@ public class ProfileController {
 // Phone validation
         String phone = phoneNumberField.getText().trim();
 
-        if (!phone.matches("\\d{10}")) {
+        if (!phone.matches("^9[678]\\d{8}$")) {
             showAlert(
                     Alert.AlertType.WARNING,
-                    "Validation Error",
-                    "Phone number must contain exactly 10 digits."
+                    "Invalid Phone Number",
+                    "Please enter a valid Nepal mobile number."
             );
             return;
         }
