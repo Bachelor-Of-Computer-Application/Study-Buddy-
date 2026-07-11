@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Split-panel login: left branding + right form -->
+<HBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.studybuddy.admin.controllers.AdminLoginController"
+      stylesheets="@../../css/theme.css, @../css/admin-dashboard.css">
+
+    <!-- LEFT – Branding Panel -->
+    <VBox styleClass="login-left-panel" alignment="CENTER" spacing="20" HBox.hgrow="SOMETIMES">
+        <padding><Insets top="60" right="50" bottom="60" left="50"/></padding>
+
+        <ImageView fitWidth="150" fitHeight="50" preserveRatio="true" smooth="true" cache="true"
+                   styleClass="app-brand-logo">
+            <image>
+                <Image url="@../../images/main_logo_study_buddyy.png"/>
+            </image>
+        </ImageView>
+
+        <VBox spacing="8" alignment="CENTER">
+            <Label text="Administration Portal" styleClass="branding-tagline"/>
+        </VBox>
+
+        <Separator styleClass="login-brand-separator" maxWidth="200"/>
+
+        <VBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="✅  Manage Users &amp; Content" styleClass="branding-feature"/>
+            <Label text="✅  Moderate Notes &amp; Resources" styleClass="branding-feature"/>
+            <Label text="✅  Monitor Activity &amp; Reports" styleClass="branding-feature"/>
+            <Label text="✅  Configure System Settings" styleClass="branding-feature"/>
+        </VBox>
+    </VBox>
+
+    <!-- RIGHT – Login Form -->
+    <VBox styleClass="login-card" alignment="CENTER" spacing="0" HBox.hgrow="ALWAYS">
+        <padding><Insets top="60" right="60" bottom="60" left="60"/></padding>
+
+        <VBox spacing="6" alignment="CENTER_LEFT">
+            <Label text="Welcome back" styleClass="login-title"/>
+            <Label text="Sign in to your admin account" styleClass="login-subtitle"/>
+        </VBox>
+
+        <VBox spacing="20" VBox.vgrow="ALWAYS">
+            <VBox.margin><Insets top="36"/></VBox.margin>
+
+            <VBox spacing="6">
+                <Label text="Email / Username" styleClass="input-label"/>
+                <TextField fx:id="usernameField"
+                           promptText="admin@studybuddy.com"
+                           styleClass="input-field"
+                           maxWidth="Infinity"/>
+            </VBox>
+
+            <VBox spacing="6">
+                <Label text="Password" styleClass="input-label"/>
+                <PasswordField fx:id="passwordField"
+                               promptText="Enter your password"
+                               styleClass="input-field"
+                               maxWidth="Infinity"/>
+            </VBox>
+
+            <Label fx:id="errorLabel"
+                   styleClass="error-label"
+                   visible="false"
+                   managed="false"
+                   maxWidth="Infinity"
+                   wrapText="true"/>
+        </VBox>
+
+        <Button fx:id="loginButton"
+                text="Sign In →"
+                styleClass="login-button"
+                maxWidth="Infinity"
+                onAction="#handleLogin">
+            <VBox.margin><Insets top="32"/></VBox.margin>
+        </Button>
+
+        <Label text="StudyBuddy Admin v1.0  •  Authorized Access Only"
+               styleClass="login-footer-text">
+            <VBox.margin><Insets top="24"/></VBox.margin>
+        </Label>
+    </VBox>
+
+</HBox>
