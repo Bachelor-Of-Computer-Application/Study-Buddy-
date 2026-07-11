@@ -324,8 +324,10 @@ public final class AcademicFilterHelper {
             ComboBox<Semester> semBox,
             ComboBox<Subject> subjectBox) {
 
-        deptBox.setItems(departmentsForFilter(academic));
-        deptBox.setValue(allDepartments());
+        if (deptBox != null) {
+            deptBox.setItems(departmentsForFilter(academic));
+        }
+        if (deptBox != null) deptBox.setValue(allDepartments());
 
         Runnable refreshSubjects = () -> refreshSubjectFilter(academic, deptBox, semBox, subjectBox);
         wireCascade(academic, deptBox, semBox, subjectBox, refreshSubjects);

@@ -1,5 +1,6 @@
 package com.studybuddy.services;
 
+import com.studybuddy.dao.TaskDAO;
 import com.studybuddy.dao.UserDAO;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.PasswordHasher;
@@ -8,6 +9,7 @@ import com.studybuddy.utils.SessionManager;
 public class AuthService {
 
     private static final UserDAO userDAO = new UserDAO();
+    private static final TaskDAO taskDAO = new TaskDAO();
     private static final SessionManager session = SessionManager.getInstance();
 
     public static boolean registerUser(String name, String email, String password) {
@@ -24,7 +26,13 @@ public class AuthService {
         user.setRole("user");
         user.setPassword(PasswordHasher.hashPassword(password));
 
-        return userDAO.createUser(user);
+        int userId = userDAO.createUser(user);
+        if (userId == -1) return false;
+
+        // Add default tasks for the new user
+        taskDAO.addDefaultTasks(userId);
+
+        return true;
     }
 
     public static User login(String email, String password) {

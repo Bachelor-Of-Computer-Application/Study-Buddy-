@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════
    Study Buddy – Home Shell  (home.css)
-   Covers: sidebar navigation + main content area wrapper
+   Covers: sidebar navigation + main content area wrapper + Tasks page
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* ── Root ────────────────────────────────────────────────────────────── */
@@ -110,7 +110,7 @@
     -fx-max-width:         Infinity;
 }
 .logout-button:hover {
-    -fx-background-color: rgba(239,68,68,0.15);
+    -fx-background-color: derive(#ef4444, 85%);
     -fx-text-fill:        #fca5a5;
 }
 
@@ -127,7 +127,7 @@
     -fx-pref-width: 36px; -fx-pref-height: 36px;
     -fx-max-width:  36px; -fx-max-height: 36px;
     -fx-alignment:  center;
-    -fx-border-color: rgba(255,255,255,0.25);
+    -fx-border-color: derive(#ffffff, -25%);
     -fx-border-radius: 999px;
     -fx-border-width: 2px;
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.25), 4, 0, 0, 1);
@@ -156,22 +156,44 @@
     -fx-text-fill: #64748b;
 }
 
-/* Mini stat chips in sidebar */
+/* Mini stat chips in sidebar – REDESIGNED FOR MODERN LOOK */
 .sidebar-stat-chip {
-    -fx-background-color:  #1e293b;
-    -fx-background-radius: 8px;
-    -fx-padding:           8 10;
+    -fx-background-color:  linear-gradient(from 0% 0% to 100% 100%, #1e293b, #334155);
+    -fx-background-radius: 12px;
+    -fx-padding:           14 12;
+    -fx-border-color:      #334155;
+    -fx-border-radius:     12px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(0,0,0,0.3), 6, 0, 0, 2);
 }
 .sidebar-stat-value {
-    -fx-font-size:   16px;
+    -fx-font-size:   20px;
     -fx-font-weight: bold;
-    -fx-text-fill:   #e2e8f0;
-    -fx-fill:        #e2e8f0;
+    -fx-text-fill:   #ffffff;
+    -fx-fill:        #ffffff;
 }
 .sidebar-stat-label {
-    -fx-font-size:  9px;
-    -fx-text-fill:  #64748b;
-    -fx-fill:       #64748b;
+    -fx-font-size:  10px;
+    -fx-font-weight: 600;
+    -fx-text-fill:  #94a3b8;
+    -fx-fill:       #94a3b8;
+}
+
+/* Sidebar progress bar */
+.sidebar-progress {
+    -fx-background-color:  #0f172a;
+    -fx-background-radius: 999px;
+    -fx-pref-height:       6px;
+}
+.sidebar-progress .bar {
+    -fx-background-color:  linear-gradient(to right, #4f46e5, #7c3aed);
+    -fx-background-radius: 999px;
+    -fx-background-insets: 0;
+}
+.sidebar-progress .track {
+    -fx-background-color:  #0f172a;
+    -fx-background-radius: 999px;
+    -fx-background-insets: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -179,6 +201,348 @@
    ══════════════════════════════════════════════════════════════════════ */
 .main-content {
     -fx-background-color: #f8fafc;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TASKS PAGE – MODERN REDESIGN
+   Matches: Todoist, TickTick, Microsoft To Do, Notion, Linear
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Page container */
+.task-content-container {
+    -fx-background-color: #f8fafc;
+}
+
+/* Header */
+.task-page-title {
+    -fx-font-size:   32px;
+    -fx-font-weight: 700;
+    -fx-text-fill:   #0f172a;
+}
+.task-page-subtitle {
+    -fx-font-size:  15px;
+    -fx-text-fill:  #64748b;
+}
+
+/* Create Task Card */
+.task-create-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 18px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     18px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.06), 14, 0, 0, 4);
+}
+.task-create-card:hover {
+    -fx-border-color: #cbd5e1;
+}
+
+.task-section-title {
+    -fx-font-size:   18px;
+    -fx-font-weight: 600;
+    -fx-text-fill:   #0f172a;
+}
+
+/* Field labels */
+.task-field-label {
+    -fx-font-size:   12px;
+    -fx-font-weight: 600;
+    -fx-text-fill:   #475569;
+}
+
+/* Input fields – all 48px height */
+.task-input-field, .task-input-combo, .task-input-date {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 12px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     12px;
+    -fx-border-width:      1px;
+    -fx-padding:           0 16;
+    -fx-font-size:         14px;
+    -fx-text-fill:         #0f172a;
+    -fx-pref-height:       48px;
+}
+.task-input-field:focused, .task-input-combo:focused, .task-input-date:focused {
+    -fx-border-color: #4f46e5;
+    -fx-border-width: 2px;
+    -fx-effect:       dropshadow(three-pass-box, rgba(79,70,229,0.12), 10, 0, 0, 3);
+}
+
+/* Text area – 120px height */
+.task-input-area {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 12px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     12px;
+    -fx-border-width:      1px;
+    -fx-padding:           12 16;
+    -fx-font-size:         14px;
+    -fx-text-fill:         #0f172a;
+    -fx-pref-height:       120px;
+}
+.task-input-area:focused {
+    -fx-border-color: #4f46e5;
+    -fx-border-width: 2px;
+    -fx-effect:       dropshadow(three-pass-box, rgba(79,70,229,0.12), 10, 0, 0, 3);
+}
+
+/* Add Task Button */
+.task-btn-add {
+    -fx-background-color:  linear-gradient(from 0% 0% to 100% 100%, #4f46e5, #6366f1);
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         15px;
+    -fx-font-weight:       600;
+    -fx-background-radius: 12px;
+    -fx-padding:           0 32;
+    -fx-cursor:            hand;
+    -fx-effect:            dropshadow(three-pass-box, rgba(79,70,229,0.30), 12, 0, 0, 4);
+}
+.task-btn-add:hover {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #4338ca, #4f46e5);
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.45), 16, 0, 0, 6);
+}
+.task-btn-add:pressed {
+    -fx-background-color: #3730a3;
+}
+
+/* Search Container */
+.task-search-container {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 24px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     24px;
+    -fx-border-width:      1px;
+}
+.task-search-container:hover {
+    -fx-border-color: #4f46e5;
+}
+
+.task-search-field {
+    -fx-font-size: 14px;
+    -fx-text-fill: #0f172a;
+    -fx-prompt-text-fill: #9ca3af;
+}
+
+/* Sort controls */
+.task-sort-label {
+    -fx-font-size:   11px;
+    -fx-font-weight: 600;
+    -fx-text-fill:   #64748b;
+}
+.task-sort-combo {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 12px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     12px;
+    -fx-border-width:      1px;
+    -fx-padding:           0 12;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+    -fx-font-weight:       500;
+}
+.task-sort-combo:focused, .task-sort-combo:showing {
+    -fx-border-color: #4f46e5;
+}
+
+/* Filter Pills */
+.task-filter-pill {
+    -fx-background-color:  #f1f5f9;
+    -fx-background-radius: 20px;
+    -fx-text-fill:         #64748b;
+    -fx-font-size:         13px;
+    -fx-font-weight:       600;
+    -fx-cursor:            hand;
+}
+.task-filter-pill:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill:        #1e293b;
+}
+.task-filter-pill:selected {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #4f46e5, #6366f1);
+    -fx-text-fill:        #ffffff;
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.30), 8, 0, 0, 2);
+}
+
+/* Scroll pane */
+.task-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color:     transparent;
+}
+.task-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Empty state card */
+.task-empty-card {
+    -fx-background-color:  #f9fafb;
+    -fx-background-radius: 18px;
+    -fx-border-color:      #e5e7eb;
+    -fx-border-radius:     18px;
+    -fx-border-width:      2px;
+    -fx-border-style:      dashed;
+}
+.task-empty-title {
+    -fx-font-size:   20px;
+    -fx-font-weight: 600;
+    -fx-text-fill:   #1e293b;
+}
+.task-empty-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #64748b;
+}
+
+/* ── Task Grid Cards ───────────────────────────────────────────────── */
+.task-grid-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 16px;
+    -fx-border-color:      #e5e7eb;
+    -fx-border-radius:     16px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.04), 8, 0, 0, 2);
+}
+.task-grid-card:hover {
+    -fx-border-color: #c7d2fe;
+    -fx-effect:       dropshadow(three-pass-box, rgba(79,70,229,0.15), 14, 0, 0, 5);
+}
+
+.task-grid-title {
+    -fx-font-size:   17px;
+    -fx-font-weight: 600;
+    -fx-text-fill:   #0f172a;
+    -fx-wrap-text:   true;
+}
+
+.task-grid-description {
+    -fx-font-size:   13px;
+    -fx-text-fill:   #64748b;
+    -fx-wrap-text:   true;
+}
+
+.task-grid-meta {
+    -fx-font-size:   12px;
+    -fx-text-fill:   #94a3b8;
+}
+
+/* ── Badges ────────────────────────────────────────────────────────── */
+.task-badge-base {
+    -fx-padding:           6 12;
+    -fx-background-radius: 20px;
+    -fx-font-size:         11px;
+    -fx-font-weight:       600;
+}
+
+.task-badge-priority-low {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill:        #0369a1;
+}
+.task-badge-priority-med {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill:        #b45309;
+}
+.task-badge-priority-high {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill:        #dc2626;
+}
+
+.task-badge-status-pending {
+    -fx-background-color: #f3f4f6;
+    -fx-text-fill:        #374151;
+}
+.task-badge-status-progress {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill:        #b45309;
+}
+.task-badge-status-done {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill:        #15803d;
+}
+
+/* ── Buttons in cards ──────────────────────────────────────────────── */
+.task-btn-edit {
+    -fx-background-color:  #f1f5f9;
+    -fx-text-fill:         #475569;
+    -fx-font-size:         12px;
+    -fx-font-weight:       600;
+    -fx-background-radius: 10px;
+    -fx-padding:           8 14;
+    -fx-cursor:            hand;
+}
+.task-btn-edit:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill:        #1e293b;
+}
+
+.task-btn-delete {
+    -fx-background-color:  #fef2f2;
+    -fx-text-fill:         #ef4444;
+    -fx-font-size:         12px;
+    -fx-font-weight:       600;
+    -fx-background-radius: 10px;
+    -fx-padding:           8 14;
+    -fx-cursor:            hand;
+}
+.task-btn-delete:hover {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill:        #dc2626;
+}
+
+/* ── Edit Mode Controls ────────────────────────────────────────────── */
+.task-edit-field, .task-edit-combo, .task-edit-date {
+    -fx-background-color:  #f9fafb;
+    -fx-background-radius: 10px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     10px;
+    -fx-border-width:      1px;
+    -fx-padding:           0 12;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+}
+
+.task-edit-field:focused, .task-edit-combo:focused, .task-edit-date:focused {
+    -fx-border-color:      #4f46e5;
+    -fx-background-color:  #ffffff;
+}
+
+.task-edit-area {
+    -fx-background-color:  #f9fafb;
+    -fx-background-radius: 10px;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     10px;
+    -fx-border-width:      1px;
+    -fx-padding:           10 12;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+}
+.task-edit-area:focused {
+    -fx-border-color:      #4f46e5;
+    -fx-background-color:  #ffffff;
+}
+
+.task-btn-save {
+    -fx-background-color:  #4f46e5;
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         13px;
+    -fx-font-weight:       600;
+    -fx-background-radius: 10px;
+    -fx-padding:           0 20;
+    -fx-cursor:            hand;
+}
+.task-btn-save:hover {
+    -fx-background-color: #4338ca;
+}
+
+.task-btn-cancel {
+    -fx-background-color:  #f1f5f9;
+    -fx-text-fill:         #64748b;
+    -fx-font-size:         13px;
+    -fx-font-weight:       600;
+    -fx-background-radius: 10px;
+    -fx-padding:           0 20;
+    -fx-cursor:            hand;
+}
+.task-btn-cancel:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill:        #475569;
 }
 
 /* Landing / welcome screen (default HomeView center) */
@@ -196,6 +560,7 @@
     -fx-fill:        #4f46e5;
     -fx-font-family: "Segoe UI";
 }
+
 .hero-title {
     -fx-font-size:      30px;
     -fx-font-weight:    bold;
@@ -210,7 +575,7 @@
     -fx-text-alignment: center;
 }
 .primary-action-button {
-    -fx-background-color:  linear-gradient(to right, #4f46e5, #7c3aed);
+    -fx-background-color:  linear-gradient(from 0% 0% to 100% 100%, #4f46e5, #7c3aed);
     -fx-text-fill:         #ffffff;
     -fx-font-size:         15px;
     -fx-font-weight:       bold;
@@ -220,6 +585,6 @@
     -fx-effect:            dropshadow(three-pass-box, rgba(79,70,229,0.35), 10, 0, 0, 3);
 }
 .primary-action-button:hover {
-    -fx-background-color: linear-gradient(to right, #3730a3, #6d28d9);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3730a3, #6d28d9);
     -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.55), 14, 0, 0, 4);
 }

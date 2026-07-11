@@ -83,6 +83,15 @@
                         </HBox>
                     </graphic>
                 </Button>
+                
+                <Button fx:id="tasksNavBtn" alignment="BASELINE_LEFT" maxWidth="Infinity" onAction="#goToTasks" styleClass="nav-button">
+                    <graphic>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label styleClass="nav-icon" text="✅" />
+                            <Text styleClass="nav-text" text="Tasks" />
+                        </HBox>
+                    </graphic>
+                </Button>
 
                 <Button fx:id="profileNavBtn" alignment="BASELINE_LEFT" maxWidth="Infinity" onAction="#goToProfile" styleClass="nav-button">
                     <graphic>
@@ -115,11 +124,6 @@
                <RowConstraints />
             </rowConstraints>
             </GridPane>
-            <VBox spacing="2" styleClass="sidebar-stat-chip">
-                <VBox.margin><Insets top="2" /></VBox.margin>
-                <Text fx:id="studyHoursCount" styleClass="sidebar-stat-value" text="—" />
-                <Label styleClass="sidebar-stat-label" text="Study Hours" />
-            </VBox>
 
             <Separator styleClass="sidebar-sep">
                 <VBox.margin><Insets bottom="4" top="8" /></VBox.margin>

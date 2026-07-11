@@ -55,6 +55,7 @@ public class EventBus {
     public static class NotesChangedEvent {}
     public static class ResourcesChangedEvent {}
     public static class QuestionsChangedEvent {}
+    public static class TasksChangedEvent {}
     public static class ProfileChangedEvent {}
     public static class AdminChangesEvent {}
     public static class StatisticsChangedEvent {}

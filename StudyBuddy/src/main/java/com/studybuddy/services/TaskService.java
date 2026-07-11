@@ -93,11 +93,25 @@ public class TaskService {
     }
 
     /**
-     * Returns completed task count for a user.
+     * Returns the number of completed tasks for a user.
      * SQL: SELECT COUNT(*) FROM Tasks WHERE userId = ? AND status = 'completed'
      */
     public int getCompletedTaskCount(int userId) {
         return taskDAO.getCompletedTaskCount(userId);
+    }
+    
+    /**
+     * Returns the number of pending tasks for a user.
+     */
+    public int getPendingTaskCount(int userId) {
+        return taskDAO.getPendingTaskCount(userId);
+    }
+    
+    /**
+     * Returns the number of in-progress tasks for a user.
+     */
+    public int getInProgressTaskCount(int userId) {
+        return taskDAO.getInProgressTaskCount(userId);
     }
 
     /**
@@ -129,5 +143,9 @@ public class TaskService {
      */
     public double getStudyHours(int userId) {
         return taskDAO.getStudyHours(userId);
+    }
+    
+    public boolean addDefaultTasks(int userId) {
+        return taskDAO.addDefaultTasks(userId);
     }
 }

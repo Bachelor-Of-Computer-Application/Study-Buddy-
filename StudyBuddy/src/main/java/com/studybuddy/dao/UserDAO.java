@@ -21,29 +21,32 @@ public class UserDAO {
      * Create a new user in the database.
      * 
      * @param user User object to create
-     * @return true if creation successful, false otherwise
+     * @return generated userId if successful, -1 otherwise
      */
-    public boolean createUser(User user) {
-        String sql = "INSERT INTO Users (name, email, password, role, points) VALUES (?, ?, ?, ?, ?)";
+    public int createUser(User user) {
+        String sql = "INSERT INTO Users (name, email, password, role) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, user.getName());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPassword());
+            ps.setString(4, user.getRole() == null ? "user" : user.getRole());
 
-            String role = user.getRole() == null ? "user" : user.getRole();
-            ps.setString(4, role);
-
-// Give 100 points only to students
-            ps.setInt(5, role.equalsIgnoreCase("user") ? 100 : 0);
-
-            return ps.executeUpdate() > 0;
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+            return -1;
 
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return -1;
         }
     }
 
@@ -662,26 +665,6 @@ public class UserDAO {
 
             ps.setInt(1, pointsToAdd);
             ps.setInt(2, userId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // DECREMENT POINTS
-    public boolean decrementPoints(int userId, int pointsToDeduct) {
-
-        String sql = "UPDATE Users SET points = points - ? WHERE id = ? AND points >= ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, pointsToDeduct);
-            ps.setInt(2, userId);
-            ps.setInt(3, pointsToDeduct);
 
             return ps.executeUpdate() > 0;
 
