@@ -24,7 +24,7 @@ public class UserDAO {
      * @return true if creation successful, false otherwise
      */
     public boolean createUser(User user) {
-        String sql = "INSERT INTO Users (name, email, password, role) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Users (name, email, password, role, points) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -32,7 +32,12 @@ public class UserDAO {
             ps.setString(1, user.getName());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPassword());
-            ps.setString(4, user.getRole() == null ? "user" : user.getRole());
+
+            String role = user.getRole() == null ? "user" : user.getRole();
+            ps.setString(4, role);
+
+// Give 100 points only to students
+            ps.setInt(5, role.equalsIgnoreCase("user") ? 100 : 0);
 
             return ps.executeUpdate() > 0;
 
@@ -657,6 +662,26 @@ public class UserDAO {
 
             ps.setInt(1, pointsToAdd);
             ps.setInt(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // DECREMENT POINTS
+    public boolean decrementPoints(int userId, int pointsToDeduct) {
+
+        String sql = "UPDATE Users SET points = points - ? WHERE id = ? AND points >= ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, pointsToDeduct);
+            ps.setInt(2, userId);
+            ps.setInt(3, pointsToDeduct);
 
             return ps.executeUpdate() > 0;
 
