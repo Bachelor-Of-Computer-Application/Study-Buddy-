@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e00f47bb-a355-449d-a53c-45b249b4d2d9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/jars.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/jars.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/javafx_jmods_26_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/javafx_jmods_26_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/lib.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/ProfileController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,7 +18,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="142" />
+    <option name="cachedIndexableFilesCount" value="143" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -27,18 +32,15 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/Bachelor-Of-Computer-Application/Study-Buddy-.git&quot;,
-    &quot;accountId&quot;: &quot;619ce80d-3b8e-44b1-8949-4984714d9ea5&quot;
+    &quot;accountId&quot;: &quot;476e86c2-eec0-4806-89bf-0cf04fc397b0&quot;
   }
 }</component>
-  <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/DashboardController.java" root0="FORCE_HIGHLIGHTING" />
-  </component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -72,16 +74,16 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.LLMThirdPartyAiProvidersConfigurable&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Application.StudyBuddyAdmin">
+  <component name="RunManager" selected="Application.studybuddy">
     <configuration name="StudyBuddyAdmin" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.studybuddy.admin.AdminApp" />
       <module name="StudyBuddy" />
@@ -120,12 +122,20 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1783506257133</updated>
-      <workItem from="1783525747677" duration="2927000" />
-      <workItem from="1783663597275" duration="24000" />
-      <workItem from="1783663645231" duration="9415000" />
-      <workItem from="1783674136487" duration="1046000" />
-      <workItem from="1783675319823" duration="2229000" />
-      <workItem from="1783679675101" duration="2443000" />
+      <workItem from="1783525747677" duration="1040000" />
+      <workItem from="1783527249499" duration="425000" />
+      <workItem from="1783527816001" duration="1089000" />
+      <workItem from="1783560386284" duration="7202000" />
+      <workItem from="1783593344490" duration="99000" />
+      <workItem from="1783593470968" duration="1578000" />
+      <workItem from="1783595124045" duration="8167000" />
+      <workItem from="1783610364177" duration="11346000" />
+      <workItem from="1783679342234" duration="245000" />
+      <workItem from="1783679736928" duration="541000" />
+      <workItem from="1783680301697" duration="2835000" />
+      <workItem from="1783742169719" duration="9876000" />
+      <workItem from="1783758892162" duration="1367000" />
+      <workItem from="1783760729254" duration="1643000" />
     </task>
     <servers />
   </component>
@@ -143,8 +153,10 @@
       </map>
     </option>
   </component>
-  <component name="XSLT-Support.FileAssociations.UIState">
-    <expand />
-    <select />
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$" />
+    </ignored-roots>
+    <option name="GROUP_MULTIFILE_MERGE_BY_DIRECTORY" value="true" />
   </component>
 </project>

@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.control.TextFormatter;
 
 public class ProfileController {
 
@@ -206,6 +207,20 @@ public class ProfileController {
                     ex.printStackTrace();
                 }
             }
+            // Allow only digits and limit phone number to 10 digits
+            phoneNumberField.setTextFormatter(new TextFormatter<>(change -> {
+                System.out.println("New text: " + change.getControlNewText());
+
+                if (!change.getText().matches("[0-9]*")) {
+                    return null;
+                }
+
+                if (change.getControlNewText().length() > 10) {
+                    return null;
+                }
+
+                return change;
+            }));
         });
 
         loadProfileData();
@@ -497,9 +512,21 @@ public class ProfileController {
             return;
         }
 
+// Phone validation
+        String phone = phoneNumberField.getText().trim();
+
+        if (!phone.matches("^9[678]\\d{8}$")) {
+            showAlert(
+                    Alert.AlertType.WARNING,
+                    "Invalid Phone Number",
+                    "Please enter a valid Nepal mobile number."
+            );
+            return;
+        }
+
         currentUser.setFullName(name);
         currentUser.setUsername(uname);
-        currentUser.setPhoneNumber(phoneNumberField.getText().trim());
+        currentUser.setPhoneNumber(phone);
         currentUser.setBio(bioField.getText().trim());
         currentUser.setDepartment(departmentField.getValue() != null ? departmentField.getValue().getName() : "");
         currentUser.setSemester(semesterCombo.getValue() != null ? semesterCombo.getValue().getName() : null);
