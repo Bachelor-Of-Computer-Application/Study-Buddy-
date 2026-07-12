@@ -8,7 +8,7 @@
       xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.studybuddy.admin.controllers.AdminUsersController"
       styleClass="admin-panel-bg">
-    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+    <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
     <!-- Header -->
     <HBox alignment="CENTER_LEFT" spacing="16">
@@ -44,7 +44,7 @@
             <TableColumn fx:id="colStatus"     text="Status"     prefWidth="90"  minWidth="70"/>
             <TableColumn fx:id="colCreatedAt"  text="Registered" prefWidth="100" minWidth="80"/>
         </columns>
-        <placeholder><Label text="No users found." styleClass="table-empty-label"/></placeholder>
+        <placeholder><Label text="No users found." styleClass="table-empty-label" /></placeholder>
     </TableView>
 
     <!-- Pagination -->

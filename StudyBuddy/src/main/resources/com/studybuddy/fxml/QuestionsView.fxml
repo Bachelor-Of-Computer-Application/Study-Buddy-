@@ -25,7 +25,7 @@
 
             <!-- ════ 1. FEED PANE ══════════════════════════════════════ -->
             <VBox fx:id="feedPane" spacing="16" styleClass="feed-panel">
-                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+                <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
                 <!-- Page header card -->
                 <HBox alignment="CENTER_LEFT" spacing="20" styleClass="page-header-card">
@@ -69,7 +69,7 @@
                         styleClass="scroll-pane">
                 <content>
                     <VBox spacing="20">
-                        <padding><Insets top="24" right="24" bottom="28" left="24"/></padding>
+                        <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
                         <!-- Back Button + header -->
                         <HBox alignment="CENTER_LEFT" spacing="14">

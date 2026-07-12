@@ -10,7 +10,7 @@
             fx:controller="com.studybuddy.admin.controllers.AdminSettingsController">
     <content>
         <VBox spacing="20" styleClass="admin-settings-bg">
-            <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+            <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
             <Label text="System Settings" styleClass="section-title"/>
             <Label text="Configure app parameters and manage departments/semesters from the database"

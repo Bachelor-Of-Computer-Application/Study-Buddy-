@@ -24,7 +24,7 @@
         <VBox spacing="0">
             <!-- ── Page Header + Filter Area ─────────────────────────── -->
             <VBox spacing="16">
-                <padding><Insets top="24" right="24" bottom="0" left="24"/></padding>
+                <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
                 <!-- Header card -->
                 <HBox alignment="CENTER_LEFT" spacing="20"
@@ -59,7 +59,7 @@
 
             <!-- ── Tab Pane ──────────────────────────────────────────── -->
             <VBox VBox.vgrow="ALWAYS">
-                <padding><Insets top="16" right="24" bottom="24" left="24"/></padding>
+                <padding><Insets top="16" right="24" bottom="24" left="24" /></padding>
                 <TabPane fx:id="resourcesTabPane" tabClosingPolicy="UNAVAILABLE"
                          styleClass="tab-pane" VBox.vgrow="ALWAYS">
 
@@ -69,7 +69,6 @@
                                     vbarPolicy="AS_NEEDED">
                             <content>
                                 <VBox spacing="16">
-                                    <padding><Insets top="4" right="4" bottom="4" left="4"/></padding>
                                     <FlowPane fx:id="resourcesFlowPane" hgap="16" vgap="16"
                                               styleClass="notes-grid"/>
                                     <!-- Empty state -->
@@ -93,7 +92,6 @@
                     <!-- My Upload History tab -->
                     <Tab text="🕒  My Upload History">
                         <VBox spacing="0" styleClass="tab-content" VBox.vgrow="ALWAYS">
-                            <padding><Insets top="4" right="0" bottom="0" left="0"/></padding>
                             <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
                                 <columns>
                                     <TableColumn fx:id="titleCol"    text="Title"         prefWidth="200" minWidth="120"/>

@@ -47,9 +47,7 @@
         <ScrollPane fitToWidth="true" styleClass="main-scroll">
             <content>
                 <VBox spacing="20" styleClass="main-content">
-                    <padding>
-                        <Insets top="24" right="24" bottom="28" left="24"/>
-                    </padding>
+                    <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
                     <!-- ── Hero Banner ─────────────────────────────────── -->
                     <HBox alignment="CENTER_LEFT" spacing="20" styleClass="hero-banner">
@@ -201,7 +199,7 @@
                         <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
                             <HBox alignment="CENTER_LEFT" spacing="12">
                                 <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-sky">
-                                    <Label text="�" styleClass="stat-icon-sm"/>
+                                    <Label text="🔄" styleClass="stat-icon-sm"/>
                                 </HBox>
                                 <VBox spacing="2">
                                     <Label text="IN PROGRESS" styleClass="stat-label"/>
@@ -211,7 +209,7 @@
                             <Label text="In progress tasks" styleClass="stat-desc"/>
                         </VBox>
                         
-                        <!-- Task Card 4: Study Progress (again or something else, but keep 4 columns) -->
+                        <!-- Task Card 4: Completion Rate -->
                         <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
                             <HBox alignment="CENTER_LEFT" spacing="12">
                                 <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-purple">
