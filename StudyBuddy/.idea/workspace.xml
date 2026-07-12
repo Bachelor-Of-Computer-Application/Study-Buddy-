@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e00f47bb-a355-449d-a53c-45b249b4d2d9" name="Changes" comment="">
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/../STUDY-BUDDY.docx" beforeDir="false" afterPath="$PROJECT_DIR$/../STUDY-BUDDY.docx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
@@ -36,6 +37,11 @@
       <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/DashboardView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/DashboardView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/ProfileView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/ProfileView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/TaskView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/TaskView.fxml" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/controllers/AdminUsersController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/controllers/AdminUsersController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/dao/AdminDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/dao/AdminDAO.java" afterDir="false" />
+>>>>>>> e34503c8a7cb646407d70a861d614fe085f97336
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +49,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="143" />
+    <option name="cachedIndexableFilesCount" value="148" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -82,7 +88,6 @@
     "Application.App.executor": "Run",
     "Application.StudyBuddyAdmin.executor": "Run",
     "Application.studybuddy.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
@@ -109,7 +114,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+<<<<<<< HEAD
   <component name="RunManager" selected="Application.studybuddy">
+=======
+  <component name="RunManager" selected="Application.StudyBuddyAdmin">
+>>>>>>> e34503c8a7cb646407d70a861d614fe085f97336
     <configuration name="StudyBuddyAdmin" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.studybuddy.admin.AdminApp" />
       <module name="StudyBuddy" />
@@ -162,6 +171,17 @@
       <workItem from="1783742169719" duration="9876000" />
       <workItem from="1783758892162" duration="1367000" />
       <workItem from="1783760729254" duration="1643000" />
+<<<<<<< HEAD
+=======
+      <workItem from="1783791141902" duration="1297000" />
+      <workItem from="1783831445286" duration="1075000" />
+      <workItem from="1783832648726" duration="945000" />
+      <workItem from="1783833758733" duration="852000" />
+      <workItem from="1783834704754" duration="129000" />
+      <workItem from="1783840714606" duration="598000" />
+      <workItem from="1783845096680" duration="473000" />
+      <workItem from="1783845597944" duration="3305000" />
+>>>>>>> e34503c8a7cb646407d70a861d614fe085f97336
     </task>
     <servers />
   </component>
