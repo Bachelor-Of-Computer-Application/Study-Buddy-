@@ -65,8 +65,6 @@
             <Button text="⏸ Suspend"         styleClass="warning-btn"  onAction="#handleSuspend"/>
             <Button text="▶ Activate"        styleClass="success-btn"  onAction="#handleActivate"/>
             <Button text="🚫 Ban"            styleClass="danger-btn"   onAction="#handleBan"/>
-            <Button text="⬆ Promote Admin" styleClass="primary-btn, btn-promote" onAction="#handlePromote"/>
-            <Button text="⬇ Demote User"    styleClass="secondary-btn" onAction="#handleDemote"/>
             <Button text="🗑 Delete"          styleClass="danger-btn"   onAction="#handleDelete"/>
         </HBox>
     </VBox>

@@ -432,6 +432,7 @@ public class TaskDAO {
         TaskMetadata metadata = parseMetadata(storedDescription);
         task.setDescription(metadata.description);
         task.setPriority(metadata.priority);
+        task.setSubject(metadata.subject);
         task.setDueDate(metadata.dueDate);
         task.setEstimatedTime(metadata.estimatedTime);
         return task;
@@ -440,13 +441,17 @@ public class TaskDAO {
     private String buildStoredDescription(Task task) {
         String description = task.getDescription() == null ? "" : task.getDescription().trim();
         StringBuilder builder = new StringBuilder(description);
-        if (task.getPriority() != null || task.getDueDate() != null || task.getEstimatedTime() != null) {
+        if (task.getPriority() != null || task.getDueDate() != null
+                || task.getEstimatedTime() != null || task.getSubject() != null) {
             if (!description.isEmpty()) {
                 builder.append("\n");
             }
             builder.append("[studybuddy-meta]");
             if (task.getPriority() != null && !task.getPriority().isBlank()) {
                 builder.append("priority=").append(task.getPriority()).append("|");
+            }
+            if (task.getSubject() != null && !task.getSubject().isBlank()) {
+                builder.append("subject=").append(task.getSubject()).append("|");
             }
             if (task.getDueDate() != null) {
                 builder.append("due=").append(task.getDueDate().toLocalDateTime().toLocalDate()).append("|");
@@ -472,6 +477,8 @@ public class TaskDAO {
             for (String entry : metaBlock.split("\\|")) {
                 if (entry.contains("priority=")) {
                     metadata.priority = entry.replace("priority=", "").trim();
+                } else if (entry.contains("subject=")) {
+                    metadata.subject = entry.replace("subject=", "").trim();
                 } else if (entry.contains("due=")) {
                     String dueValue = entry.replace("due=", "").trim();
                     try {
@@ -490,6 +497,7 @@ public class TaskDAO {
     private static class TaskMetadata {
         private String description = "";
         private String priority = "Medium";
+        private String subject = "";
         private Timestamp dueDate;
         private String estimatedTime = "";
     }

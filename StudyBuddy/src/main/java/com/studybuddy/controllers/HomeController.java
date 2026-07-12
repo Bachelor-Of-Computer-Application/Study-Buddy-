@@ -49,6 +49,7 @@ public class HomeController {
     @FXML private Text       usernameLabel;
     @FXML private Text       usernameWelcome;
     @FXML private Label      emailLabel;
+    @FXML private Label      userRoleLabel;
 
     @FXML private Button dashboardNavBtn;
     @FXML private Button notesNavBtn;
@@ -91,6 +92,10 @@ public class HomeController {
             if (emailLabel != null) {
                 emailLabel.setText(currentUser.getEmail());
             }
+            if (userRoleLabel != null) {
+                String role = currentUser.getRole();
+                userRoleLabel.setText(role != null ? role : "Student");
+            }
         }
 
         // Load all dashboard data from SQL Server
@@ -110,6 +115,10 @@ public class HomeController {
             refreshSidebarAvatar();
             if (usernameLabel != null && currentUser != null) {
                 usernameLabel.setText(currentUser.getDisplayFullName());
+            }
+            if (userRoleLabel != null && currentUser != null) {
+                String role = currentUser.getRole();
+                userRoleLabel.setText(role != null ? role : "Student");
             }
         });
     }

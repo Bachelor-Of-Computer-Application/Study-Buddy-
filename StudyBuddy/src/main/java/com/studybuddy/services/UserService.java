@@ -51,6 +51,17 @@ public class UserService {
     /**
      * Update user's full name.
      * @param userId User's ID
+    /**
+     * Update the core login `name` column so it stays in sync with fullName.
+     * @param userId User's ID
+     * @param name   New display name
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateName(int userId, String name) {
+        return userDAO.updateName(userId, name);
+    }
+
+    /**
      * @param fullName New full name
      * @return true if update successful, false otherwise
      */

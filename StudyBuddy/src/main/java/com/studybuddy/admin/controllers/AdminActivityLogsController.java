@@ -44,6 +44,12 @@ public class AdminActivityLogsController {
         searchField.textProperty().addListener((obs, o, n) -> {
             if (n == null || n.trim().isEmpty()) loadAll();
         });
+        
+        // Subscribe to EventBus for real-time activity log updates
+        com.studybuddy.utils.EventBus.getInstance().subscribe(
+            com.studybuddy.utils.EventBus.AdminChangesEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::loadAll)
+        );
     }
 
     // ── Load ──────────────────────────────────────────────────────────────────

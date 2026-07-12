@@ -136,7 +136,10 @@
                 </StackPane>
                 <VBox spacing="2" HBox.hgrow="ALWAYS">
                     <Text fx:id="usernameLabel" styleClass="sidebar-user-name" text="User" />
-                    <Label styleClass="sidebar-user-role" text="Student" />
+                    <HBox spacing="4" alignment="CENTER_LEFT">
+                        <Label text="👤" styleClass="sidebar-user-role-icon"/>
+                        <Label fx:id="userRoleLabel" styleClass="sidebar-user-role" text="Student" />
+                    </HBox>
                 </VBox>
             </HBox>
 

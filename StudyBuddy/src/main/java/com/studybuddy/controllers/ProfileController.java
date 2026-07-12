@@ -355,7 +355,11 @@ public class ProfileController {
         statTaskProgress.setText(progress + "%");
 
         // Populate Edit Profile Fields
-        fullNameField.setText(currentUser.getFullName());
+        // FIXED: was getFullName() which returns null when the fullName DB column
+        // was never set (e.g. for users registered before this fix).
+        // getDisplayFullName() falls back to the login `name` column so the field
+        // is never blank for any existing or new user.
+        fullNameField.setText(currentUser.getDisplayFullName());
         usernameField.setText(currentUser.getUsername());
         phoneNumberField.setText(currentUser.getPhoneNumber());
         bioField.setText(currentUser.getBio());
@@ -657,6 +661,9 @@ public class ProfileController {
         }
 
         currentUser.setFullName(name);
+        // Keep the core `name` column in sync so getDisplayFullName() always
+        // returns the latest value even if fullName is somehow null later.
+        currentUser.setName(name);
         currentUser.setUsername(uname);
         currentUser.setPhoneNumber(phone);
         currentUser.setBio(bioField.getText().trim());
@@ -664,6 +671,8 @@ public class ProfileController {
         currentUser.setSemester(semesterCombo.getValue() != null ? semesterCombo.getValue().getName() : null);
         boolean success = userService.updatePersonalInformation(currentUser);
         userService.updateFullName(currentUser.getId(), name);
+        // Sync the core `name` column in the DB so both columns always match.
+        userService.updateName(currentUser.getId(), name);
         userService.updateUsername(currentUser.getId(), uname);
 
         if (success) {

@@ -20,19 +20,29 @@ public class UserDAO {
     /**
      * Create a new user in the database.
      * 
-     * @param user User object to create
+     * All new users are automatically assigned the "STUDENT" role if no role is specified.
+     * This ensures consistent role assignment across the application.
+     * 
+     * The role is stored in the Users table's 'role' column during INSERT.
+     * 
+     * @param user User object to create (must have name, email, password, and role set)
      * @return generated userId if successful, -1 otherwise
      */
     public int createUser(User user) {
-        String sql = "INSERT INTO Users (name, email, password, role) VALUES (?, ?, ?, ?)";
+        // fullName is included so the Edit Profile page shows the name the user
+        // entered at registration rather than an empty field.
+        String sql = "INSERT INTO Users (name, fullName, email, password, role) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, user.getName());
-            ps.setString(2, user.getEmail());
-            ps.setString(3, user.getPassword());
-            ps.setString(4, user.getRole() == null ? "user" : user.getRole());
+            // fullName mirrors name at registration; the user can change it later via Edit Profile.
+            ps.setString(2, user.getFullName() != null ? user.getFullName() : user.getName());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, user.getPassword());
+            // Default to STUDENT role if not specified
+            ps.setString(5, user.getRole() == null || user.getRole().trim().isEmpty() ? "STUDENT" : user.getRole());
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -48,6 +58,41 @@ public class UserDAO {
             e.printStackTrace();
             return -1;
         }
+    }
+
+    // =========================
+    // GET USER BY USERNAME OR EMAIL (ADMIN LOGIN)
+    // =========================
+
+    /**
+     * Look up a user by username OR email address.
+     * Used by the admin login flow so admins can sign in with either credential.
+     *
+     * SQL: SELECT * FROM Users WHERE username = ? OR email = ?
+     *
+     * @param usernameOrEmail The value entered in the login field
+     * @return Fully-populated User object, or null if not found
+     */
+    public User getUserByUsernameOrEmail(String usernameOrEmail) {
+        String sql = "SELECT * FROM Users WHERE username = ? OR email = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, usernameOrEmail);
+            ps.setString(2, usernameOrEmail);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     // =========================
@@ -193,6 +238,32 @@ public class UserDAO {
             ps.setString(6, user.getDepartment()); // department (FIXED — was setString(7,...))
             ps.setString(7, user.getSemester()); // semester (FIXED — was setString(8,...))
             ps.setInt(8, user.getId()); // WHERE id=? (FIXED — was setInt(9,...))
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Update the core login `name` column.
+     * Called alongside updateFullName() so both columns stay in sync when the
+     * user edits their full name on the Edit Profile page.
+     *
+     * @param userId User's ID
+     * @param name   New display name
+     * @return true if update successful, false otherwise
+     */
+    public boolean updateName(int userId, String name) {
+        String sql = "UPDATE Users SET name=? WHERE id=?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, name);
+            ps.setInt(2, userId);
 
             return ps.executeUpdate() > 0;
 

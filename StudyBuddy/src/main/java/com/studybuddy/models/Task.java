@@ -21,6 +21,7 @@ public class Task {
     private String description;
     private String status;
     private String priority;
+    private String subject;
     private Timestamp dueDate;
     private String estimatedTime;
     private Timestamp createdAt;   // maps to SQL column: created_at
@@ -126,6 +127,14 @@ public class Task {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public Timestamp getDueDate() {

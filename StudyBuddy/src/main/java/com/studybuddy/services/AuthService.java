@@ -12,6 +12,20 @@ public class AuthService {
     private static final TaskDAO taskDAO = new TaskDAO();
     private static final SessionManager session = SessionManager.getInstance();
 
+    /**
+     * Register a new user with automatic Student role assignment.
+     * 
+     * All newly registered users are automatically assigned the "STUDENT" role.
+     * This ensures consistent role assignment and prevents users from choosing
+     * or modifying their role during registration.
+     * 
+     * Existing administrator accounts remain unchanged and retain their role.
+     * 
+     * @param name     User's full name
+     * @param email    User's email address (must be unique)
+     * @param password User's password (minimum 6 characters)
+     * @return true if registration successful, false otherwise
+     */
     public static boolean registerUser(String name, String email, String password) {
 
         if (name == null || name.trim().isEmpty()) return false;
@@ -22,8 +36,12 @@ public class AuthService {
 
         User user = new User();
         user.setName(name);
+        // Also populate the fullName profile column so that the Edit Profile
+        // page shows the name the user entered at registration, not an empty field.
+        user.setFullName(name);
         user.setEmail(email);
-        user.setRole("user");
+        // Automatically assign STUDENT role to all new registrations
+        user.setRole("STUDENT");
         user.setPassword(PasswordHasher.hashPassword(password));
 
         int userId = userDAO.createUser(user);

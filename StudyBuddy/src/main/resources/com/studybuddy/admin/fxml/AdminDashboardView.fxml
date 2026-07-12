@@ -104,7 +104,10 @@
                 </ImageView>
                 <VBox spacing="2" HBox.hgrow="ALWAYS">
                     <Label fx:id="adminNameLabel" text="Administrator" styleClass="admin-name-label"/>
-                    <Label fx:id="adminRoleLabel" text="ADMIN" styleClass="admin-role-label"/>
+                    <HBox spacing="4" alignment="CENTER_LEFT">
+                        <Label text="👤" styleClass="admin-role-icon"/>
+                        <Label fx:id="adminRoleLabel" text="ADMIN" styleClass="admin-role-label"/>
+                    </HBox>
                 </VBox>
             </HBox>
 

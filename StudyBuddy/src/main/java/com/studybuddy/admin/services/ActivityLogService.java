@@ -41,10 +41,18 @@ public class ActivityLogService {
     public void logAction(String action, String targetType, String targetName) {
         int adminId = 0;
         String adminName = "Admin";
+        
         if (SessionManager.getCurrentAdmin() != null) {
             adminId   = SessionManager.getCurrentAdmin().getId();
             adminName = SessionManager.getCurrentAdmin().getName();
+            
+            // Debug: Log admin ID before insertion
+            logger.info("[ActivityLog] Admin ID: " + adminId + ", Admin Name: " + adminName);
+        } else {
+            logger.warning("[ActivityLog] SessionManager.getCurrentAdmin() is NULL! Cannot log activity.");
+            return; // Don't insert if no admin is logged in
         }
+        
         logAction(adminId, adminName, action, targetType, targetName);
     }
 
@@ -53,8 +61,19 @@ public class ActivityLogService {
      */
     public void logAction(int adminId, String adminName, String action,
                           String targetType, String targetName) {
+        // Verify adminId is valid before attempting insert
+        if (adminId <= 0) {
+            logger.warning("[ActivityLog] Invalid admin_id (" + adminId + "). Skipping activity log.");
+            return;
+        }
+        
         ActivityLog log = new ActivityLog(adminId, adminName, action, targetType, targetName, "SUCCESS", null);
-        activityLogDAO.insertLog(log);
+        boolean success = activityLogDAO.insertLog(log);
+        
+        if (!success) {
+            logger.severe("[ActivityLog] Failed to insert log. AdminId=" + adminId + 
+                         ", Action=" + action + ", Target=" + targetName);
+        }
     }
 
     // ── Read ──────────────────────────────────────────────────────────────────

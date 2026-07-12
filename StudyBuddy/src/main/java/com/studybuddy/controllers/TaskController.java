@@ -1,4 +1,3 @@
-
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
@@ -17,863 +16,858 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.util.Duration;
 
 import java.net.URL;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TaskController implements Initializable {
 
+    // ── Only FXML-injected field ──────────────────────────────────────────
     @FXML private VBox rootPane;
 
+    // ── Services / state ─────────────────────────────────────────────────
     private final TaskService taskService = new TaskService();
     private User currentUser;
-    private final ObservableList<Task> allTasks = FXCollections.observableArrayList();
+    private final ObservableList<Task> allTasks    = FXCollections.observableArrayList();
     private final ObservableList<Task> visibleTasks = FXCollections.observableArrayList();
 
-    private TextField searchField;
-    private ComboBox<String> sortComboBox;
+    // ── Programmatic UI references ────────────────────────────────────────
+    private TextField   searchField;
     private ToggleGroup filterGroup;
-    private FlowPane tasksFlowPane;
-    private TextField titleField;
-    private TextArea descriptionArea;
+    private VBox        tasksListBox;   // vertical list instead of FlowPane
+
+    // Create-form fields
+    private TextField   titleField;
+    private TextField   subjectField;
+    private TextArea    descriptionArea;
     private ComboBox<String> priorityComboBox;
-    private DatePicker dueDatePicker;
-    private TextField estimatedTimeField;
+    private ComboBox<String> statusComboBox;
+    private DatePicker  dueDatePicker;
+    private TextField   estimatedTimeField;
+
+    // Stats labels (updated after every load)
+    private Label lblPending;
+    private Label lblInProgress;
+    private Label lblCompleted;
+    private Label lblOverdue;
+
+    // Filter state
     private String activeFilter = "all";
-    private String activeSort = "newest";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM d, yyyy");
-    
     private boolean isInitialized = false;
-    private EventBus.EventListener<EventBus.TasksChangedEvent> tasksChangedListener;
-    private EventBus.EventListener<EventBus.StatisticsChangedEvent> statisticsChangedListener;
+
+    private EventBus.EventListener<EventBus.TasksChangedEvent>      tasksChangedListener;
+    private EventBus.EventListener<EventBus.StatisticsChangedEvent> statsChangedListener;
+
+    private static final DateTimeFormatter DATE_FMT =
+            DateTimeFormatter.ofPattern("MMM d, yyyy");
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Lifecycle
+    // ══════════════════════════════════════════════════════════════════════
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        if (isInitialized) {
-            return;
-        }
-        
+        if (isInitialized) return;
         currentUser = App.getCurrentUser();
         buildUi();
         loadTasks();
-        
-        // Store listeners to enable unsubscription later
-        tasksChangedListener = (_event) -> Platform.runLater(this::loadTasksInternal);
-        statisticsChangedListener = (_event) -> Platform.runLater(this::loadTasksInternal);
-        
-        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, tasksChangedListener);
-        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, statisticsChangedListener);
-        
+
+        tasksChangedListener = (_e) -> Platform.runLater(this::loadTasksInternal);
+        statsChangedListener  = (_e) -> Platform.runLater(this::loadTasksInternal);
+
+        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class,     tasksChangedListener);
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, statsChangedListener);
         isInitialized = true;
     }
-    
-    /**
-     * Cleanup method to prevent memory leaks.
-     * Call this when the controller is being destroyed.
-     */
+
     public void cleanup() {
-        if (tasksChangedListener != null) {
+        if (tasksChangedListener != null)
             EventBus.getInstance().unsubscribe(EventBus.TasksChangedEvent.class, tasksChangedListener);
-        }
-        if (statisticsChangedListener != null) {
-            EventBus.getInstance().unsubscribe(EventBus.StatisticsChangedEvent.class, statisticsChangedListener);
-        }
+        if (statsChangedListener != null)
+            EventBus.getInstance().unsubscribe(EventBus.StatisticsChangedEvent.class, statsChangedListener);
         isInitialized = false;
     }
 
+    // ══════════════════════════════════════════════════════════════════════
+    // UI Construction
+    // ══════════════════════════════════════════════════════════════════════
+
     private void buildUi() {
-        if (rootPane == null) {
-            return;
-        }
+        if (rootPane == null) return;
+
+        // Outer scroll so the whole page scrolls
+        ScrollPane pageScroll = new ScrollPane();
+        pageScroll.setFitToWidth(true);
+        pageScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        pageScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        pageScroll.getStyleClass().add("tasks-scroll");
+        VBox.setVgrow(pageScroll, Priority.ALWAYS);
 
         VBox content = new VBox(24);
         content.setFillWidth(true);
-        content.setPadding(new Insets(32));
-        content.getStyleClass().add("task-content-container");
+        content.setPadding(new Insets(28, 28, 36, 28));
+        pageScroll.setContent(content);
 
-        // ── HEADER ──────────────────────────────────────────────────
-        VBox headerBox = new VBox(8);
-        Label titleLabel = new Label("Study Tasks");
-        titleLabel.getStyleClass().add("task-page-title");
-        Label subtitleLabel = new Label("Plan your study flow, track momentum, and stay on top of every deadline.");
-        subtitleLabel.getStyleClass().add("task-page-subtitle");
-        headerBox.getChildren().addAll(titleLabel, subtitleLabel);
-        content.getChildren().add(headerBox);
+        content.getChildren().addAll(
+            buildHeroBanner(),
+            buildStatsRow(),
+            buildCreateCard(),
+            buildToolbar(),
+            buildTaskListSection()
+        );
 
-        // ── CREATE TASK CARD ────────────────────────────────────────
-        VBox addCard = new VBox(20);
-        addCard.getStyleClass().add("task-create-card");
-        addCard.setPadding(new Insets(24));
-        addCard.setMaxWidth(1200);
+        rootPane.getChildren().setAll(pageScroll);
+        Platform.runLater(() -> { if (titleField != null) titleField.requestFocus(); });
+    }
 
-        Label addTitle = new Label("Create a new task");
-        addTitle.getStyleClass().add("task-section-title");
+    // ── Hero Banner ───────────────────────────────────────────────────────
 
-        // Main form fields (Title + Description)
-        HBox mainRow = new HBox(16);
-        mainRow.setAlignment(Pos.TOP_LEFT);
+    private HBox buildHeroBanner() {
+        HBox hero = new HBox();
+        hero.getStyleClass().add("tasks-hero");
+        hero.setAlignment(Pos.CENTER_LEFT);
 
-        VBox titleBox = new VBox(8);
-        Label titleLabelField = new Label("Task title");
-        titleLabelField.getStyleClass().add("task-field-label");
+        VBox left = new VBox(6);
+        HBox.setHgrow(left, Priority.ALWAYS);
+
+        Label title = new Label("📋  Study Tasks");
+        title.getStyleClass().add("tasks-hero-title");
+
+        Label sub = new Label("Plan your study schedule, organize assignments, and stay productive every day.");
+        sub.getStyleClass().add("tasks-hero-subtitle");
+        sub.setWrapText(true);
+
+        left.getChildren().addAll(title, sub);
+
+        Button newTaskBtn = new Button("＋  New Task");
+        newTaskBtn.getStyleClass().add("tasks-hero-btn");
+        newTaskBtn.setOnAction(e -> { if (titleField != null) titleField.requestFocus(); });
+
+        hero.getChildren().addAll(left, newTaskBtn);
+        return hero;
+    }
+
+    // ── Stats Row ─────────────────────────────────────────────────────────
+
+    private HBox buildStatsRow() {
+        HBox row = new HBox(16);
+        row.setFillHeight(true);
+
+        lblPending    = new Label("0");
+        lblInProgress = new Label("0");
+        lblCompleted  = new Label("0");
+        lblOverdue    = new Label("0");
+
+        row.getChildren().addAll(
+            buildStatCard("⏳", lblPending,    "Pending",     "tasks-stat-icon-pending",   "tasks-stat-value-pending"),
+            buildStatCard("🔄", lblInProgress, "In Progress", "tasks-stat-icon-progress",  "tasks-stat-value-progress"),
+            buildStatCard("✅", lblCompleted,  "Completed",   "tasks-stat-icon-completed", "tasks-stat-value-completed"),
+            buildStatCard("🚨", lblOverdue,    "Overdue",     "tasks-stat-icon-overdue",   "tasks-stat-value-overdue")
+        );
+        for (var child : row.getChildren()) HBox.setHgrow(child, Priority.ALWAYS);
+        return row;
+    }
+
+    private VBox buildStatCard(String icon, Label valueLabel, String labelText,
+                               String iconWrapStyle, String valueStyle) {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("tasks-stat-card");
+        card.setAlignment(Pos.TOP_LEFT);
+
+        HBox top = new HBox(12);
+        top.setAlignment(Pos.CENTER_LEFT);
+
+        StackPane iconWrap = new StackPane();
+        iconWrap.getStyleClass().addAll("tasks-stat-icon-wrap", iconWrapStyle);
+        Label iconLbl = new Label(icon);
+        iconLbl.getStyleClass().add("tasks-stat-icon");
+        iconWrap.getChildren().add(iconLbl);
+
+        VBox info = new VBox(2);
+        valueLabel.getStyleClass().addAll("tasks-stat-value", valueStyle);
+        Label nameLbl = new Label(labelText);
+        nameLbl.getStyleClass().add("tasks-stat-label");
+        info.getChildren().addAll(valueLabel, nameLbl);
+
+        top.getChildren().addAll(iconWrap, info);
+        card.getChildren().add(top);
+        return card;
+    }
+
+    // ── Create Task Card ──────────────────────────────────────────────────
+
+    private VBox buildCreateCard() {
+        VBox card = new VBox(16);
+        card.getStyleClass().add("tasks-create-card");
+
+        Label cardTitle = new Label("Create New Task");
+        cardTitle.getStyleClass().add("tasks-card-title");
+
+        // Row 1: Title | Priority
+        HBox row1 = new HBox(16);
         titleField = new TextField();
-        titleField.setPromptText("e.g. Review JavaFX layouts for midterm exam");
-        titleField.getStyleClass().add("task-input-field");
-        titleField.setPrefHeight(48);
-        titleBox.getChildren().addAll(titleLabelField, titleField);
-        HBox.setHgrow(titleBox, Priority.ALWAYS);
+        titleField.setPromptText("Task title…");
+        titleField.getStyleClass().add("tasks-input");
+        titleField.setOnKeyPressed(e -> { if (e.getCode() == KeyCode.ENTER) handleAddTask(); });
 
-        VBox descriptionBox = new VBox(8);
-        Label descLabel = new Label("Description");
-        descLabel.getStyleClass().add("task-field-label");
-        descriptionArea = new TextArea();
-        descriptionArea.setPromptText("Add details about your study goal or task requirements");
-        descriptionArea.setPrefHeight(120);
-        descriptionArea.setWrapText(true);
-        descriptionArea.getStyleClass().add("task-input-area");
-        descriptionBox.getChildren().addAll(descLabel, descriptionArea);
-        HBox.setHgrow(descriptionBox, Priority.ALWAYS);
-
-        mainRow.getChildren().addAll(titleBox, descriptionBox);
-
-        // Metadata row (Priority, Date, Time) - 3 columns now
-        HBox metadataRow = new HBox(12);
-        metadataRow.setAlignment(Pos.CENTER_LEFT);
-
-        VBox priorityBox = new VBox(8);
-        Label priorityLabel = new Label("Priority");
-        priorityLabel.getStyleClass().add("task-field-label");
-        priorityComboBox = new ComboBox<>(FXCollections.observableArrayList("Low", "Medium", "High"));
-        priorityComboBox.setPromptText("Set priority");
+        priorityComboBox = new ComboBox<>(
+            FXCollections.observableArrayList("Low", "Medium", "High"));
         priorityComboBox.setValue("Medium");
-        priorityComboBox.getStyleClass().add("task-input-combo");
-        priorityComboBox.setPrefHeight(48);
+        priorityComboBox.getStyleClass().add("tasks-combo");
         priorityComboBox.setMaxWidth(Double.MAX_VALUE);
-        priorityBox.getChildren().addAll(priorityLabel, priorityComboBox);
-        HBox.setHgrow(priorityBox, Priority.ALWAYS);
 
-        VBox dateBox = new VBox(8);
-        Label dateLabel = new Label("Due Date");
-        dateLabel.getStyleClass().add("task-field-label");
+        row1.getChildren().addAll(
+            fieldBox("Task Title",   titleField,       true),
+            fieldBox("Priority",     priorityComboBox, false)
+        );
+
+        // Row 2: Subject | Due Date
+        HBox row2 = new HBox(16);
+        subjectField = new TextField();
+        subjectField.setPromptText("e.g. Mathematics");
+        subjectField.getStyleClass().add("tasks-input");
+
         dueDatePicker = new DatePicker(LocalDate.now());
-        dueDatePicker.setPromptText("Select due date");
-        dueDatePicker.getStyleClass().add("task-input-date");
-        dueDatePicker.setPrefHeight(48);
+        dueDatePicker.getStyleClass().add("tasks-date");
         dueDatePicker.setMaxWidth(Double.MAX_VALUE);
-        dateBox.getChildren().addAll(dateLabel, dueDatePicker);
-        HBox.setHgrow(dateBox, Priority.ALWAYS);
 
-        VBox timeBox = new VBox(8);
-        Label timeLabel = new Label("Estimated Time");
-        timeLabel.getStyleClass().add("task-field-label");
+        row2.getChildren().addAll(
+            fieldBox("Subject",   subjectField,  true),
+            fieldBox("Due Date",  dueDatePicker, false)
+        );
+
+        // Row 3: Estimated Time | Status
+        HBox row3 = new HBox(16);
         estimatedTimeField = new TextField();
         estimatedTimeField.setPromptText("e.g. 2 hours");
-        estimatedTimeField.getStyleClass().add("task-input-field");
-        estimatedTimeField.setPrefHeight(48);
-        estimatedTimeField.setMaxWidth(Double.MAX_VALUE);
-        timeBox.getChildren().addAll(timeLabel, estimatedTimeField);
-        HBox.setHgrow(timeBox, Priority.ALWAYS);
+        estimatedTimeField.getStyleClass().add("tasks-input");
 
-        metadataRow.getChildren().addAll(priorityBox, dateBox, timeBox);
+        statusComboBox = new ComboBox<>(
+            FXCollections.observableArrayList("Pending", "In Progress", "Completed"));
+        statusComboBox.setValue("Pending");
+        statusComboBox.getStyleClass().add("tasks-combo");
+        statusComboBox.setMaxWidth(Double.MAX_VALUE);
 
-        // Action button
-        HBox buttonRow = new HBox();
-        buttonRow.setAlignment(Pos.CENTER_RIGHT);
-        Button addTaskButton = new Button("✓ Add Task");
-        addTaskButton.getStyleClass().add("task-btn-add");
-        addTaskButton.setPrefHeight(48);
-        addTaskButton.setOnAction(e -> handleAddTask());
-        buttonRow.getChildren().add(addTaskButton);
+        row3.getChildren().addAll(
+            fieldBox("Estimated Time", estimatedTimeField, true),
+            fieldBox("Status",         statusComboBox,     false)
+        );
 
-        addCard.getChildren().addAll(addTitle, mainRow, metadataRow, buttonRow);
-        content.getChildren().add(addCard);
+        // Row 4: Description (full width)
+        VBox descBox = new VBox(6);
+        Label descLbl = new Label("Description");
+        descLbl.getStyleClass().add("tasks-field-label");
+        descriptionArea = new TextArea();
+        descriptionArea.setPromptText("Add details, links, or notes about this task…");
+        descriptionArea.setPrefRowCount(3);
+        descriptionArea.setWrapText(true);
+        descriptionArea.getStyleClass().add("tasks-desc");
+        descBox.getChildren().addAll(descLbl, descriptionArea);
 
-        // ── TOOLBAR (Search + Sort) ─────────────────────────────────
-        HBox toolbar = new HBox(16);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
-        toolbar.setMaxWidth(1200);
+        // Submit row
+        HBox btnRow = new HBox();
+        btnRow.setAlignment(Pos.CENTER_RIGHT);
+        Button addBtn = new Button("✓  Add Task");
+        addBtn.getStyleClass().add("tasks-btn-add");
+        addBtn.setPrefHeight(44);
+        addBtn.setOnAction(e -> handleAddTask());
+        btnRow.getChildren().add(addBtn);
 
-        // Search box
-        HBox searchBox = new HBox(10);
-        searchBox.setAlignment(Pos.CENTER_LEFT);
-        searchBox.getStyleClass().add("task-search-container");
-        searchBox.setPadding(new Insets(0, 16, 0, 16));
-        searchBox.setPrefHeight(48);
+        card.getChildren().addAll(cardTitle, row1, row2, row3, descBox, btnRow);
+        return card;
+    }
 
-        Label searchIcon = new Label("🔎");
-        searchIcon.setStyle("-fx-font-size: 16px;");
+    /** Wraps a control with a field label in a VBox, optionally growing horizontally. */
+    private VBox fieldBox(String labelText, Control control, boolean grow) {
+        VBox box = new VBox(6);
+        Label lbl = new Label(labelText);
+        lbl.getStyleClass().add("tasks-field-label");
+        if (control instanceof TextField tf) tf.setMaxWidth(Double.MAX_VALUE);
+        box.getChildren().addAll(lbl, control);
+        if (grow) HBox.setHgrow(box, Priority.ALWAYS);
+        else       HBox.setHgrow(box, Priority.ALWAYS);  // both grow equally
+        return box;
+    }
+
+    // ── Search + Filter Toolbar ───────────────────────────────────────────
+
+    private VBox buildToolbar() {
+        VBox wrapper = new VBox(12);
+
+        // Search row
+        HBox searchRow = new HBox(16);
+        searchRow.setAlignment(Pos.CENTER_LEFT);
+        searchRow.getStyleClass().add("tasks-toolbar");
+
+        HBox searchWrap = new HBox(8);
+        searchWrap.setAlignment(Pos.CENTER_LEFT);
+        searchWrap.getStyleClass().add("tasks-search-wrap");
+        HBox.setHgrow(searchWrap, Priority.ALWAYS);
+
+        Label searchIcon = new Label("🔍");
+        searchIcon.setStyle("-fx-font-size: 14px;");
         searchField = new TextField();
-        searchField.setPromptText("Search tasks by title, description, or status...");
-        searchField.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
-        searchField.getStyleClass().add("task-search-field");
-        searchField.textProperty().addListener((obs, oldValue, newValue) -> applyFiltersAndRender());
+        searchField.setPromptText("Search tasks…");
+        searchField.getStyleClass().add("tasks-search-field");
+        searchField.textProperty().addListener((obs, o, n) -> applyFiltersAndRender());
         HBox.setHgrow(searchField, Priority.ALWAYS);
-        searchBox.getChildren().addAll(searchIcon, searchField);
-        HBox.setHgrow(searchBox, Priority.ALWAYS);
+        searchWrap.getChildren().addAll(searchIcon, searchField);
+        searchRow.getChildren().add(searchWrap);
+        wrapper.getChildren().add(searchRow);
 
-        // Sort dropdown
-        VBox sortBox = new VBox(4);
-        Label sortLabel = new Label("Sort by");
-        sortLabel.getStyleClass().add("task-sort-label");
-        sortComboBox = new ComboBox<>(FXCollections.observableArrayList("Newest", "Oldest", "Due Date", "Priority", "Alphabetical"));
-        sortComboBox.setValue("Newest");
-        sortComboBox.getStyleClass().add("task-sort-combo");
-        sortComboBox.setPrefHeight(48);
-        sortComboBox.setPrefWidth(160);
-        sortComboBox.valueProperty().addListener((obs, oldValue, newValue) -> {
-            if (newValue != null) {
-                activeSort = normalizeSortValue(newValue);
-            }
-            applyFiltersAndRender();
-        });
-        sortBox.getChildren().addAll(sortLabel, sortComboBox);
-
-        toolbar.getChildren().addAll(searchBox, sortBox);
-        content.getChildren().add(toolbar);
-
-        // ── FILTER CHIPS ────────────────────────────────────────────
-        HBox filterBar = new HBox(10);
-        filterBar.setAlignment(Pos.CENTER_LEFT);
-        filterBar.setMaxWidth(1200);
+        // Filter chips row
+        HBox filterRow = new HBox(8);
+        filterRow.setAlignment(Pos.CENTER_LEFT);
         filterGroup = new ToggleGroup();
-        addFilterChip(filterBar, "All Tasks", "all");
-        addFilterChip(filterBar, "Pending", "pending");
-        addFilterChip(filterBar, "In Progress", "in-progress");
-        addFilterChip(filterBar, "Completed", "completed");
-        content.getChildren().add(filterBar);
 
-        // ── TASK GRID ───────────────────────────────────────────────
-        ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.getStyleClass().add("task-scroll-pane");
+        addFilterChip(filterRow, "All",         "all");
+        addFilterChip(filterRow, "Pending",     "pending");
+        addFilterChip(filterRow, "In Progress", "in-progress");
+        addFilterChip(filterRow, "Completed",   "completed");
+        addFilterChip(filterRow, "Overdue",     "overdue");
+        addFilterChip(filterRow, "Today",       "today");
+        addFilterChip(filterRow, "This Week",   "thisweek");
 
-        tasksFlowPane = new FlowPane();
-        tasksFlowPane.setHgap(20);
-        tasksFlowPane.setVgap(20);
-        tasksFlowPane.setPrefWrapLength(1200);
-        tasksFlowPane.setPadding(new Insets(8));
-        tasksFlowPane.setMinHeight(300);
-        scrollPane.setContent(tasksFlowPane);
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
-        content.getChildren().add(scrollPane);
-
-        rootPane.getChildren().setAll(content);
-        Platform.runLater(() -> {
-            if (titleField != null) {
-                titleField.requestFocus();
-            }
-        });
+        wrapper.getChildren().add(filterRow);
+        return wrapper;
     }
 
     private void addFilterChip(HBox container, String text, String value) {
-        ToggleButton button = new ToggleButton(text);
-        button.setUserData(value);
-        button.setToggleGroup(filterGroup);
-        button.getStyleClass().add("task-filter-pill");
-        button.setPrefHeight(40);
-        button.setPadding(new Insets(0, 20, 0, 20));
-        if (value.equals("all")) {
-            button.setSelected(true);
-        }
-        button.setOnAction(e -> {
-            activeFilter = (String) button.getUserData();
+        ToggleButton btn = new ToggleButton(text);
+        btn.setUserData(value);
+        btn.setToggleGroup(filterGroup);
+        btn.getStyleClass().add("tasks-filter-pill");
+        if (value.equals("all")) btn.setSelected(true);
+        btn.setOnAction(e -> {
+            activeFilter = (String) btn.getUserData();
             applyFiltersAndRender();
         });
-        container.getChildren().add(button);
+        container.getChildren().add(btn);
     }
 
-    /**
-     * Public method for external callers to trigger a task reload.
-     * Ensures thread safety by running on JavaFX Application Thread.
-     */
-    private void loadTasks() {
-        if (Platform.isFxApplicationThread()) {
-            loadTasksInternal();
-        } else {
-            Platform.runLater(this::loadTasksInternal);
-        }
+    // ── Task List Section ─────────────────────────────────────────────────
+
+    private VBox buildTaskListSection() {
+        VBox section = new VBox(12);
+        tasksListBox = new VBox(12);
+        tasksListBox.setFillWidth(true);
+        section.getChildren().add(tasksListBox);
+        return section;
     }
-    
-    /**
-     * Internal method that actually loads tasks from database.
-     * Must only be called on JavaFX Application Thread.
-     */
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Data Loading & Filtering
+    // ══════════════════════════════════════════════════════════════════════
+
+    private void loadTasks() {
+        if (Platform.isFxApplicationThread()) loadTasksInternal();
+        else Platform.runLater(this::loadTasksInternal);
+    }
+
     private void loadTasksInternal() {
         if (currentUser == null) {
             allTasks.clear();
             visibleTasks.clear();
             renderTasks();
+            updateStats();
             return;
         }
-
-        // Load tasks from database (runs synchronously on FX thread - acceptable for small datasets)
-        List<Task> tasks = taskService.getTasksForUser(currentUser.getId());
-        allTasks.setAll(tasks);
+        allTasks.setAll(taskService.getTasksForUser(currentUser.getId()));
         applyFiltersAndRender();
+        updateStats();
+    }
+
+    private void updateStats() {
+        if (lblPending == null) return;
+        LocalDate today = LocalDate.now();
+        long pending   = allTasks.stream().filter(t -> normalizeStatus(t.getStatus()).equals("pending")).count();
+        long inProgress = allTasks.stream().filter(t -> normalizeStatus(t.getStatus()).equals("in-progress")).count();
+        long completed = allTasks.stream().filter(t -> normalizeStatus(t.getStatus()).equals("completed")).count();
+        long overdue   = allTasks.stream().filter(t -> isOverdue(t, today)).count();
+        lblPending.setText(String.valueOf(pending));
+        lblInProgress.setText(String.valueOf(inProgress));
+        lblCompleted.setText(String.valueOf(completed));
+        lblOverdue.setText(String.valueOf(overdue));
+    }
+
+    private boolean isOverdue(Task t, LocalDate today) {
+        if (normalizeStatus(t.getStatus()).equals("completed")) return false;
+        if (t.getDueDate() == null) return false;
+        return t.getDueDate().toLocalDateTime().toLocalDate().isBefore(today);
     }
 
     private void applyFiltersAndRender() {
-        // Ensure we're on FX Application Thread for UI operations
         if (!Platform.isFxApplicationThread()) {
             Platform.runLater(this::applyFiltersAndRender);
             return;
         }
-        
-        // Null safety check for UI components
-        if (searchField == null) {
-            renderTasks();
-            return;
-        }
-        
-        List<Task> filtered = new ArrayList<>();
-        String query = searchField.getText();
-        String loweredQuery = query == null ? "" : query.toLowerCase();
+        String query  = searchField == null ? "" : searchField.getText().toLowerCase();
+        LocalDate today = LocalDate.now();
 
-        for (Task task : allTasks) {
-            boolean matchesFilter = activeFilter.equals("all") || normalizeStatus(task.getStatus()).equals(activeFilter);
-            boolean matchesSearch = loweredQuery.isBlank() || containsText(task, loweredQuery);
-            if (matchesFilter && matchesSearch) {
-                filtered.add(task);
-            }
-        }
+        List<Task> filtered = allTasks.stream()
+            .filter(t -> matchesFilter(t, activeFilter, today))
+            .filter(t -> query.isBlank() || containsText(t, query))
+            .sorted(Comparator.comparing(Task::getCreatedAt,
+                    Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+            .collect(Collectors.toList());
 
-        filtered.sort(getComparator());
         visibleTasks.setAll(filtered);
         renderTasks();
     }
 
-    private Comparator<Task> getComparator() {
-        return switch (activeSort) {
-            case "oldest" -> Comparator.comparing(Task::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()));
-            case "due date" -> Comparator.comparing(Task::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()));
-            case "priority" -> Comparator.comparing(this::getPriorityWeight).reversed().thenComparing(Task::getTitle, String.CASE_INSENSITIVE_ORDER);
-            case "alphabetical" -> Comparator.comparing(Task::getTitle, String.CASE_INSENSITIVE_ORDER);
-            default -> Comparator.comparing(Task::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
+    private boolean matchesFilter(Task t, String filter, LocalDate today) {
+        return switch (filter) {
+            case "pending"     -> normalizeStatus(t.getStatus()).equals("pending");
+            case "in-progress" -> normalizeStatus(t.getStatus()).equals("in-progress");
+            case "completed"   -> normalizeStatus(t.getStatus()).equals("completed");
+            case "overdue"     -> isOverdue(t, today);
+            case "today"       -> t.getDueDate() != null &&
+                                   t.getDueDate().toLocalDateTime().toLocalDate().equals(today);
+            case "thisweek"    -> t.getDueDate() != null &&
+                                   !t.getDueDate().toLocalDateTime().toLocalDate().isBefore(today) &&
+                                   t.getDueDate().toLocalDateTime().toLocalDate().isBefore(today.plusDays(7));
+            default            -> true;
         };
     }
 
-    private String normalizeSortValue(String value) {
-        if (value == null) {
-            return "newest";
-        }
-        String normalized = value.trim().toLowerCase();
-        return switch (normalized) {
-            case "oldest" -> "oldest";
-            case "due date" -> "due date";
-            case "priority" -> "priority";
-            case "alphabetical" -> "alphabetical";
-            default -> "newest";
-        };
+    private boolean containsText(Task t, String q) {
+        return (t.getTitle()       != null && t.getTitle().toLowerCase().contains(q))
+            || (t.getDescription() != null && t.getDescription().toLowerCase().contains(q))
+            || (t.getSubject()     != null && t.getSubject().toLowerCase().contains(q))
+            || (t.getStatus()      != null && t.getStatus().toLowerCase().contains(q));
     }
 
-    private boolean containsText(Task task, String query) {
-        return (task.getTitle() != null && task.getTitle().toLowerCase().contains(query))
-                || (task.getDescription() != null && task.getDescription().toLowerCase().contains(query))
-                || (task.getStatus() != null && task.getStatus().toLowerCase().contains(query));
-    }
-
-    private int getPriorityWeight(Task task) {
-        return switch (task.getPriority() == null ? "medium" : task.getPriority().toLowerCase()) {
-            case "high" -> 3;
-            case "medium" -> 2;
-            case "low" -> 1;
-            default -> 0;
-        };
-    }
+    // ══════════════════════════════════════════════════════════════════════
+    // Render
+    // ══════════════════════════════════════════════════════════════════════
 
     private void renderTasks() {
-        if (tasksFlowPane == null) {
-            return;
-        }
+        if (tasksListBox == null) return;
+        tasksListBox.getChildren().clear();
 
-        tasksFlowPane.getChildren().clear();
         if (visibleTasks.isEmpty()) {
-            VBox emptyState = new VBox(16);
-            emptyState.getStyleClass().add("task-empty-card");
-            emptyState.setAlignment(Pos.CENTER);
-            emptyState.setPadding(new Insets(48));
-            emptyState.setPrefWidth(600);
-            emptyState.setMaxWidth(600);
-
-            Label icon = new Label("📋");
-            icon.setStyle("-fx-font-size: 48px;");
-            Label title = new Label("No tasks found");
-            title.getStyleClass().add("task-empty-title");
-            Label subtitle = new Label("Create your first study task to get started.");
-            subtitle.getStyleClass().add("task-empty-subtitle");
-            Button createButton = new Button("+ Create Task");
-            createButton.getStyleClass().add("task-btn-add");
-            createButton.setPrefHeight(44);
-            createButton.setOnAction(e -> {
-                if (titleField != null) {
-                    titleField.requestFocus();
-                }
-            });
-            emptyState.getChildren().addAll(icon, title, subtitle, createButton);
-            tasksFlowPane.getChildren().add(emptyState);
+            tasksListBox.getChildren().add(buildEmptyState());
             return;
         }
 
         for (Task task : visibleTasks) {
-            VBox card = createTaskCard(task);
-            tasksFlowPane.getChildren().add(card);
+            tasksListBox.getChildren().add(buildTaskCard(task));
         }
     }
 
-    private VBox createTaskCard(Task task) {
-        VBox card = new VBox(16);
-        card.getStyleClass().add("task-grid-card");
-        card.setPadding(new Insets(20));
-        card.setMinWidth(360);
-        card.setPrefWidth(360);
-        card.setMaxWidth(420);
-        card.setMinHeight(280);
-        card.setPrefHeight(280);
+    private VBox buildEmptyState() {
+        VBox empty = new VBox(16);
+        empty.getStyleClass().add("tasks-empty");
+        empty.setAlignment(Pos.CENTER);
 
-        card.setOnMouseEntered(e -> animateCardHover(card, true));
-        card.setOnMouseExited(e -> animateCardHover(card, false));
+        Label icon  = new Label("📋");
+        icon.getStyleClass().add("tasks-empty-icon");
+        Label title = new Label("No Tasks Yet");
+        title.getStyleClass().add("tasks-empty-title");
+        Label sub   = new Label("Create your first study task to stay organized.");
+        sub.getStyleClass().add("tasks-empty-sub");
 
-        // Use StackPane to overlay view/edit modes without resizing
-        StackPane contentStack = new StackPane();
-        contentStack.setAlignment(Pos.TOP_LEFT);
-        VBox.setVgrow(contentStack, Priority.ALWAYS);
+        Button btn  = new Button("＋  Create Task");
+        btn.getStyleClass().add("tasks-btn-add");
+        btn.setPrefHeight(42);
+        btn.setOnAction(e -> { if (titleField != null) titleField.requestFocus(); });
 
-        // View mode content
-        VBox viewMode = createCardViewContent(card, task);
-        viewMode.setVisible(true);
-        viewMode.setManaged(true);
+        empty.getChildren().addAll(icon, title, sub, btn);
+        return empty;
+    }
 
-        // Edit mode content (created on demand)
-        VBox editMode = new VBox();
-        editMode.setVisible(false);
-        editMode.setManaged(false);
+    // ── Task Card ─────────────────────────────────────────────────────────
 
-        contentStack.getChildren().addAll(viewMode, editMode);
-        card.getChildren().add(contentStack);
+    private HBox buildTaskCard(Task task) {
+        HBox card = new HBox(0);
+        card.getStyleClass().add("tasks-card");
+        card.setFillHeight(true);
 
-        // Store references in card's properties for toggle
-        card.getProperties().put("viewMode", viewMode);
-        card.getProperties().put("editMode", editMode);
-        card.getProperties().put("task", task);
+        // Colored left priority strip
+        Region strip = new Region();
+        strip.getStyleClass().addAll("tasks-priority-strip", getPriorityStripClass(task.getPriority()));
+        strip.setMinWidth(5); strip.setPrefWidth(5); strip.setMaxWidth(5);
+
+        VBox body = new VBox(10);
+        body.getStyleClass().add("tasks-card-body");
+        HBox.setHgrow(body, Priority.ALWAYS);
+
+        // Row 1: title + badges
+        HBox titleRow = new HBox(10);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+
+        boolean done = normalizeStatus(task.getStatus()).equals("completed");
+        Label titleLbl = new Label(nvl(task.getTitle(), "Untitled"));
+        titleLbl.getStyleClass().add(done ? "tasks-card-title-done" : "tasks-card-title");
+        titleLbl.setWrapText(true);
+        HBox.setHgrow(titleLbl, Priority.ALWAYS);
+
+        Label statusBadge   = badge(getStatusLabel(task.getStatus()), getStatusBadgeClass(task.getStatus()));
+        Label priorityBadge = badge(nvl(task.getPriority(), "Medium"), getPriorityBadgeClass(task.getPriority()));
+
+        titleRow.getChildren().addAll(titleLbl, priorityBadge, statusBadge);
+
+        // Row 2: subject chip + meta
+        HBox metaRow = new HBox(14);
+        metaRow.setAlignment(Pos.CENTER_LEFT);
+
+        if (task.getSubject() != null && !task.getSubject().isBlank()) {
+            Label subjectLbl = new Label("📚 " + task.getSubject());
+            subjectLbl.getStyleClass().add("tasks-card-subject");
+            metaRow.getChildren().add(subjectLbl);
+        }
+
+        LocalDate today = LocalDate.now();
+        boolean overdue = isOverdue(task, today);
+        if (task.getDueDate() != null) {
+            Label dueLbl = new Label("📅 " + formatDate(task.getDueDate()));
+            dueLbl.getStyleClass().add(overdue ? "tasks-card-meta-overdue" : "tasks-card-meta");
+            metaRow.getChildren().add(dueLbl);
+        }
+        if (task.getEstimatedTime() != null && !task.getEstimatedTime().isBlank()) {
+            Label timeLbl = new Label("⏱ " + task.getEstimatedTime());
+            timeLbl.getStyleClass().add("tasks-card-meta");
+            metaRow.getChildren().add(timeLbl);
+        }
+        if (overdue) {
+            Label overdueTag = badge("Overdue", "tasks-badge-overdue");
+            metaRow.getChildren().add(overdueTag);
+        }
+
+        // Row 3: description preview
+        VBox descRow = new VBox();
+        if (task.getDescription() != null && !task.getDescription().isBlank()) {
+            Label desc = new Label(task.getDescription());
+            desc.getStyleClass().add("tasks-card-desc");
+            desc.setWrapText(true);
+            desc.setMaxHeight(42);
+            descRow.getChildren().add(desc);
+        }
+
+        // Row 4: action buttons
+        HBox actionsRow = new HBox(8);
+        actionsRow.setAlignment(Pos.CENTER_RIGHT);
+
+        Button editBtn = new Button("✏  Edit");
+        editBtn.getStyleClass().add("tasks-btn-edit");
+
+        Button deleteBtn = new Button("🗑  Delete");
+        deleteBtn.getStyleClass().add("tasks-btn-delete");
+        deleteBtn.setOnAction(e -> confirmDelete(card, task));
+
+        Button completeBtn = new Button("✅  Complete");
+        completeBtn.getStyleClass().add("tasks-btn-complete");
+        completeBtn.setDisable(done);
+        completeBtn.setOnAction(e -> markComplete(task));
+
+        // Edit mode toggling (lazy-build)
+        VBox editPanel = new VBox();
+        editPanel.setVisible(false);
+        editPanel.setManaged(false);
+
+        editBtn.setOnAction(e -> {
+            boolean showing = editPanel.isVisible();
+            if (!showing && editPanel.getChildren().isEmpty()) {
+                editPanel.getChildren().setAll(buildEditPanel(task, body, editPanel, titleLbl));
+            }
+            editPanel.setVisible(!showing);
+            editPanel.setManaged(!showing);
+            editBtn.setText(showing ? "✏  Edit" : "✕  Cancel");
+        });
+
+        actionsRow.getChildren().addAll(completeBtn, editBtn, deleteBtn);
+        body.getChildren().addAll(titleRow, metaRow, descRow, editPanel, actionsRow);
+
+        card.getChildren().addAll(strip, body);
+
+        // Hover animation
+        card.setOnMouseEntered(e -> animateHover(card, true));
+        card.setOnMouseExited(e  -> animateHover(card, false));
+
+        // Fade-in on creation
+        FadeTransition ft = new FadeTransition(Duration.millis(250), card);
+        ft.setFromValue(0.0); ft.setToValue(1.0); ft.play();
 
         return card;
     }
 
-    private VBox createCardViewContent(VBox card, Task task) {
-        VBox content = new VBox(14);
-        content.setFillWidth(true);
+    // ── Inline Edit Panel ─────────────────────────────────────────────────
 
-        // Title
-        Label titleLabel = new Label(task.getTitle() == null || task.getTitle().isBlank() ? "Untitled task" : task.getTitle());
-        titleLabel.getStyleClass().add("task-grid-title");
-        titleLabel.setWrapText(true);
-        titleLabel.setMaxHeight(50);
+    private VBox buildEditPanel(Task task, VBox body, VBox editPanel, Label titleLbl) {
+        VBox panel = new VBox(10);
+        panel.setPadding(new Insets(12, 0, 4, 0));
 
-        // Description
-        Label descriptionLabel = new Label(task.getDescription() == null || task.getDescription().isBlank() ? "No description provided." : task.getDescription());
-        descriptionLabel.getStyleClass().add("task-grid-description");
-        descriptionLabel.setWrapText(true);
-        descriptionLabel.setMaxHeight(60);
-        VBox.setVgrow(descriptionLabel, Priority.ALWAYS);
+        // Row A: title | subject
+        HBox rowA = new HBox(12);
+        TextField eTitleField = new TextField(task.getTitle());
+        eTitleField.getStyleClass().add("tasks-edit-input");
+        eTitleField.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(eTitleField, Priority.ALWAYS);
 
-        // Priority badge only
-        HBox badgesRow = new HBox(8);
-        badgesRow.setAlignment(Pos.CENTER_LEFT);
-        Label priorityBadge = createBadge(getDisplayText(task.getPriority(), "Medium"), getPriorityClass(task.getPriority()));
-        badgesRow.getChildren().add(priorityBadge);
+        TextField eSubjectField = new TextField(nvl(task.getSubject(), ""));
+        eSubjectField.setPromptText("Subject");
+        eSubjectField.getStyleClass().add("tasks-edit-input");
+        eSubjectField.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(eSubjectField, Priority.ALWAYS);
 
-        // Dates row
-        HBox datesRow = new HBox(12);
-        datesRow.setAlignment(Pos.CENTER_LEFT);
-        Label dueLabel = new Label("📅 " + formatDueDate(task.getDueDate()));
-        dueLabel.getStyleClass().add("task-grid-meta");
-        Label createdLabel = new Label("🕒 " + formatDate(task.getCreatedAt()));
-        createdLabel.getStyleClass().add("task-grid-meta");
-        datesRow.getChildren().addAll(dueLabel, createdLabel);
+        rowA.getChildren().addAll(
+            labeledControl("Title",   eTitleField,   true),
+            labeledControl("Subject", eSubjectField, true)
+        );
 
-        // Footer (Status + Actions)
-        HBox footerRow = new HBox(10);
-        footerRow.setAlignment(Pos.CENTER_LEFT);
-        
-        Label statusBadge = createBadge(getStatusLabel(task.getStatus()), getStatusClass(task.getStatus()));
-        
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        // Row B: priority | status | due date | estimated time
+        HBox rowB = new HBox(12);
+        ComboBox<String> ePriority = new ComboBox<>(
+            FXCollections.observableArrayList("Low", "Medium", "High"));
+        ePriority.setValue(capitalize(nvl(task.getPriority(), "Medium")));
+        ePriority.getStyleClass().add("tasks-edit-combo");
+        ePriority.setMaxWidth(Double.MAX_VALUE);
 
-        Button editButton = new Button("✏ Edit");
-        editButton.getStyleClass().add("task-btn-edit");
-        editButton.setOnAction(e -> switchToEditMode(card, task));
+        ComboBox<String> eStatus = new ComboBox<>(
+            FXCollections.observableArrayList("Pending", "In Progress", "Completed"));
+        eStatus.setValue(getStatusDisplayName(task.getStatus()));
+        eStatus.getStyleClass().add("tasks-edit-combo");
+        eStatus.setMaxWidth(Double.MAX_VALUE);
 
-        Button deleteButton = new Button("🗑 Delete");
-        deleteButton.getStyleClass().add("task-btn-delete");
-        deleteButton.setOnAction(e -> confirmDelete(card, task));
+        DatePicker eDue = new DatePicker(
+            task.getDueDate() != null
+                ? task.getDueDate().toLocalDateTime().toLocalDate()
+                : LocalDate.now());
+        eDue.getStyleClass().add("tasks-edit-combo");
+        eDue.setMaxWidth(Double.MAX_VALUE);
 
-        footerRow.getChildren().addAll(statusBadge, spacer, editButton, deleteButton);
+        TextField eTime = new TextField(nvl(task.getEstimatedTime(), ""));
+        eTime.setPromptText("Est. time");
+        eTime.getStyleClass().add("tasks-edit-input");
+        eTime.setMaxWidth(Double.MAX_VALUE);
 
-        content.getChildren().addAll(titleLabel, descriptionLabel, badgesRow, datesRow, footerRow);
-        return content;
-    }
+        rowB.getChildren().addAll(
+            labeledControl("Priority",  ePriority, true),
+            labeledControl("Status",    eStatus,   true),
+            labeledControl("Due Date",  eDue,      true),
+            labeledControl("Est. Time", eTime,     true)
+        );
 
-    private void switchToEditMode(VBox card, Task task) {
-        VBox viewMode = (VBox) card.getProperties().get("viewMode");
-        VBox editMode = (VBox) card.getProperties().get("editMode");
+        // Row C: description
+        TextArea eDesc = new TextArea(nvl(task.getDescription(), ""));
+        eDesc.setPromptText("Description…");
+        eDesc.setPrefRowCount(2);
+        eDesc.setWrapText(true);
+        eDesc.getStyleClass().add("tasks-edit-area");
 
-        if (editMode.getChildren().isEmpty()) {
-            // Build edit mode UI (first time)
-            editMode.getChildren().setAll(createEditModeContent(card, task));
-        }
+        // Buttons
+        HBox btnRow = new HBox(8);
+        btnRow.setAlignment(Pos.CENTER_RIGHT);
 
-        viewMode.setVisible(false);
-        viewMode.setManaged(false);
-        editMode.setVisible(true);
-        editMode.setManaged(true);
-    }
+        Button saveBtn = new Button("✓  Save");
+        saveBtn.getStyleClass().add("tasks-btn-save");
+        saveBtn.setOnAction(e -> {
+            String t = eTitleField.getText().trim();
+            if (t.isBlank()) { showAlert(Alert.AlertType.ERROR, "Title required", "Please enter a task title."); return; }
+            task.setTitle(t);
+            task.setSubject(eSubjectField.getText().trim());
+            task.setDescription(eDesc.getText().trim());
+            task.setPriority(ePriority.getValue() == null ? "medium" : ePriority.getValue().toLowerCase());
+            task.setStatus(normalizeStatus(eStatus.getValue()));
+            task.setDueDate(eDue.getValue() != null ? Timestamp.valueOf(eDue.getValue().atStartOfDay()) : null);
+            task.setEstimatedTime(eTime.getText().trim());
 
-    private void switchToViewMode(VBox card, Task task) {
-        VBox viewMode = (VBox) card.getProperties().get("viewMode");
-        VBox editMode = (VBox) card.getProperties().get("editMode");
-
-        // Refresh view mode with updated task data
-        viewMode.getChildren().setAll(createCardViewContent(card, task).getChildren());
-
-        editMode.setVisible(false);
-        editMode.setManaged(false);
-        viewMode.setVisible(true);
-        viewMode.setManaged(true);
-    }
-
-    private VBox createEditModeContent(VBox card, Task task) {
-        VBox content = new VBox(12);
-        content.setFillWidth(true);
-
-        // Title field
-        TextField editTitle = new TextField(task.getTitle());
-        editTitle.getStyleClass().add("task-edit-field");
-        editTitle.setPrefHeight(42);
-        editTitle.setPromptText("Task title");
-
-        // Description area
-        TextArea editDescription = new TextArea(task.getDescription());
-        editDescription.getStyleClass().add("task-edit-area");
-        editDescription.setPrefHeight(70);
-        editDescription.setWrapText(true);
-        editDescription.setPromptText("Description");
-
-        // Compact metadata row
-        HBox metaRow = new HBox(8);
-        metaRow.setAlignment(Pos.CENTER_LEFT);
-
-        ComboBox<String> editPriority = new ComboBox<>(FXCollections.observableArrayList("Low", "Medium", "High"));
-        editPriority.setValue(task.getPriority() == null || task.getPriority().isBlank() ? "Medium" : capitalize(task.getPriority()));
-        editPriority.getStyleClass().add("task-edit-combo");
-        editPriority.setPrefHeight(40);
-        HBox.setHgrow(editPriority, Priority.ALWAYS);
-
-        ComboBox<String> editStatus = new ComboBox<>(FXCollections.observableArrayList("Pending", "In Progress", "Completed"));
-        editStatus.setValue(getStatusDisplayName(task.getStatus()));
-        editStatus.getStyleClass().add("task-edit-combo");
-        editStatus.setPrefHeight(40);
-        HBox.setHgrow(editStatus, Priority.ALWAYS);
-
-        metaRow.getChildren().addAll(editPriority, editStatus);
-
-        // Date/Time row
-        HBox dateRow = new HBox(8);
-        dateRow.setAlignment(Pos.CENTER_LEFT);
-
-        DatePicker editDueDate = new DatePicker();
-        editDueDate.setValue(task.getDueDate() != null ? task.getDueDate().toLocalDateTime().toLocalDate() : LocalDate.now());
-        editDueDate.getStyleClass().add("task-edit-date");
-        editDueDate.setPrefHeight(40);
-        HBox.setHgrow(editDueDate, Priority.ALWAYS);
-
-        TextField editEstimatedTime = new TextField(task.getEstimatedTime());
-        editEstimatedTime.getStyleClass().add("task-edit-field");
-        editEstimatedTime.setPromptText("Est. time");
-        editEstimatedTime.setPrefHeight(40);
-        HBox.setHgrow(editEstimatedTime, Priority.ALWAYS);
-
-        dateRow.getChildren().addAll(editDueDate, editEstimatedTime);
-
-        // Action buttons
-        HBox actionsRow = new HBox(8);
-        actionsRow.setAlignment(Pos.CENTER_RIGHT);
-
-        Button saveButton = new Button("✓ Save");
-        saveButton.getStyleClass().add("task-btn-save");
-        saveButton.setPrefHeight(38);
-        saveButton.setOnAction(e -> {
-            saveTaskFromEdit(task, editTitle, editDescription, editPriority, editStatus, editDueDate, editEstimatedTime);
-            switchToViewMode(card, task);
-        });
-
-        Button cancelButton = new Button("✕ Cancel");
-        cancelButton.getStyleClass().add("task-btn-cancel");
-        cancelButton.setPrefHeight(38);
-        cancelButton.setOnAction(e -> switchToViewMode(card, task));
-
-        actionsRow.getChildren().addAll(cancelButton, saveButton);
-
-        // Keyboard shortcuts
-        editTitle.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ESCAPE) {
-                switchToViewMode(card, task);
-            } else if (e.getCode() == KeyCode.ENTER && e.isControlDown()) {
-                saveTaskFromEdit(task, editTitle, editDescription, editPriority, editStatus, editDueDate, editEstimatedTime);
-                switchToViewMode(card, task);
+            if (taskService.updateTask(task)) {
+                boolean nowDone = normalizeStatus(task.getStatus()).equals("completed");
+                titleLbl.getStyleClass().setAll(nowDone ? "tasks-card-title-done" : "tasks-card-title");
+                titleLbl.setText(task.getTitle());
+                editPanel.setVisible(false);
+                editPanel.setManaged(false);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Save failed", "Could not update the task.");
             }
         });
 
-        content.getChildren().addAll(editTitle, editDescription, metaRow, dateRow, actionsRow);
-        return content;
+        Button cancelBtn = new Button("✕  Cancel");
+        cancelBtn.getStyleClass().add("tasks-btn-cancel");
+        cancelBtn.setOnAction(e -> {
+            editPanel.setVisible(false);
+            editPanel.setManaged(false);
+        });
+
+        btnRow.getChildren().addAll(cancelBtn, saveBtn);
+        panel.getChildren().addAll(rowA, rowB, eDesc, btnRow);
+        return panel;
     }
 
-    private void saveTaskFromEdit(Task task, TextField titleField, TextArea descriptionArea, 
-                                   ComboBox<String> priorityBox, 
-                                   ComboBox<String> statusBox, DatePicker dueDatePicker, 
-                                   TextField estimatedTimeField) {
-        String title = titleField != null ? titleField.getText().trim() : task.getTitle();
-        if (title == null || title.isBlank()) {
-            showAlert(Alert.AlertType.ERROR, "Task title required", "Please enter a title before saving.");
-            return;
-        }
-
-        task.setTitle(title);
-        task.setDescription(descriptionArea != null ? descriptionArea.getText().trim() : task.getDescription());
-        task.setPriority(priorityBox != null ? priorityBox.getValue().toLowerCase() : task.getPriority());
-        
-        String newStatus = statusBox != null ? normalizeStatus(statusBox.getValue()) : task.getStatus();
-        task.setStatus(newStatus);
-        
-        task.setDueDate(dueDatePicker != null && dueDatePicker.getValue() != null ? 
-            Timestamp.valueOf(dueDatePicker.getValue().atStartOfDay()) : task.getDueDate());
-        task.setEstimatedTime(estimatedTimeField != null ? estimatedTimeField.getText().trim() : task.getEstimatedTime());
-
-        if (!taskService.updateTask(task)) {
-            showAlert(Alert.AlertType.ERROR, "Save failed", "The task could not be updated right now.");
-        }
+    private VBox labeledControl(String labelText, Control control, boolean grow) {
+        VBox box = new VBox(4);
+        Label lbl = new Label(labelText);
+        lbl.getStyleClass().add("tasks-field-label");
+        box.getChildren().addAll(lbl, control);
+        if (grow) HBox.setHgrow(box, Priority.ALWAYS);
+        return box;
     }
 
-    private void confirmDelete(VBox card, Task task) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Delete task?");
-        confirm.setHeaderText("This action cannot be undone.");
-        confirm.setContentText("Delete \"" + task.getTitle() + "\"?");
-        confirm.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-        if (confirm.showAndWait().filter(button -> button == ButtonType.OK).isPresent()) {
-            animateDelete(card, task);
-        }
-    }
+    // ══════════════════════════════════════════════════════════════════════
+    // Actions
+    // ══════════════════════════════════════════════════════════════════════
 
     private void handleAddTask() {
         if (currentUser == null) {
-            showAlert(Alert.AlertType.ERROR, "Login required", "Please log in again before creating a task.");
+            showAlert(Alert.AlertType.ERROR, "Not logged in", "Please log in again.");
             return;
         }
-
-        String title = titleField != null ? titleField.getText().trim() : "";
-        if (title == null || title.isBlank()) {
-            showAlert(Alert.AlertType.ERROR, "Task title required", "Please enter a task title first.");
+        String title = titleField == null ? "" : titleField.getText().trim();
+        if (title.isBlank()) {
+            showAlert(Alert.AlertType.ERROR, "Title required", "Please enter a task title.");
             return;
         }
-
         Task task = new Task();
         task.setUserId(currentUser.getId());
         task.setTitle(title);
+        task.setSubject(subjectField      != null ? subjectField.getText().trim()      : "");
         task.setDescription(descriptionArea != null ? descriptionArea.getText().trim() : "");
-        task.setPriority(priorityComboBox != null ? priorityComboBox.getValue().toLowerCase() : "medium");
-        task.setStatus("pending");
-        task.setDueDate(dueDatePicker != null && dueDatePicker.getValue() != null ? Timestamp.valueOf(dueDatePicker.getValue().atStartOfDay()) : null);
-        task.setEstimatedTime(estimatedTimeField != null ? estimatedTimeField.getText().trim() : "");
+        task.setPriority((priorityComboBox != null && priorityComboBox.getValue() != null)
+                ? priorityComboBox.getValue().toLowerCase() : "medium");
+        task.setStatus(normalizeStatus(
+                statusComboBox != null && statusComboBox.getValue() != null
+                ? statusComboBox.getValue() : "Pending"));
+        task.setDueDate(dueDatePicker != null && dueDatePicker.getValue() != null
+                ? Timestamp.valueOf(dueDatePicker.getValue().atStartOfDay()) : null);
+        task.setEstimatedTime(estimatedTimeField != null
+                ? estimatedTimeField.getText().trim() : "");
 
         if (taskService.addTask(task)) {
-            // Clear form fields
-            if (titleField != null) titleField.clear();
-            if (descriptionArea != null) descriptionArea.clear();
-            if (priorityComboBox != null) priorityComboBox.setValue("Medium");
-            if (dueDatePicker != null) dueDatePicker.setValue(LocalDate.now());
+            if (titleField        != null) titleField.clear();
+            if (subjectField      != null) subjectField.clear();
+            if (descriptionArea   != null) descriptionArea.clear();
+            if (priorityComboBox  != null) priorityComboBox.setValue("Medium");
+            if (statusComboBox    != null) statusComboBox.setValue("Pending");
+            if (dueDatePicker     != null) dueDatePicker.setValue(LocalDate.now());
             if (estimatedTimeField != null) estimatedTimeField.clear();
-            
-            // Refresh will happen via EventBus subscription - no need to call refreshTasks() here
+            // EventBus triggers loadTasksInternal automatically
         } else {
-            showAlert(Alert.AlertType.ERROR, "Add task failed", "The task could not be created right now.");
+            showAlert(Alert.AlertType.ERROR, "Add failed", "Could not create the task.");
         }
     }
 
-    private void refreshTasks() {
-        // Deprecated - EventBus handles refresh automatically
-        // Kept for backward compatibility but intentionally empty
-    }
-
-    private Label createBadge(String text, String styleClass) {
-        Label badge = new Label(text);
-        badge.getStyleClass().addAll("task-badge-base", styleClass);
-        return badge;
-    }
-
-    private String getStatusLabel(String status) {
-        return switch (normalizeStatus(status)) {
-            case "completed" -> "Completed";
-            case "in-progress" -> "In Progress";
-            default -> "Pending";
-        };
-    }
-
-    private String getPriorityClass(String priority) {
-        return switch (priority == null ? "medium" : priority.toLowerCase()) {
-            case "high" -> "task-badge-priority-high";
-            case "medium" -> "task-badge-priority-med";
-            case "low" -> "task-badge-priority-low";
-            default -> "task-badge-priority-med";
-        };
-    }
-
-    private String getStatusClass(String status) {
-        return switch (normalizeStatus(status)) {
-            case "completed" -> "task-badge-status-done";
-            case "in-progress" -> "task-badge-status-progress";
-            default -> "task-badge-status-pending";
-        };
-    }
-
-    private String getStatusStyle(String status) {
-        return switch (normalizeStatus(status)) {
-            case "completed" -> "status-completed";
-            case "in-progress" -> "status-progress";
-            default -> "status-pending";
-        };
-    }
-
-    private String getPriorityStyle(String priority) {
-        return switch (priority == null ? "medium" : priority.toLowerCase()) {
-            case "high" -> "priority-high";
-            case "medium" -> "priority-medium";
-            case "low" -> "priority-low";
-            default -> "priority-medium";
-        };
-    }
-
-    private String normalizeStatus(String status) {
-        if (status == null) {
-            return "pending";
+    private void markComplete(Task task) {
+        task.setStatus("completed");
+        if (!taskService.updateTask(task)) {
+            showAlert(Alert.AlertType.ERROR, "Update failed", "Could not mark task as complete.");
         }
-        String normalized = status.trim().toLowerCase();
-        return switch (normalized) {
+        // EventBus will reload
+    }
+
+    private void confirmDelete(HBox card, Task task) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Delete Task");
+        confirm.setHeaderText("Delete \"" + task.getTitle() + "\"?");
+        confirm.setContentText("This action cannot be undone.");
+        confirm.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        confirm.showAndWait().filter(b -> b == ButtonType.OK).ifPresent(b -> animateDelete(card, task));
+    }
+
+    private void animateDelete(HBox card, Task task) {
+        FadeTransition fade   = new FadeTransition(Duration.millis(200), card);
+        fade.setFromValue(1.0); fade.setToValue(0.0);
+        TranslateTransition slide = new TranslateTransition(Duration.millis(200), card);
+        slide.setFromX(0); slide.setToX(16);
+        ParallelTransition pt = new ParallelTransition(fade, slide);
+        pt.setOnFinished(e -> {
+            if (!taskService.deleteTask(task.getId())) {
+                Platform.runLater(() -> {
+                    card.setOpacity(1.0); card.setTranslateX(0);
+                    showAlert(Alert.AlertType.ERROR, "Delete failed", "Could not delete the task.");
+                });
+            }
+        });
+        pt.play();
+    }
+
+    private void animateHover(HBox card, boolean in) {
+        ScaleTransition st = new ScaleTransition(Duration.millis(150), card);
+        st.setToX(in ? 1.005 : 1.0);
+        st.setToY(in ? 1.005 : 1.0);
+        st.play();
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Helpers
+    // ══════════════════════════════════════════════════════════════════════
+
+    private Label badge(String text, String styleClass) {
+        Label l = new Label(text);
+        l.getStyleClass().addAll("tasks-badge", styleClass);
+        return l;
+    }
+
+    private String normalizeStatus(String s) {
+        if (s == null) return "pending";
+        return switch (s.trim().toLowerCase()) {
             case "in progress", "in-progress", "in_progress" -> "in-progress";
             case "completed" -> "completed";
             default -> "pending";
         };
     }
 
-    private String getDisplayText(String value, String fallback) {
-        return (value == null || value.isBlank()) ? fallback : value;
-    }
-
-    private String capitalize(String value) {
-        if (value == null || value.isBlank()) {
-            return "Medium";
-        }
-        return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
-    }
-
-    private String formatDueDate(Timestamp timestamp) {
-        if (timestamp == null) {
-            return "No due date";
-        }
-        return timestamp.toLocalDateTime().toLocalDate().format(DATE_FORMATTER);
-    }
-
-    private String formatDate(Timestamp timestamp) {
-        if (timestamp == null) {
-            return "Just now";
-        }
-        return timestamp.toLocalDateTime().toLocalDate().format(DATE_FORMATTER);
-    }
-
-    private String getStatusDisplayName(String status) {
-        return switch (normalizeStatus(status)) {
-            case "completed" -> "Completed";
-            case "in-progress" -> "In Progress";
-            default -> "Pending";
+    private String getStatusLabel(String s) {
+        return switch (normalizeStatus(s)) {
+            case "completed"  -> "Completed";
+            case "in-progress"-> "In Progress";
+            default           -> "Pending";
         };
     }
 
-    private void animateCardHover(VBox card, boolean hovered) {
-        ScaleTransition transition = new ScaleTransition(Duration.millis(180), card);
-        transition.setToX(hovered ? 1.02 : 1.0);
-        transition.setToY(hovered ? 1.02 : 1.0);
-        transition.play();
+    private String getStatusDisplayName(String s) { return getStatusLabel(s); }
+
+    private String getStatusBadgeClass(String s) {
+        return switch (normalizeStatus(s)) {
+            case "completed"   -> "tasks-badge-completed";
+            case "in-progress" -> "tasks-badge-progress";
+            default            -> "tasks-badge-pending";
+        };
     }
 
-    private void animateSuccess(VBox card) {
-        ScaleTransition scale = new ScaleTransition(Duration.millis(140), card);
-        scale.setFromX(1.0);
-        scale.setFromY(1.0);
-        scale.setToX(1.01);
-        scale.setToY(1.01);
-        scale.setAutoReverse(true);
-        scale.setCycleCount(2);
-        scale.play();
+    private String getPriorityBadgeClass(String p) {
+        return switch (p == null ? "medium" : p.toLowerCase()) {
+            case "high" -> "tasks-badge-high";
+            case "low"  -> "tasks-badge-low";
+            default     -> "tasks-badge-medium";
+        };
     }
 
-    private void animateDelete(VBox card, Task task) {
-        FadeTransition fade = new FadeTransition(Duration.millis(180), card);
-        fade.setFromValue(1.0);
-        fade.setToValue(0.0);
-        TranslateTransition slide = new TranslateTransition(Duration.millis(180), card);
-        slide.setFromX(0);
-        slide.setToX(12);
-        ParallelTransition transition = new ParallelTransition(fade, slide);
-        transition.setOnFinished(e -> {
-            if (taskService.deleteTask(task.getId())) {
-                // Refresh will happen via EventBus subscription - no need to call refreshTasks() here
-            } else {
-                // Restore card visibility on failure
-                Platform.runLater(() -> {
-                    fade.stop();
-                    slide.stop();
-                    card.setOpacity(1.0);
-                    card.setTranslateX(0);
-                    showAlert(Alert.AlertType.ERROR, "Delete failed", "The task could not be deleted right now.");
-                });
-            }
-        });
-        transition.play();
+    private String getPriorityStripClass(String p) {
+        return switch (p == null ? "medium" : p.toLowerCase()) {
+            case "high" -> "tasks-strip-high";
+            case "low"  -> "tasks-strip-low";
+            default     -> "tasks-strip-medium";
+        };
     }
 
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private String formatDate(Timestamp ts) {
+        if (ts == null) return "";
+        return ts.toLocalDateTime().toLocalDate().format(DATE_FMT);
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.isBlank()) return "Medium";
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
+    }
+
+    private String nvl(String s, String fallback) {
+        return (s == null || s.isBlank()) ? fallback : s;
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 }

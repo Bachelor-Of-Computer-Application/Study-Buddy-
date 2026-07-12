@@ -62,6 +62,23 @@ public class AdminUsersController {
     private int currentPage = 1;
     private static final int PAGE_SIZE = 10;
 
+    /**
+     * Guard flag: true while a hard-delete background thread is running.
+     *
+     * Purpose: AdminService.hardDeleteUser() publishes AdminChangesEvent
+     * synchronously on the background thread.  EventBus dispatches that event
+     * to our subscriber which queues Platform.runLater(this::loadData).
+     * If that runLater fires while successAlert.showAndWait() is blocking the
+     * FX thread, JavaFX pumps the event queue and runs loadData() — a SQL
+     * query — on the FX thread, causing the UI to freeze / deadlock.
+     *
+     * Setting this flag true before the deletion thread starts and false after
+     * the success dialog closes makes the EventBus subscriber a no-op during
+     * the entire deletion window.  A clean reload is then scheduled as a
+     * separate background Task after the dialog returns.
+     */
+    private volatile boolean deletionInProgress = false;
+
     @FXML
     public void initialize() {
         setupColumns();
@@ -71,6 +88,24 @@ public class AdminUsersController {
         if (usersTable != null) {
             usersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         }
+        
+        // Subscribe to EventBus for real-time updates.
+        // IMPORTANT: the listener must NOT call loadData() while a deletion is
+        // in progress.  hardDeleteUser() publishes AdminChangesEvent on the
+        // background thread; that event is dispatched synchronously, queuing
+        // Platform.runLater(loadData) before our own runLater(uiUpdate) has
+        // finished.  When successAlert.showAndWait() pumps the FX queue it
+        // would execute loadData() — a SQL call — on the FX thread, causing
+        // the freeze.  The deletionInProgress flag suppresses that reload; a
+        // clean background reload is scheduled explicitly after deletion ends.
+        com.studybuddy.utils.EventBus.getInstance().subscribe(
+            com.studybuddy.utils.EventBus.AdminChangesEvent.class,
+            (_event) -> {
+                if (!deletionInProgress) {
+                    javafx.application.Platform.runLater(this::loadData);
+                }
+            }
+        );
     }
 
     // ── Data Loading ──────────────────────────────────────────────────────────
@@ -212,6 +247,8 @@ public class AdminUsersController {
         grid.setPadding(new Insets(20, 150, 10, 10));
 
         TextField nameF  = new TextField(nullSafe(u.getDisplayFullName()));
+        TextField usernameF = new TextField(nullSafe(u.getUsername()));
+        usernameF.setDisable(true); // Username should not be editable
         TextField emailF = new TextField(nullSafe(u.getEmail()));
         ComboBox<Department> deptC = new ComboBox<>(FXCollections.observableArrayList(academicService.getAllActiveDepartments()));
         deptC.setCellFactory(lv -> new ListCell<>() {
@@ -249,14 +286,16 @@ public class AdminUsersController {
             semC.getItems().clear();
             if (d != null) semC.setItems(FXCollections.observableArrayList(academicService.getSemestersByDepartment(d.getId())));
         });
-        ComboBox<String> roleC = new ComboBox<>(FXCollections.observableArrayList("STUDENT", "ADMIN"));
-        roleC.setValue(u.getRole());
+        
+        ComboBox<String> statusC = new ComboBox<>(FXCollections.observableArrayList("Active", "Suspended", "Banned", "Pending"));
+        statusC.setValue(nullSafe(u.getStatus()));
 
         grid.addRow(0, new Label("Full Name:"), nameF);
-        grid.addRow(1, new Label("Email:"),      emailF);
-        grid.addRow(2, new Label("Role:"),       roleC);
+        grid.addRow(1, new Label("Username:"), usernameF);
+        grid.addRow(2, new Label("Email:"),      emailF);
         grid.addRow(3, new Label("Department:"), deptC);
         grid.addRow(4, new Label("Semester:"),   semC);
+        grid.addRow(5, new Label("Status:"),     statusC);
         dialog.getDialogPane().setContent(grid);
 
         dialog.showAndWait().ifPresent(res -> {
@@ -266,16 +305,17 @@ public class AdminUsersController {
                 }
                 String deptName = deptC.getValue() != null ? deptC.getValue().getName() : "";
                 String semLabel = semC.getValue() != null ? semC.getValue().getName() : "";
+                // Role is preserved - not editable anymore
                 boolean ok = adminService.editUserInfo(u.getId(),
                         nameF.getText().trim(), emailF.getText().trim(),
-                        roleC.getValue(), deptName, semLabel);
+                        u.getRole(), deptName, semLabel);
                 if (ok) {
                     u.setName(nameF.getText().trim());
                     u.setFullName(nameF.getText().trim());
                     u.setEmail(emailF.getText().trim());
-                    u.setRole(roleC.getValue());
                     u.setDepartment(deptName);
                     u.setSemester(semLabel);
+                    u.setStatus(statusC.getValue());
                     usersTable.refresh();
                     showAlert(Alert.AlertType.INFORMATION, "User updated successfully.");
                 }
@@ -299,24 +339,6 @@ public class AdminUsersController {
             showAlert(ok ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR,
                     ok ? "Password reset successfully." : "Failed to reset password.");
         });
-    }
-
-    @FXML
-    public void handlePromote() {
-        User u = selectedUser(); if (u == null) return;
-        if (confirm("Promote " + u.getName() + " to Admin?")) {
-            boolean ok = adminService.promoteToAdmin(u.getId(), u.getName());
-            if (ok) { u.setRole("ADMIN"); usersTable.refresh(); }
-        }
-    }
-
-    @FXML
-    public void handleDemote() {
-        User u = selectedUser(); if (u == null) return;
-        if (confirm("Demote " + u.getName() + " to Student?")) {
-            boolean ok = adminService.demoteToUser(u.getId(), u.getName());
-            if (ok) { u.setRole("STUDENT"); usersTable.refresh(); }
-        }
     }
 
     @FXML
@@ -348,10 +370,181 @@ public class AdminUsersController {
     @FXML
     public void handleDelete() {
         User u = selectedUser(); if (u == null) return;
-        if (confirm("Soft-delete user " + u.getName() + "? Status will be set to Deleted.")) {
-            boolean ok = adminService.softDeleteUser(u.getId(), u.getName());
-            if (ok) { masterList.remove(u); filteredList.remove(u); updateTable(); }
-        }
+        
+        // Show detailed warning dialog
+        Alert confirmDialog = new Alert(Alert.AlertType.WARNING);
+        confirmDialog.setTitle("Permanently Delete User");
+        confirmDialog.setHeaderText("Are you sure you want to permanently delete this user?");
+        
+        StringBuilder content = new StringBuilder();
+        content.append("User: ").append(u.getName()).append(" (").append(u.getEmail()).append(")\n\n");
+        content.append("⚠️ WARNING: This action CANNOT be undone!\n\n");
+        content.append("This will permanently delete:\n");
+        content.append("• User account\n");
+        content.append("• All user's notes\n");
+        content.append("• All user's resources\n");
+        content.append("• All user's questions\n");
+        content.append("• All user's answers\n");
+        content.append("• All user's tasks\n");
+        content.append("• All user's notifications\n");
+        content.append("• All user's activity logs\n");
+        content.append("• All associated files\n\n");
+        content.append("Are you absolutely sure you want to continue?");
+        
+        confirmDialog.setContentText(content.toString());
+        confirmDialog.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+        
+        ButtonType result = confirmDialog.showAndWait().orElse(ButtonType.NO);
+        if (result != ButtonType.YES) return;
+        
+        // Show progress indicator (non-blocking – no buttons, dismissed from code)
+        Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
+        progressAlert.setTitle("Deleting User");
+        progressAlert.setHeaderText("Please wait...");
+        progressAlert.setContentText("Deleting user and all related data...");
+        progressAlert.getButtonTypes().clear();
+        progressAlert.show();
+        
+        System.out.println(">>> UI: Progress dialog shown");
+
+        // Block EventBus-triggered loadData() for the entire deletion window.
+        // AdminChangesEvent is published by hardDeleteUser() on the background
+        // thread.  Without this flag, that event would queue loadData() via
+        // Platform.runLater, which then runs on the FX thread while
+        // successAlert.showAndWait() is blocking it — causing a UI freeze.
+        deletionInProgress = true;
+        
+        // Perform deletion in background thread to keep FX thread free
+        Thread deletionThread = new Thread(() -> {
+            System.out.println(">>> THREAD: Background deletion thread STARTED for user: " + u.getName() + " (ID=" + u.getId() + ")");
+            
+            com.studybuddy.admin.dao.AdminDAO.DeletionResult deleteResult = null;
+            Exception caughtException = null;
+            
+            try {
+                System.out.println(">>> THREAD: Calling adminService.hardDeleteUser()...");
+                deleteResult = adminService.hardDeleteUser(u.getId(), u.getName());
+                System.out.println(">>> THREAD: adminService.hardDeleteUser() RETURNED. Success=" + (deleteResult != null && deleteResult.success));
+            } catch (Exception e) {
+                System.out.println(">>> THREAD: Exception caught: " + e.getMessage());
+                e.printStackTrace();
+                caughtException = e;
+            }
+            
+            // Capture final values for lambda
+            final com.studybuddy.admin.dao.AdminDAO.DeletionResult finalResult = deleteResult;
+            final Exception finalException = caughtException;
+            
+            System.out.println(">>> THREAD: Queueing Platform.runLater() for UI update...");
+
+            // ── Platform.runLater: UI UPDATES ONLY — no DB calls, no loadData() ──
+            javafx.application.Platform.runLater(() -> {
+                System.out.println(">>> UI: Platform.runLater() ENTERED");
+                
+                try {
+                    // 1. Close progress dialog first — must complete before any showAndWait()
+                    System.out.println(">>> UI: Closing progress dialog...");
+                    progressAlert.close();
+                    System.out.println(">>> UI: Progress dialog CLOSED");
+
+                    if (finalException != null) {
+                        // ── Exception path ──────────────────────────────────
+                        deletionInProgress = false;   // release guard before dialog
+                        System.out.println(">>> UI: Showing exception error dialog");
+                        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                        errorAlert.setTitle("Error");
+                        errorAlert.setHeaderText("Deletion failed");
+                        errorAlert.setContentText(finalException.getMessage());
+                        errorAlert.showAndWait();
+
+                    } else if (finalResult != null && finalResult.success) {
+                        // ── Success path ─────────────────────────────────────
+                        // 2. Remove from in-memory lists (pure UI — no SQL)
+                        System.out.println(">>> UI: Deletion successful, updating lists...");
+                        masterList.remove(u);
+                        filteredList.remove(u);
+                        updateTable();
+
+                        // 3. Show success dialog — safe: no DB calls queued on FX thread
+                        System.out.println(">>> UI: Showing success dialog");
+                        Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                        successAlert.setTitle("User Deleted");
+                        successAlert.setHeaderText("User deleted successfully");
+                        successAlert.setContentText(finalResult.getSummary());
+                        successAlert.showAndWait();
+                        System.out.println(">>> UI: Success dialog closed");
+
+                        // 4. Release guard AFTER dialog closes, then reload off-thread
+                        deletionInProgress = false;
+                        scheduleBackgroundReload();
+
+                    } else {
+                        // ── Failure path ─────────────────────────────────────
+                        deletionInProgress = false;   // release guard before dialog
+                        System.out.println(">>> UI: Deletion failed, showing error dialog");
+                        String errorMsg = (finalResult != null && finalResult.errorMessage != null)
+                            ? finalResult.errorMessage
+                            : "Unknown error occurred";
+                        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                        errorAlert.setTitle("Deletion Failed");
+                        errorAlert.setHeaderText("Failed to delete user");
+                        errorAlert.setContentText(errorMsg);
+                        errorAlert.showAndWait();
+                    }
+                    
+                    System.out.println(">>> UI: Platform.runLater() COMPLETED");
+                    
+                } catch (Exception uiEx) {
+                    System.out.println(">>> UI: Exception in Platform.runLater(): " + uiEx.getMessage());
+                    uiEx.printStackTrace();
+                    deletionInProgress = false;   // always release on unexpected error
+                    try { progressAlert.close(); } catch (Exception ignored) {}
+                }
+            });
+            
+            System.out.println(">>> THREAD: Background deletion thread FINISHED");
+        });
+        
+        deletionThread.setName("UserDeletionThread-" + u.getId());
+        deletionThread.setDaemon(true);
+        deletionThread.start();
+        System.out.println(">>> UI: Background thread STARTED (thread name: " + deletionThread.getName() + ")");
+    }
+
+    /**
+     * Reload the user list from the database on a background thread, then
+     * apply the result on the FX thread.  Called only after the success dialog
+     * has closed so showAndWait() can no longer pump the queue and accidentally
+     * run this code on the FX thread.
+     *
+     * This is the ONLY place where a post-deletion DB reload is permitted.
+     * DO NOT call loadData() directly on the FX thread after deletion.
+     */
+    private void scheduleBackgroundReload() {
+        javafx.concurrent.Task<java.util.List<User>> reloadTask = new javafx.concurrent.Task<>() {
+            @Override
+            protected java.util.List<User> call() {
+                return adminService.getUsers();   // SQL runs off the FX thread
+            }
+        };
+
+        reloadTask.setOnSucceeded(evt -> {
+            // Back on the FX thread — pure UI update, no SQL
+            java.util.List<User> fresh = reloadTask.getValue();
+            masterList.setAll(fresh);
+            filteredList = new java.util.ArrayList<>(masterList);
+            currentPage  = 1;
+            updateTable();
+            System.out.println(">>> UI: Background reload completed (" + fresh.size() + " users)");
+        });
+
+        reloadTask.setOnFailed(evt -> {
+            System.out.println(">>> UI: Background reload failed: " + reloadTask.getException());
+        });
+
+        Thread reloadThread = new Thread(reloadTask, "UserReloadThread");
+        reloadThread.setDaemon(true);
+        reloadThread.start();
     }
 
     // ── Export ────────────────────────────────────────────────────────────────

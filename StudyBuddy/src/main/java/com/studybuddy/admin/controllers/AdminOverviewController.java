@@ -94,11 +94,17 @@ public class AdminOverviewController {
         logger.fine("[DEBUG] POST-LOAD VERIFY lblTotalUsers.getText() = '" + (lblTotalUsers != null ? lblTotalUsers.getText() : "NULL_LABEL") + "'");
         logger.fine("[DEBUG] POST-LOAD VERIFY lblTotalNotes.getText() = '" + (lblTotalNotes != null ? lblTotalNotes.getText() : "NULL_LABEL") + "'");
         
-        // Subscribe to EventBus events
-        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> refreshStats());
-        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (_event) -> refreshStats());
-        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> refreshStats());
-        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> refreshStats());
+        // Subscribe to EventBus events - ensure UI updates happen on JavaFX Application Thread
+        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshStats));
+        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshStats));
+        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshStats));
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshStats));
+        EventBus.getInstance().subscribe(EventBus.AdminChangesEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshStats));
     }
 
     // ── Stats ─────────────────────────────────────────────────────────────────

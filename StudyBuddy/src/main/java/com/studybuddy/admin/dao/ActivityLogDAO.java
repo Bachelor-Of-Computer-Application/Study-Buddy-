@@ -48,10 +48,16 @@ public class ActivityLogDAO {
             ps.setString(5, log.getTargetName());
             ps.setString(6, log.getStatus() != null ? log.getStatus() : "SUCCESS");
             ps.setString(7, log.getRemarks());
+            
+            logger.fine("[ActivityLogDAO] Inserting log with admin_id=" + log.getAdminId() + 
+                       ", admin_name=" + log.getAdminName());
+            
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            logger.warning("Failed to insert activity log: " + e.getMessage());
+            logger.severe("Failed to insert activity log: " + e.getMessage() + 
+                         " | admin_id=" + log.getAdminId() + 
+                         ", action=" + log.getAction());
             return false;
         }
     }

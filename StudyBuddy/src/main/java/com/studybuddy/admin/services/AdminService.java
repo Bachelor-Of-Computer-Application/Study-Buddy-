@@ -32,30 +32,79 @@ public class AdminService {
     // ══════════════════════════════════════════════════════════════════════════
 
     /**
-     * Validate admin credentials. On success, stores the User in SessionManager.
+     * Validate admin credentials. Accepts either username or email address.
+     * On success, stores the User in SessionManager and prints verification output.
+     *
+     * Lookup order:
+     *   1. Search Users WHERE username = input OR email = input
+     *   2. Verify role is ADMIN or Administrator
+     *   3. Verify password (BCrypt hash or plain-text fallback for dev seeds)
+     *   4. Store in SessionManager
      *
      * @return true if login is valid
      */
-    public boolean validateAdminLogin(String username, String password) {
-        User user = new UserDAO().getUserByEmail(username);
-        if (user != null && ("admin".equalsIgnoreCase(user.getRole()) || "ADMIN".equalsIgnoreCase(user.getRole()))) {
-            boolean valid = PasswordHasher.verifyPassword(password, user.getPassword())
-                    || password.equals(user.getPassword()); // plain-text fallback for dev
-            if (valid) {
-                SessionManager.setCurrentAdmin(user);
-                logService.logAction("Admin Login", "Session", username);
-                return true;
-            }
+    public boolean validateAdminLogin(String usernameOrEmail, String password) {
+        System.out.println("[AdminService] Attempting login for: " + usernameOrEmail);
+
+        // Support both username and email — try the combined lookup first.
+        User user = new UserDAO().getUserByUsernameOrEmail(usernameOrEmail);
+
+        // Fallback: plain email lookup (covers edge cases where username column is null)
+        if (user == null) {
+            user = new UserDAO().getUserByEmail(usernameOrEmail);
         }
-        // Hardcoded dev fallback
-        if ("admin".equalsIgnoreCase(username) && "admin123".equals(password)) {
-            User devAdmin = new User();
-            devAdmin.setId(0); devAdmin.setName("Administrator"); devAdmin.setEmail(username);
-            devAdmin.setRole("ADMIN"); devAdmin.setStatus("Active");
-            SessionManager.setCurrentAdmin(devAdmin);
-            return true;
+
+        if (user == null) {
+            System.out.println("[AdminService] User not found in database: " + usernameOrEmail);
+            return false;
         }
-        return false;
+
+        System.out.println("[AdminService] User found. ID: " + user.getId()
+                + ", Name: "  + user.getName()
+                + ", Role: "  + user.getRole()
+                + ", Email: " + user.getEmail());
+
+        // Accept both role values used in the DB (ADMIN and Administrator)
+        String role = user.getRole();
+        boolean isAdmin = role != null
+                && (role.equalsIgnoreCase("ADMIN")
+                    || role.equalsIgnoreCase("Administrator"));
+
+        if (!isAdmin) {
+            System.out.println("[AdminService] User is not an admin. Role: " + role);
+            return false;
+        }
+
+        // Verify password — supports BCrypt hash and plain-text dev seeds
+        boolean valid = PasswordHasher.verifyPassword(password, user.getPassword())
+                || password.equals(user.getPassword());
+
+        if (!valid) {
+            System.out.println("[AdminService] Password verification failed");
+            return false;
+        }
+
+        // ── Success ──────────────────────────────────────────────────────────
+        SessionManager.setCurrentAdmin(user);
+
+        // Verification output (as required)
+        System.out.println("[AdminService] ✓ Admin login successful.");
+        System.out.println("Authenticated Admin ID = " + user.getId());
+        System.out.println("Username = "              + user.getUsername());
+        System.out.println("Email = "                 + user.getEmail());
+        System.out.println("Role = "                  + user.getRole());
+
+        // Confirm SessionManager stored correctly
+        User storedAdmin = SessionManager.getCurrentAdmin();
+        if (storedAdmin != null) {
+            System.out.println("[AdminService] ✓ SessionManager.getCurrentAdmin() ID: " + storedAdmin.getId());
+        } else {
+            System.out.println("[AdminService] ✗ SessionManager.getCurrentAdmin() is NULL!");
+        }
+
+        logService.logAction("Admin Login", "Session",
+                user.getUsername() != null ? user.getUsername() : user.getEmail());
+        return true;
     }
 
     /** Clear session on logout. */
@@ -103,26 +152,66 @@ public class AdminService {
 
     public boolean suspendUser(int userId, String userName) {
         boolean ok = adminDAO.updateUserStatus(userId, "Suspended");
-        if (ok) logService.logAction("User Suspended", "User", userName);
+        if (ok) {
+            logService.logAction("User Suspended", "User", userName);
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
+        }
         return ok;
     }
 
     public boolean activateUser(int userId, String userName) {
         boolean ok = adminDAO.updateUserStatus(userId, "Active");
-        if (ok) logService.logAction("User Activated", "User", userName);
+        if (ok) {
+            logService.logAction("User Activated", "User", userName);
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
+        }
         return ok;
     }
 
     public boolean banUser(int userId, String userName) {
         boolean ok = adminDAO.updateUserStatus(userId, "Banned");
-        if (ok) logService.logAction("User Banned", "User", userName);
+        if (ok) {
+            logService.logAction("User Banned", "User", userName);
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
+        }
         return ok;
     }
 
     public boolean editUserInfo(int userId, String name, String email, String role,
                                 String department, String semester) {
+        // Get old user info for detailed logging
+        User oldUser = adminDAO.getUserById(userId);
+        
         boolean ok = adminDAO.updateUserInfo(userId, name, email, role, department, semester);
-        if (ok) logService.logAction("User Info Edited", "User", email);
+        
+        if (ok) {
+            // Build detailed change log
+            StringBuilder changes = new StringBuilder();
+            changes.append("User: ").append(email).append("\n");
+            changes.append("Changed:\n");
+            
+            if (oldUser != null) {
+                if (!name.equals(oldUser.getName())) {
+                    changes.append("- Name: '").append(oldUser.getName()).append("' → '").append(name).append("'\n");
+                }
+                if (!email.equals(oldUser.getEmail())) {
+                    changes.append("- Email: '").append(oldUser.getEmail()).append("' → '").append(email).append("'\n");
+                }
+                if (department != null && !department.equals(oldUser.getDepartment())) {
+                    changes.append("- Department: '").append(oldUser.getDepartment()).append("' → '").append(department).append("'\n");
+                }
+                if (semester != null && !semester.equals(oldUser.getSemester())) {
+                    changes.append("- Semester: '").append(oldUser.getSemester()).append("' → '").append(semester).append("'\n");
+                }
+            }
+            
+            logService.logAction("User Info Updated", "User", changes.toString());
+            
+            // Publish events for real-time UI updates
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.StatisticsChangedEvent());
+        }
+        
         return ok;
     }
 
@@ -133,12 +222,24 @@ public class AdminService {
         return ok;
     }
 
+    /**
+     * @deprecated Role changes should not be performed through the UI.
+     * This method is kept for backward compatibility only and is not exposed
+     * in the AdminUsersController UI.
+     */
+    @Deprecated
     public boolean promoteToAdmin(int userId, String userName) {
         boolean ok = adminDAO.promoteToAdmin(userId);
         if (ok) logService.logAction("User Promoted to Admin", "User", userName);
         return ok;
     }
 
+    /**
+     * @deprecated Role changes should not be performed through the UI.
+     * This method is kept for backward compatibility only and is not exposed
+     * in the AdminUsersController UI.
+     */
+    @Deprecated
     public boolean demoteToUser(int userId, String userName) {
         boolean ok = adminDAO.demoteToUser(userId);
         if (ok) logService.logAction("User Demoted to Student", "User", userName);
@@ -147,8 +248,66 @@ public class AdminService {
 
     public boolean softDeleteUser(int userId, String userName) {
         boolean ok = adminDAO.softDeleteUser(userId);
-        if (ok) logService.logAction("User Soft Deleted", "User", userName);
+        if (ok) {
+            logService.logAction("User Soft Deleted", "User", userName);
+            // Publish event for UI updates
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.StatisticsChangedEvent());
+        }
         return ok;
+    }
+    
+    /**
+     * Permanently delete user and all related records with proper transaction handling.
+     * Logs detailed information about all deleted items and publishes events for UI updates.
+     * 
+     * @param userId   User ID to delete
+     * @param userName User's name for logging
+     * @return DeletionResult with success status, counts, and error message if any
+     */
+    public AdminDAO.DeletionResult hardDeleteUser(int userId, String userName) {
+        System.out.println(">>> SERVICE: Entering AdminService.hardDeleteUser() for user=" + userName + ", id=" + userId);
+        
+        AdminDAO.DeletionResult result = adminDAO.hardDeleteUser(userId);
+        
+        System.out.println(">>> SERVICE: AdminDAO.hardDeleteUser() returned. Success=" + result.success);
+        
+        if (result.success) {
+            System.out.println(">>> SERVICE: Deletion successful, creating activity log...");
+            
+            // Log detailed deletion information
+            StringBuilder details = new StringBuilder();
+            details.append("User: ").append(userName).append("\n");
+            details.append("Deleted:\n");
+            details.append("- User account\n");
+            if (result.notesCount > 0) details.append("- ").append(result.notesCount).append(" Note(s)\n");
+            if (result.resourcesCount > 0) details.append("- ").append(result.resourcesCount).append(" Resource(s)\n");
+            if (result.questionsCount > 0) details.append("- ").append(result.questionsCount).append(" Question(s)\n");
+            if (result.answersCount > 0) details.append("- ").append(result.answersCount).append(" Answer(s)\n");
+            if (result.tasksCount > 0) details.append("- ").append(result.tasksCount).append(" Task(s)\n");
+            if (result.notificationsCount > 0) details.append("- ").append(result.notificationsCount).append(" Notification(s)\n");
+            
+            System.out.println(">>> SERVICE: Calling logService.logAction()...");
+            logService.logAction("User Permanently Deleted", "User", details.toString());
+            System.out.println(">>> SERVICE: Activity log completed");
+            
+            System.out.println(">>> SERVICE: Publishing EventBus events...");
+            // Publish events to update all UI components
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.StatisticsChangedEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.NotesChangedEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.ResourcesChangedEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.QuestionsChangedEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.TasksChangedEvent());
+            System.out.println(">>> SERVICE: EventBus events published");
+        } else {
+            System.out.println(">>> SERVICE: Deletion failed, logging failure...");
+            logService.logAction("User Deletion Failed", "User", 
+                userName + " - Error: " + result.errorMessage);
+        }
+        
+        System.out.println(">>> SERVICE: Exiting AdminService.hardDeleteUser()");
+        return result;
     }
 
     // ══════════════════════════════════════════════════════════════════════════

@@ -3,8 +3,13 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="rootPane" spacing="0" styleClass="root-pane" stylesheets="@../css/theme.css, @../css/home.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.TaskController">
+<VBox fx:id="rootPane"
+      styleClass="tasks-root"
+      stylesheets="@../css/theme.css, @../css/tasks.css"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.studybuddy.controllers.TaskController">
     <padding>
-        <Insets bottom="24" left="24" right="24" top="24"/>
+        <Insets top="0" right="0" bottom="0" left="0"/>
     </padding>
 </VBox>
