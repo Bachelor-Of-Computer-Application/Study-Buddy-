@@ -15,6 +15,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -294,7 +295,7 @@ public class AskQuestionController implements Initializable {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/com/studybuddy/fxml/HomeView.fxml")
             );
-            BorderPane homeView = loader.load();
+            Parent homeView = loader.load();
             rootPane.getScene().setRoot(homeView);
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Error",
@@ -312,7 +313,7 @@ public class AskQuestionController implements Initializable {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/com/studybuddy/fxml/HomeView.fxml")
             );
-            BorderPane homeView = loader.load();
+            Parent homeView = loader.load();
             rootPane.getScene().setRoot(homeView);
 
             // After navigation, trigger profile view

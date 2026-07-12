@@ -16,6 +16,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -248,7 +249,7 @@ public class NotesController implements Initializable {
     public void showCreateNoteDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/fxml/CreateNoteDialog.fxml"));
-            VBox dialogContent = loader.load();
+            Parent dialogContent = loader.load();
 
             Stage dialog = new Stage();
             dialog.setTitle("Create New Note");

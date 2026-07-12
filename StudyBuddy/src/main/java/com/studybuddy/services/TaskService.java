@@ -2,7 +2,6 @@ package com.studybuddy.services;
 
 import com.studybuddy.dao.TaskDAO;
 import com.studybuddy.models.Task;
-import com.studybuddy.utils.EventBus;
 import java.util.List;
 
 /**

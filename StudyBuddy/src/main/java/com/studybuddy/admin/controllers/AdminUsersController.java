@@ -372,7 +372,7 @@ public class AdminUsersController {
         User u = selectedUser(); if (u == null) return;
         
         // Show detailed warning dialog
-Alert confirmDialog = new Alert(Alert.AlertType.WARNING);
+        Alert confirmDialog = new Alert(Alert.AlertType.WARNING);
         confirmDialog.setTitle("Permanently Delete User");
         confirmDialog.setHeaderText("Are you sure you want to permanently delete this user?");
         
@@ -395,21 +395,16 @@ Alert confirmDialog = new Alert(Alert.AlertType.WARNING);
         confirmDialog.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
         
         ButtonType result = confirmDialog.showAndWait().orElse(ButtonType.NO);
-if (result != ButtonType.YES) {
-            return;
-        }
+        if (result != ButtonType.YES) return;
+        
         // Show progress indicator (non-blocking – no buttons, dismissed from code)
         Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
         progressAlert.setTitle("Deleting User");
         progressAlert.setHeaderText("Please wait...");
         progressAlert.setContentText("Deleting user and all related data...");
         progressAlert.getButtonTypes().clear();
-progressAlert.setResizable(false);
-
-        Stage stage = (Stage) progressAlert.getDialogPane().getScene().getWindow();
-        stage.setOnCloseRequest(event -> event.consume());
-
         progressAlert.show();
+        
         System.out.println(">>> UI: Progress dialog shown");
 
         // Block EventBus-triggered loadData() for the entire deletion window.
@@ -470,14 +465,14 @@ progressAlert.setResizable(false);
                         filteredList.remove(u);
                         updateTable();
 
-// 3. Show success dialog — safe: no DB calls queued on FX thread
-                            System.out.println(">>> UI: Showing success dialog");
-                            Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                            successAlert.setTitle("User Deleted");
-                            successAlert.setHeaderText("User deleted successfully");
-                            successAlert.setContentText(finalResult.getSummary());
-                            successAlert.showAndWait();
-                            System.out.println(">>> UI: Success dialog closed");
+                        // 3. Show success dialog — safe: no DB calls queued on FX thread
+                        System.out.println(">>> UI: Showing success dialog");
+                        Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                        successAlert.setTitle("User Deleted");
+                        successAlert.setHeaderText("User deleted successfully");
+                        successAlert.setContentText(finalResult.getSummary());
+                        successAlert.showAndWait();
+                        System.out.println(">>> UI: Success dialog closed");
 
                         // 4. Release guard AFTER dialog closes, then reload off-thread
                         deletionInProgress = false;

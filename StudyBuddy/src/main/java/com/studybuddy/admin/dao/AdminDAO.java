@@ -544,19 +544,8 @@ public class AdminDAO {
                 System.out.println("STEP 20: Deleting User record...");
                 int userRows;
                 try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Users WHERE id = ?")) {
-
                     ps.setInt(1, userId);
-
-                    System.out.println("\n==================================");
-                    System.out.println("Executing SQL:");
-                    System.out.println("DELETE FROM Users WHERE id = ?");
-                    System.out.println("Parameter = " + userId);
-
                     userRows = ps.executeUpdate();
-
-                    System.out.println("Deleted rows = " + userRows);
-                    System.out.println("Finished SQL");
-                    System.out.println("==================================");
                 }
                 System.out.println("STEP 20 DONE: User deleted, rows affected = " + userRows);
                 

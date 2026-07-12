@@ -998,7 +998,7 @@ public class DashboardController implements Initializable {
     public void handleUploadNotes() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/fxml/CreateNoteDialog.fxml"));
-            VBox dialogContent = loader.load();
+            Parent dialogContent = loader.load();
 
             Stage dialog = new Stage();
             dialog.setTitle("Create New Note");

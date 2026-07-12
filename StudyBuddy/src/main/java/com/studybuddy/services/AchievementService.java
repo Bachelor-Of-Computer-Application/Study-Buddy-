@@ -10,9 +10,6 @@ import java.util.List;
  * Service to calculate and track user achievements based on existing data.
  */
 public class AchievementService {
-    private final NoteDAO noteDAO = new NoteDAO();
-    private final ResourceDAO resourceDAO = new ResourceDAO();
-    private final QuestionDAO questionDAO = new QuestionDAO();
     private final TaskDAO taskDAO = new TaskDAO();
     private final StatisticsService statsService = new StatisticsService();
     

@@ -5,11 +5,8 @@ import com.studybuddy.dao.QuestionDAO;
 import com.studybuddy.dao.UserDAO;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.User;
-import com.studybuddy.utils.DatabaseUtil;
 import com.studybuddy.utils.EventBus;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
