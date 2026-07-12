@@ -91,35 +91,45 @@ public class NotesController implements Initializable {
     private void loadNotes() {
         if (currentUserId <= 0) {
             allNotes = new ArrayList<>();
-            displayNotes(allNotes);
+            displayNotes(allNotes, new ArrayList<>());
             return;
         }
         try {
+            // Load user's personal notes (both private and community) for My Notes tab
             allNotes = noteService.getNotesByUserId(currentUserId);
             if (allNotes == null) {
                 allNotes = new ArrayList<>();
             }
-            displayNotes(allNotes);
+            
+            // Load all approved community notes from all users for Community Notes tab
+            List<Note> communityNotes = noteService.getAllPublicNotes();
+            if (communityNotes == null) {
+                communityNotes = new ArrayList<>();
+            }
+            
+            displayNotes(allNotes, communityNotes);
         } catch (Exception e) {
             showError("Failed to load notes: " + e.getMessage());
         }
     }
 
-    private void displayNotes(List<Note> notes) {
+    private void displayNotes(List<Note> userNotes, List<Note> communityNotes) {
         myNotesContainer.getChildren().clear();
         communityNotesContainer.getChildren().clear();
 
         boolean hasPersonal = false;
         boolean hasCommunity = false;
 
-        for (Note note : notes) {
-            if (note.isPrivate()) {
-                myNotesContainer.getChildren().add(createPersonalNoteCard(note));
-                hasPersonal = true;
-            } else {
-                communityNotesContainer.getChildren().add(createCommunityNoteCard(note));
-                hasCommunity = true;
-            }
+        // Display user's own notes in My Notes tab (both private and community)
+        for (Note note : userNotes) {
+            myNotesContainer.getChildren().add(createPersonalNoteCard(note));
+            hasPersonal = true;
+        }
+
+        // Display all approved community notes from all users in Community Notes tab
+        for (Note note : communityNotes) {
+            communityNotesContainer.getChildren().add(createCommunityNoteCard(note));
+            hasCommunity = true;
         }
 
         emptyState.setVisible(!hasPersonal && !hasCommunity);
@@ -349,14 +359,28 @@ public class NotesController implements Initializable {
             }
             filtered.add(note);
         }
-        displayNotes(filtered);
+        
+        // Load community notes separately (not filtered by user)
+        List<Note> communityNotes = new ArrayList<>();
+        try {
+            communityNotes = noteService.getAllPublicNotes();
+            if (communityNotes == null) {
+                communityNotes = new ArrayList<>();
+            }
+        } catch (Exception e) {
+            showError("Failed to load community notes: " + e.getMessage());
+        }
+        
+        displayNotes(filtered, communityNotes);
     }
 
     @FXML
     public void clearFilters() {
         AcademicFilterHelper.resetFilters(academicService, departmentFilter, semesterFilter, subjectFilter);
         sourceFilter.getSelectionModel().clearSelection();
-        displayNotes(allNotes);
+        
+        // Reload both user notes and community notes
+        loadNotes();
     }
 
     private String nullSafe(String s) {

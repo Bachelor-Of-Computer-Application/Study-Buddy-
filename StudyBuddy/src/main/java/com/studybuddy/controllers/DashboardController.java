@@ -22,7 +22,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -32,8 +31,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.QuestionService;
@@ -171,6 +168,7 @@ public class DashboardController implements Initializable {
     public void refreshDashboard() {
         refreshStats();
         refreshMyUploads();
+        loadRecentAndTrending();
     }
 
     @FXML public void handleMyUploadsTabChange(javafx.event.ActionEvent event) {
@@ -996,25 +994,7 @@ public class DashboardController implements Initializable {
 
     @FXML
     public void handleUploadNotes() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/fxml/CreateNoteDialog.fxml"));
-            Parent dialogContent = loader.load();
-
-            Stage dialog = new Stage();
-            dialog.setTitle("Create New Note");
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            Scene scene = new Scene(dialogContent, 750, 800);
-            dialog.setScene(scene);
-            dialog.setResizable(true);
-            dialog.setMinWidth(650);
-            dialog.setMinHeight(700);
-            dialog.showAndWait();
-            
-            refreshDashboard();
-        } catch (IOException e) {
-            showAlert("Error", "Failed to open create note dialog: " + e.getMessage());
-            e.printStackTrace();
-        }
+        loadCenterView("/com/studybuddy/fxml/NotesView.fxml");
     }
 
     @FXML
