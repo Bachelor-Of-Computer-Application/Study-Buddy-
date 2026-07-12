@@ -34,13 +34,6 @@ public class AdminService {
     /**
      * Validate admin credentials. Accepts either username or email address.
      * On success, stores the User in SessionManager and prints verification output.
-     *
-     * Lookup order:
-     *   1. Search Users WHERE username = input OR email = input
-     *   2. Verify role is ADMIN or Administrator
-     *   3. Verify password (BCrypt hash or plain-text fallback for dev seeds)
-     *   4. Store in SessionManager
-     *
      * @return true if login is valid
      */
     public boolean validateAdminLogin(String usernameOrEmail, String password) {

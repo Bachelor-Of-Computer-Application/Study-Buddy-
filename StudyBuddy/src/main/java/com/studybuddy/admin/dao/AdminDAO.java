@@ -468,6 +468,12 @@ public class AdminDAO {
                     String deleteQuestionVotesSQL = 
                         "DELETE FROM QuestionVotes WHERE question_id IN " +
                         "(SELECT question_id FROM Questions WHERE user_id = ?)";
+                    deleteWithStatement(
+                            conn,
+                            "DELETE FROM AnswerVotes WHERE answer_id IN " +
+                                    "(SELECT answer_id FROM Answers WHERE user_id = ?)",
+                            userId
+                    );
                     deleteWithStatement(conn, deleteQuestionVotesSQL, userId);
                     System.out.println("STEP 9a DONE: QuestionVotes deleted");
                 } else {
@@ -475,23 +481,57 @@ public class AdminDAO {
                 }
                 
                 // 2. Delete ALL votes on user's Answers (by answer_id, not user_id)
+                // 2. Delete ALL AnswerVotes
                 System.out.println("STEP 10: Checking if AnswerVotes table exists...");
+
                 if (DatabaseUtil.tableExists(conn, "AnswerVotes")) {
-                    System.out.println("STEP 10a: AnswerVotes exists, deleting...");
-                    String deleteAnswerVotesSQL = 
-                        "DELETE FROM AnswerVotes WHERE answer_id IN " +
-                        "(SELECT answer_id FROM Answers WHERE user_id = ?)";
+
+                    System.out.println("STEP 10a: Deleting votes on answers under user's questions...");
+
+                    String deleteAnswerVotesSQL =
+                            "DELETE FROM AnswerVotes WHERE answer_id IN (" +
+                                    "SELECT answer_id FROM Answers " +
+                                    "WHERE question_id IN (" +
+                                    "SELECT question_id FROM Questions WHERE user_id = ?))";
+
                     deleteWithStatement(conn, deleteAnswerVotesSQL, userId);
-                    System.out.println("STEP 10a DONE: AnswerVotes deleted");
+
+                    System.out.println("STEP 10b: Deleting votes on user's own answers...");
+
+                    String deleteOwnAnswerVotesSQL =
+                            "DELETE FROM AnswerVotes WHERE answer_id IN (" +
+                                    "SELECT answer_id FROM Answers WHERE user_id = ?)";
+
+                    deleteWithStatement(conn, deleteOwnAnswerVotesSQL, userId);
+
+                    System.out.println("STEP 10 DONE: AnswerVotes deleted");
+
                 } else {
-                    System.out.println("STEP 10a SKIPPED: AnswerVotes table does not exist");
+                    System.out.println("STEP 10 SKIPPED: AnswerVotes table does not exist");
                 }
-                
-                // 3. Delete user's Answers (child of Questions)
-                System.out.println("STEP 11: Deleting Answers...");
-                deleteWithStatement(conn, "DELETE FROM Answers WHERE user_id = ?", userId);
-                System.out.println("STEP 11 DONE: Answers deleted");
-                
+
+                // 3. Delete ALL answers on the user's questions
+                System.out.println("STEP 11: Deleting Answers on user's Questions...");
+
+                deleteWithStatement(
+                        conn,
+                        "DELETE FROM Answers WHERE question_id IN " +
+                                "(SELECT question_id FROM Questions WHERE user_id = ?)",
+                        userId
+                );
+
+                System.out.println("STEP 11a DONE");
+
+// 3b. Delete answers written by the user on other people's questions
+                System.out.println("STEP 11b: Deleting user's own Answers...");
+
+                deleteWithStatement(
+                        conn,
+                        "DELETE FROM Answers WHERE user_id = ?",
+                        userId
+                );
+
+                System.out.println("STEP 11b DONE");
                 // 4. Delete user's Questions (Answers and Votes already deleted)
                 System.out.println("STEP 12: Deleting Questions...");
                 deleteWithStatement(conn, "DELETE FROM Questions WHERE user_id = ?", userId);
