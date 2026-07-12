@@ -25,6 +25,7 @@ public class Task {
     private Timestamp dueDate;
     private String estimatedTime;
     private Timestamp createdAt;   // maps to SQL column: created_at
+    private boolean isRewarded;    // tracks if achievement points have been awarded for this task
 
     // =========================
     // CONSTRUCTORS
@@ -159,5 +160,13 @@ public class Task {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isRewarded() {
+        return isRewarded;
+    }
+
+    public void setRewarded(boolean rewarded) {
+        isRewarded = rewarded;
     }
 }

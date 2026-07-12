@@ -555,6 +555,60 @@ public class AdminQuestionsController {
         }
     }
 
+    // =========================
+    // MARK AS BEST ANSWER (Requirements 3.1, 3.2, 3.3)
+    // =========================
+
+    /**
+     * Marks the selected answer as the best answer and transfers reward points.
+     * Only administrators can perform this action.
+     * Requirements: 3.1, 3.2, 3.3
+     */
+    @FXML
+    public void handleMarkBestAnswer() {
+        Question q = selectedQuestion(); if (q == null) return;
+        if (answersTable == null) { warn("Answer table not available."); return; }
+
+        Answer a = answersTable.getSelectionModel().getSelectedItem();
+        if (a == null) { warn("Please select an answer to mark as best."); return; }
+
+        // Check if already rewarded
+        if (a.isRewarded()) {
+            warn("This answer has already been marked as best answer.");
+            return;
+        }
+
+        // Confirm with admin
+        int rewardPoints = q.getRewardPoints();
+        String message = "Mark this answer as the best answer?\n\n";
+        if (rewardPoints > 0) {
+            message += "This will transfer " + rewardPoints + " achievement points to the answer author.";
+        } else {
+            message += "No points will be transferred as this question has no reward points.";
+        }
+
+        if (!confirm(message)) return;
+
+        try {
+            boolean success = questionService.markBestAnswer(q.getId(), a.getId());
+
+            if (success) {
+                // Refresh the answers list
+                List<Answer> answers = adminService.getAnswersForQuestion(q.getId());
+                q.setAnswers(answers);
+                answersTable.setItems(FXCollections.observableArrayList(answers));
+                questionsTable.refresh();
+
+                info("Answer marked as best!" + (rewardPoints > 0 ? " " + rewardPoints + " points transferred." : ""));
+            } else {
+                warn("Failed to mark answer as best. The answer may have already been rewarded.");
+            }
+        } catch (Exception e) {
+            warn("Error marking answer as best: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     // ── Setup ─────────────────────────────────────────────────────────────────
 
     private void setupQuestionsTable() {

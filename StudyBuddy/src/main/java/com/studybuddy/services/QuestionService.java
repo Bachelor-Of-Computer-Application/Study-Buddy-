@@ -2,9 +2,11 @@ package com.studybuddy.services;
 
 import com.studybuddy.App;
 import com.studybuddy.dao.QuestionDAO;
+import com.studybuddy.dao.UserDAO;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.DatabaseUtil;
+import com.studybuddy.utils.EventBus;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,6 +18,7 @@ import java.util.List;
 public class QuestionService {
 
     private final QuestionDAO questionDAO = new QuestionDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     /**
      * Persists a new question.
@@ -39,26 +42,91 @@ public class QuestionService {
     }
 
     /**
-     * Returns the point balance for the current user.
-     * Returns 0 on any failure — never a magic number.
+     * Saves a question and deducts reward points from the user's achievement balance.
+     * Requirement 2: Deduct points immediately when question is created.
+     *
+     * @param text The question text content
+     * @param subject The subject name
+     * @param subjectId The subject ID from Subjects table (0 treated as NULL)
+     * @param rewardPoints The reward points offered for this question (0 or positive)
+     * @param attachment Optional file attachment path
+     * @param departmentId Optional department ID
+     * @param semesterId Optional semester ID
+     * @return true if question was saved and points were deducted, false otherwise
      */
-    public int getUserPoints() {
-        String sql = "SELECT points FROM Users WHERE id = ?";
-
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, getCurrentUserId());
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getInt("points");
-            }
-
-        } catch (SQLException e) {
-            System.err.println("[QuestionService] Could not fetch user points: " + e.getMessage());
+    public boolean saveQuestionWithDeduction(String text, String subject, int subjectId, int rewardPoints,
+                                              String attachment, Integer departmentId, Integer semesterId) {
+        if (rewardPoints <= 0) {
+            // No points to deduct, just save the question
+            return saveQuestion(text, subject, subjectId, 0, attachment, departmentId, semesterId);
         }
 
-        return 0;
+        int userId = getCurrentUserId();
+
+        try (java.sql.Connection conn = com.studybuddy.dao.DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                // Step 1: Deduct points from user (validate sufficient balance)
+                int newBalance = 0;
+                String deductSql = "UPDATE Users SET achievement_points = achievement_points - ? OUTPUT INSERTED.achievement_points WHERE id = ? AND achievement_points >= ?";
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(deductSql)) {
+                    ps.setInt(1, rewardPoints);
+                    ps.setInt(2, userId);
+                    ps.setInt(3, rewardPoints);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            newBalance = rs.getInt("achievement_points");
+                        } else {
+                            // User doesn't have enough points
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                // Step 2: Create the question with reward points (same connection)
+                boolean questionCreated = questionDAO.createQuestion(conn, userId, text, subject, subjectId,
+                        rewardPoints, attachment, departmentId, semesterId);
+                if (!questionCreated) {
+                    conn.rollback();
+                    return false;
+                }
+
+                conn.commit();
+
+                // Requirement 5: Publish PointsChangedEvent for profile refresh
+                EventBus.getInstance().publish(new EventBus.PointsChangedEvent(userId, newBalance));
+
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            System.err.println("[QuestionService] ❌ Failed to save question with deduction: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Returns the achievement point balance for the current user.
+     */
+    public int getAchievementPoints() {
+        Integer points = userDAO.getAchievementPoints(getCurrentUserId());
+        return points != null ? points : 0;
+    }
+
+    /**
+     * Returns the point balance for the current user.
+     * @deprecated Use {@link #getAchievementPoints()} for the achievement points system.
+     */
+    public int getUserPoints() {
+        return getAchievementPoints();
     }
 
     /**
@@ -79,10 +147,10 @@ public class QuestionService {
         return App.getCurrentUser() != null ? App.getCurrentUser().getId() : 1;
     }
 
-    public boolean validateInputs(String q, String s, int p) {
+    public boolean validateInputs(String q, String s, int rewardPoints) {
         return q != null && !q.isEmpty()
                 && s != null && !s.isEmpty()
-                && p >= 0;
+                && rewardPoints > 0;
     }
 
     public int saveQuestionBankEntry(Question q) throws SQLException {
@@ -123,5 +191,28 @@ public class QuestionService {
             FileStorageService.getInstance().deleteFile(q.getAttachmentPath());
         }
         return deleted;
+    }
+
+    // =========================
+    // MARK BEST ANSWER (Requirement 3)
+    // =========================
+
+    /**
+     * Marks an answer as the best answer and transfers reward points to the answer author.
+     * Only administrators can call this method.
+     * Requirements: 3.1, 3.2, 3.3
+     *
+     * @param questionId The ID of the question
+     * @param answerId The ID of the answer to mark as best
+     * @return true if the best answer was marked successfully, false otherwise
+     */
+    public boolean markBestAnswer(int questionId, int answerId) {
+        try {
+            return questionDAO.markBestAnswer(questionId, answerId);
+        } catch (SQLException e) {
+            System.err.println("[QuestionService] Failed to mark best answer: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }

@@ -260,6 +260,14 @@ public class ProfileController {
             loadProfileData();
             loadActivityLog();
         });
+
+        // Requirement 5: Refresh achievement_points when points change
+        EventBus.getInstance().subscribe(EventBus.PointsChangedEvent.class, (event) -> {
+            if (currentUser != null && event.getUserId() == currentUser.getId()) {
+                refreshCurrentUserFromDB();
+                loadProfileData();
+            }
+        });
     }
 
     private void setupAvatarInteractions() {
@@ -314,7 +322,7 @@ public class ProfileController {
         // Header / Summary Card
         displayNameLabel.setText(currentUser.getDisplayFullName());
         usernameSubLabel.setText("@" + (currentUser.getUsername() != null ? currentUser.getUsername() : "username"));
-        pointsBadgeLabel.setText(currentUser.getPoints() + " pts");
+        pointsBadgeLabel.setText(currentUser.getAchievementPoints() + " pts");
         userRoleLabel.setText("🎓 Role: " + (currentUser.getRole() != null ? currentUser.getRole() : "Student"));
         if (currentUser.getCreatedAt() != null) {
             joinedDateLabel.setText("📅 Joined: " + currentUser.getCreatedAt().format(DateTimeFormatter.ofPattern("MMM yyyy")));
