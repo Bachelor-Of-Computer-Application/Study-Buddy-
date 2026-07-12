@@ -77,6 +77,9 @@
                             <TableColumn fx:id="colSentAt" text="Sent At" prefWidth="120"/>
                             <TableColumn fx:id="colRead" text="Status" prefWidth="80"/>
                         </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
                     </TableView>
                     <HBox spacing="8">
                         <Button text="✅ Mark Read" styleClass="secondary-btn" onAction="#handleMarkRead"/>

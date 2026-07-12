@@ -101,6 +101,9 @@
                             <TableColumn fx:id="colUserName"  text="User Name"      prefWidth="200"/>
                             <TableColumn fx:id="colUserScore" text="Activity Score"  prefWidth="140"/>
                         </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
                         <placeholder><Label text="No data." styleClass="table-empty-label"/></placeholder>
                     </TableView>
                 </VBox>
@@ -114,6 +117,9 @@
                             <TableColumn fx:id="colResTitle"     text="Resource Title" prefWidth="240"/>
                             <TableColumn fx:id="colResDownloads" text="Downloads"      prefWidth="110"/>
                         </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
                         <placeholder><Label text="No data." styleClass="table-empty-label"/></placeholder>
                     </TableView>
                 </VBox>

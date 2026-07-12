@@ -54,6 +54,9 @@
                             <TableColumn fx:id="deptCodeCol" text="Code" prefWidth="80"/>
                             <TableColumn fx:id="deptActiveCol" text="Active" prefWidth="70"/>
                         </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
                     </TableView>
                     <VBox spacing="8" prefWidth="280">
                         <TextField fx:id="deptNameField" promptText="Department Name" styleClass="input-field"/>
@@ -80,6 +83,9 @@
                             <TableColumn fx:id="semDeptCol" text="Department" prefWidth="120"/>
                             <TableColumn fx:id="semActiveCol" text="Active" prefWidth="70"/>
                         </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
                     </TableView>
                     <VBox spacing="8" prefWidth="280">
                         <ComboBox fx:id="semDeptCombo" promptText="Department" styleClass="combo-box" maxWidth="Infinity"/>
