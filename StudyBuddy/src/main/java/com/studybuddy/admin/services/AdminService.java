@@ -291,15 +291,14 @@ public class AdminService {
             logService.logAction("User Permanently Deleted", "User", details.toString());
             System.out.println(">>> SERVICE: Activity log completed");
             
-            System.out.println(">>> SERVICE: Publishing EventBus events...");
-            // Publish events to update all UI components
-            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
-            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.StatisticsChangedEvent());
-            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.NotesChangedEvent());
-            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.ResourcesChangedEvent());
-            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.QuestionsChangedEvent());
-            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.TasksChangedEvent());
-            System.out.println(">>> SERVICE: EventBus events published");
+            // NOTE: EventBus events are NOT published here because:
+            // 1. This runs on a background thread
+            // 2. AdminUsersController.handleDelete() already handles UI refresh via scheduleBackgroundReload()
+            // 3. Publishing events from background thread causes subscribers to queue Platform.runLater()
+            //    with DB calls, which execute during showAndWait() modal dialog blocking, freezing the UI.
+            // The explicit scheduleBackgroundReload() in AdminUsersController provides a clean, controlled
+            // reload after all dialogs have closed.
+            System.out.println(">>> SERVICE: Skipping EventBus events (handled by AdminUsersController.scheduleBackgroundReload)");
         } else {
             System.out.println(">>> SERVICE: Deletion failed, logging failure...");
             logService.logAction("User Deletion Failed", "User", 

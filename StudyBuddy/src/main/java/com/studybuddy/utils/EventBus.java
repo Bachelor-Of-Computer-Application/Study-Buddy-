@@ -59,4 +59,18 @@ public class EventBus {
     public static class ProfileChangedEvent {}
     public static class AdminChangesEvent {}
     public static class StatisticsChangedEvent {}
+
+    // Requirement 5: Profile refresh after point transactions
+    public static class PointsChangedEvent {
+        private final int userId;
+        private final int newBalance;
+
+        public PointsChangedEvent(int userId, int newBalance) {
+            this.userId = userId;
+            this.newBalance = newBalance;
+        }
+
+        public int getUserId() { return userId; }
+        public int getNewBalance() { return newBalance; }
+    }
 }

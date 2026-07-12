@@ -112,10 +112,11 @@ public class TaskDAO {
     /**
      * Returns all tasks for a given user, ordered by newest first.
      * SQL: SELECT * FROM Tasks WHERE userId = ? ORDER BY created_at DESC
+     * Includes is_rewarded for requirement 4.4
      */
     public List<Task> getTasksByUserId(int userId) {
         List<Task> tasks = new ArrayList<>();
-        String sql = "SELECT id, user_id AS userId, title, description, status, created_at " +
+        String sql = "SELECT id, user_id AS userId, title, description, status, created_at, COALESCE(is_rewarded, 0) AS is_rewarded " +
                      "FROM Tasks WHERE user_id = ? ORDER BY created_at DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -148,10 +149,11 @@ public class TaskDAO {
      *   FROM Tasks
      *   WHERE userId = ?
      *   ORDER BY created_at DESC
+     * Includes is_rewarded for requirement 4.4
      */
     public List<Task> getRecentTasksByUserId(int userId) {
         List<Task> tasks = new ArrayList<>();
-        String sql = "SELECT TOP (10) id, user_id AS userId, title, description, status, created_at " +
+        String sql = "SELECT TOP (10) id, user_id AS userId, title, description, status, created_at, COALESCE(is_rewarded, 0) AS is_rewarded " +
                      "FROM Tasks WHERE user_id = ? ORDER BY created_at DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -401,6 +403,113 @@ public class TaskDAO {
     }
 
     // =========================
+    // IS TASK REWARDED (Requirement 4.4)
+    // =========================
+
+    /**
+     * Checks if a task has already been rewarded with achievement points.
+     * SQL: SELECT is_rewarded FROM Tasks WHERE id = ?
+     *
+     * @param taskId the ID of the task to check
+     * @return true if the task has been rewarded, false otherwise
+     */
+    public boolean isTaskRewarded(int taskId) {
+        String sql = "SELECT is_rewarded FROM Tasks WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, taskId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int rewarded = rs.getInt("is_rewarded");
+                    return rewarded == 1;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // =========================
+    // UPDATE TASK WITH REWARD (atomic transaction)
+    // =========================
+
+    /**
+     * Updates a task and awards achievement points in a single JDBC transaction.
+     * Prevents duplicate rewards via Tasks.is_rewarded.
+     */
+    public boolean updateTaskWithReward(Task task, int points) {
+        if (points <= 0) {
+            return updateTask(task);
+        }
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                String checkSql = "SELECT is_rewarded FROM Tasks WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
+                    ps.setInt(1, task.getId());
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next() || rs.getInt("is_rewarded") == 1) {
+                            conn.rollback();
+                            return updateTask(task);
+                        }
+                    }
+                }
+
+                task.setDescription(buildStoredDescription(task));
+                String updateSql = "UPDATE Tasks SET title = ?, description = ?, status = ?, is_rewarded = 1 WHERE id = ? AND is_rewarded = 0";
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setString(1, task.getTitle());
+                    ps.setString(2, task.getDescription());
+                    ps.setString(3, task.getStatus());
+                    ps.setInt(4, task.getId());
+                    if (ps.executeUpdate() == 0) {
+                        conn.rollback();
+                        return false;
+                    }
+                }
+
+                int newBalance = 0;
+                String addSql = "UPDATE Users SET achievement_points = achievement_points + ? OUTPUT INSERTED.achievement_points WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(addSql)) {
+                    ps.setInt(1, points);
+                    ps.setInt(2, task.getUserId());
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            conn.rollback();
+                            return false;
+                        }
+                        newBalance = rs.getInt("achievement_points");
+                    }
+                }
+
+                conn.commit();
+                task.setRewarded(true);
+                EventBus.getInstance().publish(new EventBus.TasksChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+                EventBus.getInstance().publish(new EventBus.PointsChangedEvent(task.getUserId(), newBalance));
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
     // STUDY HOURS (DERIVED)
     // =========================
 
@@ -427,6 +536,16 @@ public class TaskDAO {
         task.setTitle(rs.getString("title"));
         task.setStatus(rs.getString("status"));
         task.setCreatedAt(rs.getTimestamp("created_at")); // SQL column: created_at
+
+        // Set is_rewarded from query result (Requirement 4.4)
+        try {
+            int isRewarded = rs.getInt("is_rewarded");
+            if (!rs.wasNull()) {
+                task.setRewarded(isRewarded == 1);
+            }
+        } catch (SQLException ignored) {
+            // Column may not exist in older schemas
+        }
 
         String storedDescription = rs.getString("description");
         TaskMetadata metadata = parseMetadata(storedDescription);

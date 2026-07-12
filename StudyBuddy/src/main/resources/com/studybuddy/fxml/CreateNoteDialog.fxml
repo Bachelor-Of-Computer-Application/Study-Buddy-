@@ -6,6 +6,7 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
@@ -16,86 +17,97 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.studybuddy.controllers.CreateNoteController"
       stylesheets="@../css/theme.css, @../css/notes.css"
-      spacing="22"
-      minWidth="650"
-      minHeight="700">
-    <padding><Insets top="40" right="45" bottom="40" left="45"/></padding>
+      spacing="0">
 
     <!-- Dialog Title -->
-    <Label text="✏️  Create New Note" styleClass="dialog-title" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
-    <Label text="Fill in the details below to create and optionally share your note."
-           styleClass="page-subtitle" wrapText="true" style="-fx-font-size: 14px;"/>
-
-    <!-- Note Title -->
-    <VBox spacing="10">
-        <Label text="Note Title *" styleClass="field-label" style="-fx-font-weight: 700;"/>
-        <TextField fx:id="titleField" promptText="Enter a descriptive, clear title for your note…"
-                   styleClass="form-input" maxWidth="Infinity" prefHeight="42"/>
+    <VBox spacing="10" styleClass="dialog-header">
+        <padding><Insets top="30" right="45" bottom="15" left="45"/></padding>
+        <Label text="✏️  Create New Note" styleClass="dialog-title" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+        <Label text="Fill in the details below to create and optionally share your note."
+               styleClass="page-subtitle" wrapText="true" style="-fx-font-size: 14px;"/>
     </VBox>
 
-    <!-- Department / Semester / Subject — Cascading dropdowns -->
-    <HBox spacing="18">
-        <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <Label text="Department *" styleClass="field-label" style="-fx-font-weight: 700;"/>
-            <ComboBox fx:id="departmentComboBox" promptText="Select department"
-                      styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
-        </VBox>
-        <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <Label text="Semester *" styleClass="field-label" style="-fx-font-weight: 700;"/>
-            <ComboBox fx:id="semesterComboBox" promptText="Select semester"
-                      styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
-        </VBox>
-        <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <Label text="Subject *" styleClass="field-label" style="-fx-font-weight: 700;"/>
-            <ComboBox fx:id="subjectComboBox" promptText="Select subject"
-                      styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
-        </VBox>
-    </HBox>
+    <!-- Scrollable Form Content -->
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox spacing="22" minWidth="650">
+                <padding><Insets top="20" right="45" bottom="20" left="45"/></padding>
 
-    <HBox spacing="18">
-        <!-- Source -->
-        <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <Label text="Source" styleClass="field-label" style="-fx-font-weight: 700;"/>
-            <ComboBox fx:id="sourceField" promptText="Select source (optional)"
-                      styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
-        </VBox>
+                <!-- Note Title -->
+                <VBox spacing="10">
+                    <Label text="Note Title *" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                    <TextField fx:id="titleField" promptText="Enter a descriptive, clear title for your note…"
+                               styleClass="form-input" maxWidth="Infinity" prefHeight="42"/>
+                </VBox>
 
-        <!-- Date -->
-        <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <Label text="Date" styleClass="field-label" style="-fx-font-weight: 700;"/>
-            <DatePicker fx:id="dateField" styleClass="date-picker" maxWidth="Infinity" prefHeight="42"/>
-        </VBox>
-    </HBox>
+                <!-- Department / Semester / Subject — Cascading dropdowns -->
+                <HBox spacing="18">
+                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                        <Label text="Department *" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                        <ComboBox fx:id="departmentComboBox" promptText="Select department"
+                                  styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
+                    </VBox>
+                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                        <Label text="Semester *" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                        <ComboBox fx:id="semesterComboBox" promptText="Select semester"
+                                  styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
+                    </VBox>
+                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                        <Label text="Subject *" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                        <ComboBox fx:id="subjectComboBox" promptText="Select subject"
+                                  styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
+                    </VBox>
+                </HBox>
 
-    <!-- Description / Content -->
-    <VBox spacing="10" VBox.vgrow="ALWAYS">
-        <Label text="Description / Content" styleClass="field-label" style="-fx-font-weight: 700;"/>
-        <TextArea fx:id="descriptionField" prefHeight="200"
-                  promptText="Write your note content here, or describe what the attached file contains…"
-                  styleClass="text-area" wrapText="true"/>
-    </VBox>
+                <HBox spacing="18">
+                    <!-- Source -->
+                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                        <Label text="Source" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                        <ComboBox fx:id="sourceField" promptText="Select source (optional)"
+                                  styleClass="combo-box" maxWidth="Infinity" prefHeight="42"/>
+                    </VBox>
 
-    <!-- File Upload -->
-    <VBox spacing="10">
-        <Label text="Attach File  (PDF, DOCX, PPTX, Images, Text)" styleClass="field-label" style="-fx-font-weight: 700;"/>
-        <HBox spacing="14" alignment="CENTER_LEFT">
-            <TextField fx:id="fileTextField" promptText="No file selected"
-                       styleClass="form-input" editable="false" HBox.hgrow="ALWAYS" prefHeight="42"/>
-            <Button text="📁  Choose File" styleClass="btn-secondary" onAction="#selectFile" prefHeight="42" prefWidth="140"/>
-        </HBox>
-    </VBox>
+                    <!-- Date -->
+                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                        <Label text="Date" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                        <DatePicker fx:id="dateField" styleClass="date-picker" maxWidth="Infinity" prefHeight="42"/>
+                    </VBox>
+                </HBox>
 
-    <!-- Visibility -->
-    <VBox spacing="12">
-        <Label text="Visibility" styleClass="field-label" style="-fx-font-weight: 700;"/>
-        <HBox spacing="40">
-            <RadioButton fx:id="privateRadio" text="🔒  Private Note" selected="true" style="-fx-font-size: 14px; -fx-font-weight: 500;"/>
-            <RadioButton fx:id="shareRadio"   text="👥  Share with Community" style="-fx-font-size: 14px; -fx-font-weight: 500;"/>
-        </HBox>
-    </VBox>
+                <!-- Description / Content -->
+                <VBox spacing="10">
+                    <Label text="Description / Content" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                    <TextArea fx:id="descriptionField" prefHeight="200"
+                              promptText="Write your note content here, or describe what the attached file contains…"
+                              styleClass="text-area" wrapText="true"/>
+                </VBox>
 
-    <!-- Buttons row -->
-    <HBox spacing="14" alignment="CENTER_RIGHT">
+                <!-- File Upload -->
+                <VBox spacing="10">
+                    <Label text="Attach File  (PDF, DOCX, PPTX, Images, Text)" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                    <HBox spacing="14" alignment="CENTER_LEFT">
+                        <TextField fx:id="fileTextField" promptText="No file selected"
+                                   styleClass="form-input" editable="false" HBox.hgrow="ALWAYS" prefHeight="42"/>
+                        <Button text="📁  Choose File" styleClass="btn-secondary" onAction="#selectFile" prefHeight="42" prefWidth="140"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Visibility -->
+                <VBox spacing="12">
+                    <Label text="Visibility" styleClass="field-label" style="-fx-font-weight: 700;"/>
+                    <HBox spacing="40">
+                        <RadioButton fx:id="privateRadio" text="🔒  Private Note" selected="true" style="-fx-font-size: 14px; -fx-font-weight: 500;"/>
+                        <RadioButton fx:id="shareRadio"   text="👥  Share with Community" style="-fx-font-size: 14px; -fx-font-weight: 500;"/>
+                    </HBox>
+                </VBox>
+
+            </VBox>
+        </content>
+    </ScrollPane>
+
+    <!-- Footer Buttons (always visible) -->
+    <HBox spacing="14" alignment="CENTER_RIGHT" styleClass="dialog-footer">
+        <padding><Insets top="15" right="45" bottom="25" left="45"/></padding>
         <VBox fx:id="uploadResourceBtn" visible="false" managed="false">
             <!-- Wrapper so controller can show/hide uploadResourceBtn -->
             <Button text="📤  Upload Resource" styleClass="btn-success"

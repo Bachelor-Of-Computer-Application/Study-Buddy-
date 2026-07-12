@@ -2,6 +2,7 @@ package com.studybuddy.services;
 
 import com.studybuddy.dao.TaskDAO;
 import com.studybuddy.models.Task;
+import com.studybuddy.utils.EventBus;
 import java.util.List;
 
 /**
@@ -17,6 +18,11 @@ import java.util.List;
  */
 public class TaskService {
     private final TaskDAO taskDAO = new TaskDAO();
+
+    // Achievement points for task completion (Requirement 4)
+    private static final int POINTS_LOW = 3;
+    private static final int POINTS_MEDIUM = 5;
+    private static final int POINTS_HIGH = 10;
 
     // =========================
     // GET ALL TASKS FOR USER
@@ -59,14 +65,36 @@ public class TaskService {
     }
 
     // =========================
-    // UPDATE TASK
+    // UPDATE TASK WITH POINTS (Requirement 4)
     // =========================
 
     /**
-     * Updates an existing task's title, description, and status.
+     * Updates an existing task and awards achievement points atomically when completing for the first time.
      */
     public boolean updateTask(Task task) {
+        boolean isCompleting = "completed".equalsIgnoreCase(task.getStatus());
+        if (isCompleting && !task.isRewarded()) {
+            int points = getPointsForPriority(task.getPriority());
+            return taskDAO.updateTaskWithReward(task, points);
+        }
         return taskDAO.updateTask(task);
+    }
+
+    /**
+     * Gets the achievement points for a task based on its priority.
+     * Requirement 4: Low=3, Medium=5, High=10
+     *
+     * @param priority The task priority (Low, Medium, High)
+     * @return The points to award
+     */
+    private int getPointsForPriority(String priority) {
+        if (priority == null) return POINTS_MEDIUM;
+
+        return switch (priority.toLowerCase()) {
+            case "high" -> POINTS_HIGH;
+            case "low" -> POINTS_LOW;
+            default -> POINTS_MEDIUM;
+        };
     }
 
     // =========================
@@ -99,14 +127,14 @@ public class TaskService {
     public int getCompletedTaskCount(int userId) {
         return taskDAO.getCompletedTaskCount(userId);
     }
-    
+
     /**
      * Returns the number of pending tasks for a user.
      */
     public int getPendingTaskCount(int userId) {
         return taskDAO.getPendingTaskCount(userId);
     }
-    
+
     /**
      * Returns the number of in-progress tasks for a user.
      */
@@ -144,7 +172,7 @@ public class TaskService {
     public double getStudyHours(int userId) {
         return taskDAO.getStudyHours(userId);
     }
-    
+
     public boolean addDefaultTasks(int userId) {
         return taskDAO.addDefaultTasks(userId);
     }

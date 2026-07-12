@@ -401,124 +401,147 @@ public class AdminDAO {
 
     /**
      * Hard delete user with full CASCADE delete of all related records.
-     * Uses a single database transaction to ensure all-or-nothing deletion.
-     *
-     * <p><strong>FK Dependency Order (must be respected):</strong>
-     * <pre>
-     *   AnswerVotes.answer_id  → Answers.answer_id
-     *   Answers.question_id    → Questions.question_id   ← root cause of FK violation
-     *   QuestionVotes.question_id → Questions.question_id
-     *   Questions.user_id      → Users.id
-     *   Answers.user_id        → Users.id
-     *   Notes.userId           → Users.id
-     *   Resources.uploadedBy   → Users.id
-     *   Tasks.user_id          → Users.id
-     *   Notifications.userId   → Users.id
-     * </pre>
-     *
-     * <p><strong>Critical rule:</strong> Before deleting a Question, ALL answers that
-     * reference it must be deleted — regardless of who wrote those answers.
-     * Only deleting the target user's own answers is insufficient when other users
-     * have answered the user's questions.
-     *
-     * @param userId the user to permanently delete
-     * @return {@link DeletionResult} with success status and counts
+     * Uses a database transaction to ensure all-or-nothing deletion.
+     * 
+     * Deletes (in order):
+     * 1. User-owned Notes (and their dependent records)
+     * 2. User-owned Resources
+     * 3. User-owned Questions (and their dependent Answers)
+     * 4. User-submitted Answers
+     * 5. User Tasks
+     * 6. User Notifications
+     * 7. User Activity Logs
+     * 8. User Votes/Bookmarks (if tables exist)
+     * 9. Finally, the User record itself
+     * 
+     * @param userId User ID to delete
+     * @return DeletionResult containing success status, counts, and any error message
      */
     public DeletionResult hardDeleteUser(int userId) {
+        System.out.println("=== ENTERING hardDeleteUser for userId=" + userId + " ===");
         DeletionResult result = new DeletionResult();
-
+        
         try (Connection conn = DatabaseUtil.getConnection()) {
+            System.out.println("STEP 1: Got database connection");
+            
+            // Start transaction
             conn.setAutoCommit(false);
-
+            System.out.println("STEP 2: Set autoCommit=false (transaction started)");
+            
             try {
-                // ── Count items for the summary shown after deletion ────────────────
-                result.notesCount         = countUserItems(conn, "Notes",         "userId",     userId);
-                result.resourcesCount     = countUserItems(conn, "Resources",     "uploadedBy", userId);
-                result.questionsCount     = countUserItems(conn, "Questions",     "user_id",    userId);
-                result.answersCount       = countUserItems(conn, "Answers",       "user_id",    userId);
-                result.tasksCount         = countUserItems(conn, "Tasks",         "user_id",    userId);
-                result.notificationsCount = countUserItems(conn, "Notifications", "userId",     userId);
-
-                // ── Step 1: AnswerVotes for ALL answers on the user's questions ─────
-                // Must precede deletion of those answers (FK: AnswerVotes → Answers).
-                // Scope: any answer (any author) on a question owned by this user.
-                if (DatabaseUtil.tableExists(conn, "AnswerVotes")) {
-                    deleteWithStatement(conn,
-                        "DELETE FROM AnswerVotes WHERE answer_id IN (" +
-                        "  SELECT a.answer_id FROM Answers a" +
-                        "  INNER JOIN Questions q ON a.question_id = q.question_id" +
-                        "  WHERE q.user_id = ?)",
-                        userId);
-                }
-
-                // ── Step 2: AnswerVotes for the user's own answers on other users' questions ──
-                // Covers votes on answers the user wrote to questions they did NOT own.
-                if (DatabaseUtil.tableExists(conn, "AnswerVotes")) {
-                    deleteWithStatement(conn,
-                        "DELETE FROM AnswerVotes WHERE answer_id IN (" +
-                        "  SELECT answer_id FROM Answers WHERE user_id = ?)",
-                        userId);
-                }
-
-                // ── Step 3: ALL answers on the user's questions (any author) ────────
-                // FK: Answers.question_id → Questions.question_id.
-                // This is the step that was missing and caused the FK violation.
-                // Other users' answers to the user's questions block Question deletion
-                // if they are not removed first.
-                deleteWithStatement(conn,
-                    "DELETE FROM Answers WHERE question_id IN (" +
-                    "  SELECT question_id FROM Questions WHERE user_id = ?)",
-                    userId);
-
-                // ── Step 4: The user's own answers on other users' questions ─────────
-                deleteWithStatement(conn, "DELETE FROM Answers WHERE user_id = ?", userId);
-
-                // ── Step 5: Delete ALL QuestionVotes related to this user ───────────────
+                // Count items before deletion for logging
+                System.out.println("STEP 3: Counting Notes...");
+                result.notesCount = countUserItems(conn, "Notes", "userId", userId);
+                System.out.println("STEP 3 DONE: Notes count = " + result.notesCount);
+                
+                System.out.println("STEP 4: Counting Resources...");
+                result.resourcesCount = countUserItems(conn, "Resources", "uploadedBy", userId);
+                System.out.println("STEP 4 DONE: Resources count = " + result.resourcesCount);
+                
+                System.out.println("STEP 5: Counting Questions...");
+                result.questionsCount = countUserItems(conn, "Questions", "user_id", userId);
+                System.out.println("STEP 5 DONE: Questions count = " + result.questionsCount);
+                
+                System.out.println("STEP 6: Counting Answers...");
+                result.answersCount = countUserItems(conn, "Answers", "user_id", userId);
+                System.out.println("STEP 6 DONE: Answers count = " + result.answersCount);
+                
+                System.out.println("STEP 7: Counting Tasks...");
+                result.tasksCount = countUserItems(conn, "Tasks", "user_id", userId);
+                System.out.println("STEP 7 DONE: Tasks count = " + result.tasksCount);
+                
+                System.out.println("STEP 8: Counting Notifications...");
+                result.notificationsCount = countUserItems(conn, "Notifications", "userId", userId);
+                System.out.println("STEP 8 DONE: Notifications count = " + result.notificationsCount);
+                
+                // 1. Delete ALL votes on user's Questions (by question_id, not user_id)
+                System.out.println("STEP 9: Checking if QuestionVotes table exists...");
                 if (DatabaseUtil.tableExists(conn, "QuestionVotes")) {
-
-                    // Delete votes on the user's own questions
-                    deleteWithStatement(conn,
-                            "DELETE FROM QuestionVotes WHERE question_id IN (" +
-                                    "SELECT question_id FROM Questions WHERE user_id = ?)",
-                            userId);
-                    System.out.println(">>>>>>>> ABOUT TO DELETE USER VOTES <<<<<<<<");
-                    // Delete votes cast BY the user on any question
-                    deleteWithStatement(conn,
-                            "DELETE FROM QuestionVotes WHERE user_id = ?",
-                            userId);
+                    System.out.println("STEP 9a: QuestionVotes exists, deleting...");
+                    String deleteQuestionVotesSQL = 
+                        "DELETE FROM QuestionVotes WHERE question_id IN " +
+                        "(SELECT question_id FROM Questions WHERE user_id = ?)";
+                    deleteWithStatement(conn, deleteQuestionVotesSQL, userId);
+                    System.out.println("STEP 9a DONE: QuestionVotes deleted");
+                } else {
+                    System.out.println("STEP 9a SKIPPED: QuestionVotes table does not exist");
                 }
-
-                // ── Step 6: The user's questions (all dependents removed above) ──────
+                
+                // 2. Delete ALL votes on user's Answers (by answer_id, not user_id)
+                System.out.println("STEP 10: Checking if AnswerVotes table exists...");
+                if (DatabaseUtil.tableExists(conn, "AnswerVotes")) {
+                    System.out.println("STEP 10a: AnswerVotes exists, deleting...");
+                    String deleteAnswerVotesSQL = 
+                        "DELETE FROM AnswerVotes WHERE answer_id IN " +
+                        "(SELECT answer_id FROM Answers WHERE user_id = ?)";
+                    deleteWithStatement(conn, deleteAnswerVotesSQL, userId);
+                    System.out.println("STEP 10a DONE: AnswerVotes deleted");
+                } else {
+                    System.out.println("STEP 10a SKIPPED: AnswerVotes table does not exist");
+                }
+                
+                // 3. Delete user's Answers (child of Questions)
+                System.out.println("STEP 11: Deleting Answers...");
+                deleteWithStatement(conn, "DELETE FROM Answers WHERE user_id = ?", userId);
+                System.out.println("STEP 11 DONE: Answers deleted");
+                
+                // 4. Delete user's Questions (Answers and Votes already deleted)
+                System.out.println("STEP 12: Deleting Questions...");
                 deleteWithStatement(conn, "DELETE FROM Questions WHERE user_id = ?", userId);
-
-                // ── Step 7: Notes ─────────────────────────────────────────────────────
+                System.out.println("STEP 12 DONE: Questions deleted");
+                
+                // 5. Delete user's Notes
+                System.out.println("STEP 13: Deleting Notes...");
                 deleteWithStatement(conn, "DELETE FROM Notes WHERE userId = ?", userId);
-
-                // ── Step 8: Resources ─────────────────────────────────────────────────
+                System.out.println("STEP 13 DONE: Notes deleted");
+                
+                // 6. Delete user's Resources
+                System.out.println("STEP 14: Deleting Resources...");
                 deleteWithStatement(conn, "DELETE FROM Resources WHERE uploadedBy = ?", userId);
-
-                // ── Step 9: Tasks ─────────────────────────────────────────────────────
+                System.out.println("STEP 14 DONE: Resources deleted");
+                
+                // 7. Delete user's Tasks
+                System.out.println("STEP 15: Deleting Tasks...");
                 deleteWithStatement(conn, "DELETE FROM Tasks WHERE user_id = ?", userId);
-
-                // ── Step 10: Notifications ────────────────────────────────────────────
+                System.out.println("STEP 15 DONE: Tasks deleted");
+                
+                // 8. Delete user's Notifications
+                System.out.println("STEP 16: Deleting Notifications...");
                 deleteWithStatement(conn, "DELETE FROM Notifications WHERE userId = ?", userId);
-
-                // ── Step 11: UploadedFiles (optional table) ───────────────────────────
+                System.out.println("STEP 16 DONE: Notifications deleted");
+                
+                // 9. Delete user's UploadedFiles (if table exists)
+                System.out.println("STEP 17: Checking if UploadedFiles table exists...");
                 if (DatabaseUtil.tableExists(conn, "UploadedFiles")) {
+                    System.out.println("STEP 17a: UploadedFiles exists, deleting...");
                     deleteWithStatement(conn, "DELETE FROM UploadedFiles WHERE uploaded_by = ?", userId);
+                    System.out.println("STEP 17a DONE: UploadedFiles deleted");
+                } else {
+                    System.out.println("STEP 17a SKIPPED: UploadedFiles table does not exist");
                 }
-
-                // ── Step 12: UserActivities / activity log (optional table) ───────────
+                
+                // 10. Delete user's Activity Logs (if table exists)
+                System.out.println("STEP 18: Checking if UserActivities table exists...");
                 if (DatabaseUtil.tableExists(conn, "UserActivities")) {
+                    System.out.println("STEP 18a: UserActivities exists, deleting...");
                     deleteWithStatement(conn, "DELETE FROM UserActivities WHERE user_id = ?", userId);
+                    System.out.println("STEP 18a DONE: UserActivities deleted");
+                } else {
+                    System.out.println("STEP 18a SKIPPED: UserActivities table does not exist");
                 }
-
-                // ── Step 13: Bookmarks (optional table) ───────────────────────────────
+                
+                // 11. Delete user's Bookmarks (if table exists)
+                System.out.println("STEP 19: Checking if Bookmarks table exists...");
                 if (DatabaseUtil.tableExists(conn, "Bookmarks")) {
+                    System.out.println("STEP 19a: Bookmarks exists, deleting...");
                     deleteWithStatement(conn, "DELETE FROM Bookmarks WHERE user_id = ?", userId);
+                    System.out.println("STEP 19a DONE: Bookmarks deleted");
+                } else {
+                    System.out.println("STEP 19a SKIPPED: Bookmarks table does not exist");
                 }
-
-                // ── Step 14: The Users row itself ─────────────────────────────────────
+                
+                // 12. Finally, delete the User record itself
+                System.out.println("STEP 20: Deleting User record...");
                 int userRows;
                 try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Users WHERE id = ?")) {
 
@@ -535,37 +558,59 @@ public class AdminDAO {
                     System.out.println("Finished SQL");
                     System.out.println("==================================");
                 }
-
+                System.out.println("STEP 20 DONE: User deleted, rows affected = " + userRows);
+                
                 if (userRows == 0) {
+                    System.out.println("STEP 21: User not found, rolling back...");
                     conn.rollback();
                     result.success = false;
                     result.errorMessage = "User not found (id=" + userId + ")";
+                    System.out.println("=== EXITING hardDeleteUser (user not found) ===");
                     return result;
                 }
-
+                
+                // Commit transaction
+                System.out.println("STEP 22: Committing transaction...");
                 conn.commit();
+                System.out.println("STEP 22 DONE: Transaction committed");
+                
                 result.success = true;
+                System.out.println("=== EXITING hardDeleteUser (SUCCESS) ===");
                 return result;
-
+                
             } catch (SQLException e) {
-                try { conn.rollback(); } catch (SQLException rb) {
-                    logger.log(java.util.logging.Level.SEVERE, "Rollback failed", rb);
+                System.out.println("STEP ERROR: SQLException caught: " + e.getMessage());
+                e.printStackTrace();
+                
+                // Rollback on any error
+                try {
+                    System.out.println("STEP ERROR: Rolling back transaction...");
+                    conn.rollback();
+                    System.out.println("STEP ERROR: Rollback complete");
+                } catch (SQLException rollbackEx) {
+                    System.out.println("STEP ERROR: Rollback FAILED: " + rollbackEx.getMessage());
+                    logger.log(java.util.logging.Level.SEVERE, "Rollback failed", rollbackEx);
                 }
+                
                 result.success = false;
                 result.errorMessage = "Database error: " + e.getMessage();
-                logger.log(java.util.logging.Level.SEVERE,
-                        "hardDeleteUser failed for userId=" + userId, e);
+                logger.log(java.util.logging.Level.SEVERE, "hardDeleteUser failed for userId=" + userId, e);
+                System.out.println("=== EXITING hardDeleteUser (SQL ERROR) ===");
                 return result;
-
+                
             } finally {
+                System.out.println("STEP FINALLY: Resetting autoCommit=true...");
                 conn.setAutoCommit(true);
+                System.out.println("STEP FINALLY DONE: autoCommit reset");
             }
-
+            
         } catch (SQLException e) {
+            System.out.println("STEP CONN ERROR: Connection error: " + e.getMessage());
+            e.printStackTrace();
             result.success = false;
             result.errorMessage = "Connection error: " + e.getMessage();
-            logger.log(java.util.logging.Level.SEVERE,
-                    "hardDeleteUser connection failed for userId=" + userId, e);
+            logger.log(java.util.logging.Level.SEVERE, "hardDeleteUser connection failed for userId=" + userId, e);
+            System.out.println("=== EXITING hardDeleteUser (CONNECTION ERROR) ===");
             return result;
         }
     }
@@ -586,26 +631,11 @@ public class AdminDAO {
     /**
      * Helper method to execute a delete statement with a single integer parameter.
      */
-    /**
-     * Helper method to execute a delete statement with a single integer parameter.
-     */
     private void deleteWithStatement(Connection conn, String sql, int param) throws SQLException {
-
-        System.out.println("\n==================================");
-        System.out.println("Executing SQL:");
-        System.out.println(sql);
-        System.out.println("Parameter = " + param);
-
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, param);
-
-            int rows = ps.executeUpdate();
-
-            System.out.println("Deleted rows = " + rows);
+            ps.executeUpdate();
         }
-
-        System.out.println("Finished SQL");
-        System.out.println("==================================");
     }
     
     /**
@@ -896,6 +926,11 @@ public class AdminDAO {
                     a.setAnswerText(rs.getString("answer_text"));
                     a.setVotes(rs.getInt("votes"));
                     a.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toString() : "");
+                    try {
+                        a.setRewarded(rs.getBoolean("is_rewarded"));
+                    } catch (SQLException ignored) {
+                        a.setRewarded(false);
+                    }
                     list.add(a);
                 }
             }

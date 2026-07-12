@@ -53,6 +53,7 @@ public class User {
     private int questionsCount;
     private int achievements;
     private int points;
+    private int achievementPoints;
 
     // ===========================
     // Default Constructor
@@ -300,6 +301,14 @@ public class User {
 
     public void setPoints(int points) {
         this.points = points;
+    }
+
+    public int getAchievementPoints() {
+        return achievementPoints;
+    }
+
+    public void setAchievementPoints(int achievementPoints) {
+        this.achievementPoints = achievementPoints;
     }
 
     /** Display name: fullName when set, otherwise login name. */

@@ -253,9 +253,10 @@ public class NotesController implements Initializable {
             Stage dialog = new Stage();
             dialog.setTitle("Create New Note");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(dialogContent, 520, 620));
+            dialog.setScene(new Scene(dialogContent));
             dialog.setMinWidth(480);
             dialog.setMinHeight(500);
+            dialog.sizeToScene();
             dialog.showAndWait();
 
             loadNotes();

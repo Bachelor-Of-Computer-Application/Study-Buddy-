@@ -32,6 +32,9 @@ public class Question {
     private String userDepartment;
     private String userSemester;
 
+    // Best answer tracking (Requirements 3.1, 3.2)
+    private int bestAnswerId;
+
     public Question() {
     }
 
@@ -145,6 +148,14 @@ public class Question {
 
     public String getSemesterName() { return semesterName; }
     public void setSemesterName(String semesterName) { this.semesterName = semesterName; }
+
+    // Best answer methods (Requirements 3.1, 3.2)
+    public int getBestAnswerId() { return bestAnswerId; }
+    public void setBestAnswerId(int bestAnswerId) { this.bestAnswerId = bestAnswerId; }
+
+    public boolean hasBestAnswer() {
+        return bestAnswerId > 0;
+    }
 
     @Override
     public String toString() {

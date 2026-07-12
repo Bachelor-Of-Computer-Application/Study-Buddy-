@@ -134,13 +134,20 @@ public class DashboardController implements Initializable {
         refreshDashboard();
         setupListeners();
 
-        // Subscribe to EventBus events
-        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> refreshHeroAvatar());
+        // Subscribe to EventBus events - use Platform.runLater() to ensure DB calls
+        // don't block the UI when events are published from background threads.
+        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshHeroAvatar));
         refreshHeroAvatar();
     }
 

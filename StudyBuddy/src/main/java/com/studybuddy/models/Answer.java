@@ -8,6 +8,7 @@ public class Answer {
     private String answerText;
     private int votes;
     private String createdAt;
+    private boolean isRewarded;
 
     public Answer() {
     }
@@ -42,4 +43,7 @@ public class Answer {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public boolean isRewarded() { return isRewarded; }
+    public void setRewarded(boolean rewarded) { this.isRewarded = rewarded; }
 }
