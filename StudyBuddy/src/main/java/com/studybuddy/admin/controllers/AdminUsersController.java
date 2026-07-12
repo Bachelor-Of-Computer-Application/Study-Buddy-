@@ -428,31 +428,20 @@ public class AdminUsersController {
             return;
 
         // Show detailed warning dialog
-        Alert confirmDialog = new Alert(Alert.AlertType.WARNING);
-        confirmDialog.setTitle("Permanently Delete User");
-        confirmDialog.setHeaderText("Are you sure you want to permanently delete this user?");
+// Confirmation dialog
+        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmDialog.setTitle("Delete User");
+        confirmDialog.setHeaderText(null);
+        confirmDialog.setContentText(
+                "Are you sure you want to permanently delete this user?"
+        );
 
-        StringBuilder content = new StringBuilder();
-        content.append("User: ").append(u.getName()).append(" (").append(u.getEmail()).append(")\n\n");
-        content.append("⚠️ WARNING: This action CANNOT be undone!\n\n");
-        content.append("This will permanently delete:\n");
-        content.append("• User account\n");
-        content.append("• All user's notes\n");
-        content.append("• All user's resources\n");
-        content.append("• All user's questions\n");
-        content.append("• All user's answers\n");
-        content.append("• All user's tasks\n");
-        content.append("• All user's notifications\n");
-        content.append("• All user's activity logs\n");
-        content.append("• All associated files\n\n");
-        content.append("Are you absolutely sure you want to continue?");
-
-        confirmDialog.setContentText(content.toString());
         confirmDialog.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
 
         ButtonType result = confirmDialog.showAndWait().orElse(ButtonType.NO);
-        if (result != ButtonType.YES)
+        if (result != ButtonType.YES) {
             return;
+        }
 
         // Show progress indicator (non-blocking – no buttons, dismissed from code)
         Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
@@ -460,8 +449,12 @@ public class AdminUsersController {
         progressAlert.setHeaderText("Please wait...");
         progressAlert.setContentText("Deleting user and all related data...");
         progressAlert.getButtonTypes().clear();
-        progressAlert.show();
+        progressAlert.setResizable(false);
 
+        Stage stage = (Stage) progressAlert.getDialogPane().getScene().getWindow();
+        stage.setOnCloseRequest(event -> event.consume());
+
+        progressAlert.show();
         System.out.println(">>> UI: Progress dialog shown");
 
         // Block EventBus-triggered loadData() for the entire deletion window.
@@ -531,9 +524,9 @@ public class AdminUsersController {
                             // 3. Show success dialog — safe: no DB calls queued on FX thread
                             System.out.println(">>> UI: Showing success dialog");
                             Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                            successAlert.setTitle("User Deleted");
-                            successAlert.setHeaderText("User deleted successfully");
-                            successAlert.setContentText(finalResult.getSummary());
+                            successAlert.setTitle("Information");
+                            successAlert.setHeaderText(null);
+                            successAlert.setContentText("User deleted successfully.");
                             successAlert.showAndWait();
                             System.out.println(">>> UI: Success dialog closed");
 
