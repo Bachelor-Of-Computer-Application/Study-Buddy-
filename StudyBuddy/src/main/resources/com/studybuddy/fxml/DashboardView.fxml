@@ -139,7 +139,7 @@
                                     <Label fx:id="lblTotalTasks" styleClass="stat-value" text="0"/>
                                 </VBox>
                             </HBox>
-                            <Label text="Pending deadlines" styleClass="stat-desc"/>
+                            <Label text="Total tasks" styleClass="stat-desc"/>
                         </VBox>
 
                         <!-- Card 5: Progress -->
@@ -154,6 +154,75 @@
                                 </VBox>
                             </HBox>
                             <Label text="Tasks completion" styleClass="stat-desc"/>
+                        </VBox>
+                    </GridPane>
+                    
+                    <!-- ── 4 Task Stat Cards ───────────────────────────── -->
+                    <GridPane hgap="16" vgap="16">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="25"/>
+                            <ColumnConstraints percentWidth="25"/>
+                            <ColumnConstraints percentWidth="25"/>
+                            <ColumnConstraints percentWidth="25"/>
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints/>
+                        </rowConstraints>
+                        
+                        <!-- Task Card 1: Completed -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="0" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-green">
+                                    <Label text="✅" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="COMPLETED" styleClass="stat-label"/>
+                                    <Label fx:id="lblCompletedTasks" styleClass="stat-value, stat-value-success" text="0"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Completed tasks" styleClass="stat-desc"/>
+                        </VBox>
+                        
+                        <!-- Task Card 2: Pending -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="1" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-amber">
+                                    <Label text="⏳" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="PENDING" styleClass="stat-label"/>
+                                    <Label fx:id="lblPendingTasks" styleClass="stat-value" text="0"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Pending tasks" styleClass="stat-desc"/>
+                        </VBox>
+                        
+                        <!-- Task Card 3: In Progress -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-sky">
+                                    <Label text="�" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="IN PROGRESS" styleClass="stat-label"/>
+                                    <Label fx:id="lblInProgressTasks" styleClass="stat-value" text="0"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="In progress tasks" styleClass="stat-desc"/>
+                        </VBox>
+                        
+                        <!-- Task Card 4: Study Progress (again or something else, but keep 4 columns) -->
+                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
+                            <HBox alignment="CENTER_LEFT" spacing="12">
+                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-purple">
+                                    <Label text="🎯" styleClass="stat-icon-sm"/>
+                                </HBox>
+                                <VBox spacing="2">
+                                    <Label text="COMPLETION %" styleClass="stat-label"/>
+                                    <Label fx:id="lblTaskCompletionPercentage" styleClass="stat-value, stat-value-success" text="0%"/>
+                                </VBox>
+                            </HBox>
+                            <Label text="Task completion rate" styleClass="stat-desc"/>
                         </VBox>
                     </GridPane>
 

@@ -1,7 +1,6 @@
 package com.studybuddy.services;
 
 import com.studybuddy.App;
-import com.studybuddy.dao.UserDAO;
 import com.studybuddy.dao.QuestionDAO;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.User;
@@ -17,63 +16,26 @@ import java.util.List;
 public class QuestionService {
 
     private final QuestionDAO questionDAO = new QuestionDAO();
-    private final UserDAO userDAO = new UserDAO();
 
     /**
      * Persists a new question.
      * Delegates to QuestionDAO which now stores both subject (name) and subjectId (FK).
      */
-    public boolean saveQuestion(String text, String subject, int subjectId, int rewardPoints,
-                                String attachment, Integer departmentId, Integer semesterId) {
-
+    public boolean saveQuestion(String text, String subject, int subjectId, int points, String attachment,
+                                  Integer departmentId, Integer semesterId) {
         try {
-
             int userId = getCurrentUserId();
-            System.out.println("========== ASK QUESTION ==========");
-            System.out.println("User ID = " + userId);
-            System.out.println("Reward = " + rewardPoints);
-            System.out.println("Current Points = " + getUserPoints());
-
-            // Check balance
-            int currentPoints = getUserPoints();
-
-            if (currentPoints < rewardPoints) {
-                return false;
-            }
-
-            // Deduct points first
-            if (rewardPoints > 0) {
-                boolean deducted = userDAO.decrementPoints(userId, rewardPoints);
-                System.out.println("Deduct Result = " + deducted);
-                System.out.println("Points After = " + getUserPoints());
-                if (!deducted) {
-                    return false;
-                }
-            }
-
-            // Save question
-            boolean saved = questionDAO.createQuestion(
-                    userId,
-                    text,
-                    subject,
-                    subjectId,
-                    rewardPoints,
-                    attachment,
-                    departmentId,
-                    semesterId
-            );
-
-            // Refund if saving failed
-            if (!saved && rewardPoints > 0) {
-                userDAO.incrementPoints(userId, rewardPoints);
-            }
-
-            return saved;
-
+            return questionDAO.createQuestion(userId, text, subject, subjectId, points, attachment,
+                    departmentId, semesterId);
         } catch (SQLException e) {
+            System.err.println("[QuestionService] ❌ Failed to save question: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean saveQuestion(String text, String subject, int subjectId, int points, String attachment) {
+        return saveQuestion(text, subject, subjectId, points, attachment, null, null);
     }
 
     /**

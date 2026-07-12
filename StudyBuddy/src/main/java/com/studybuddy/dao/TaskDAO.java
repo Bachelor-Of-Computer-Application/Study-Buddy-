@@ -1,6 +1,7 @@
 package com.studybuddy.dao;
 
 import com.studybuddy.models.Task;
+import com.studybuddy.utils.EventBus;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -37,18 +38,71 @@ public class TaskDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            task.setDescription(buildStoredDescription(task));
             ps.setInt(1,    task.getUserId());
             ps.setString(2, task.getTitle());
             ps.setString(3, task.getDescription());
             ps.setString(4, task.getStatus());
 
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) {
+                EventBus.getInstance().publish(new EventBus.TasksChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            }
+            return success;
 
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
+    }
 
-        return false;
+    /**
+     * Adds default study tasks for a new user.
+     */
+    public boolean addDefaultTasks(int userId) {
+        // Define default tasks
+        record DefaultTask(String title, String description, String status) {}
+        
+        var defaultTasks = new DefaultTask[]{
+            new DefaultTask("Complete Profile", "Fill in your full name, username, and add a profile picture", "pending"),
+            new DefaultTask("Upload First Note", "Create and upload a study note for one of your subjects", "pending"),
+            new DefaultTask("Upload 5 Notes", "Create and upload 5 study notes", "pending"),
+            new DefaultTask("Upload 10 Notes", "Create and upload 10 study notes", "pending"),
+            new DefaultTask("Upload First Resource", "Share a helpful resource with the community", "pending"),
+            new DefaultTask("Upload 5 Resources", "Share 5 helpful resources with the community", "pending"),
+            new DefaultTask("Ask First Question", "Post a question to the community about a topic you're struggling with", "pending"),
+            new DefaultTask("Ask 5 Questions", "Post 5 questions to the community", "pending"),
+            new DefaultTask("Answer First Question", "Help another student by answering one of their questions", "pending"),
+            new DefaultTask("Answer 5 Questions", "Help other students by answering 5 of their questions", "pending"),
+            new DefaultTask("Complete First Task", "Finish your first task", "pending"),
+            new DefaultTask("Complete 5 Tasks", "Finish 5 of your tasks", "pending"),
+            new DefaultTask("Complete 10 Tasks", "Finish 10 of your tasks", "pending"),
+            new DefaultTask("Complete 20 Tasks", "Finish 20 of your tasks", "pending"),
+            new DefaultTask("Study for Midterm", "Prepare study materials for your midterm exams", "pending"),
+            new DefaultTask("Prepare Final Notes", "Create comprehensive final exam study notes", "pending"),
+            new DefaultTask("Download 5 Resources", "Download 5 helpful resources from the library", "pending"),
+            new DefaultTask("Complete Weekly Goal", "Set and complete your weekly study goal", "pending"),
+            new DefaultTask("Organize Study Materials", "Create a system for organizing your study materials", "pending"),
+            new DefaultTask("Review Semester Progress", "Review your overall progress for the semester", "pending")
+        };
+        
+        boolean allCreated = true;
+        
+        // Add each default task
+        for (var dt : defaultTasks) {
+            Task task = new Task();
+            task.setUserId(userId);
+            task.setTitle(dt.title());
+            task.setDescription(dt.description());
+            task.setStatus(dt.status());
+            
+            if (!createTask(task)) {
+                allCreated = false;
+            }
+        }
+        
+        return allCreated;
     }
 
     // =========================
@@ -179,18 +233,23 @@ public class TaskDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            task.setDescription(buildStoredDescription(task));
             ps.setString(1, task.getTitle());
             ps.setString(2, task.getDescription());
             ps.setString(3, task.getStatus());
             ps.setInt(4,    task.getId());
 
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) {
+                EventBus.getInstance().publish(new EventBus.TasksChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            }
+            return success;
 
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 
     // =========================
@@ -208,13 +267,17 @@ public class TaskDAO {
 
             ps.setInt(1, taskId);
 
-            return ps.executeUpdate() > 0;
+            boolean success = ps.executeUpdate() > 0;
+            if (success) {
+                EventBus.getInstance().publish(new EventBus.TasksChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            }
+            return success;
 
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 
     // =========================
@@ -252,10 +315,60 @@ public class TaskDAO {
 
     /**
      * Returns the number of completed tasks for a user.
-     * SQL: SELECT COUNT(*) FROM Tasks WHERE userId = ? AND status = 'completed'
+     * SQL: SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND status = 'completed'
      */
     public int getCompletedTaskCount(int userId) {
         String sql = "SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND status = 'completed'";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+    
+    /**
+     * Returns the number of pending tasks for a user.
+     * SQL: SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND status = 'pending'
+     */
+    public int getPendingTaskCount(int userId) {
+        String sql = "SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND status = 'pending'";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+    
+    /**
+     * Returns the number of in-progress tasks for a user.
+     * SQL: SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND status = 'in-progress' OR status = 'in_progress'
+     */
+    public int getInProgressTaskCount(int userId) {
+        String sql = "SELECT COUNT(*) FROM Tasks WHERE user_id = ? AND (status = 'in-progress' OR status = 'in_progress')";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -312,9 +425,72 @@ public class TaskDAO {
         task.setId(rs.getInt("id"));
         task.setUserId(rs.getInt("userId"));            // SQL column: userId
         task.setTitle(rs.getString("title"));
-        task.setDescription(rs.getString("description"));
         task.setStatus(rs.getString("status"));
         task.setCreatedAt(rs.getTimestamp("created_at")); // SQL column: created_at
+
+        String storedDescription = rs.getString("description");
+        TaskMetadata metadata = parseMetadata(storedDescription);
+        task.setDescription(metadata.description);
+        task.setPriority(metadata.priority);
+        task.setDueDate(metadata.dueDate);
+        task.setEstimatedTime(metadata.estimatedTime);
         return task;
+    }
+
+    private String buildStoredDescription(Task task) {
+        String description = task.getDescription() == null ? "" : task.getDescription().trim();
+        StringBuilder builder = new StringBuilder(description);
+        if (task.getPriority() != null || task.getDueDate() != null || task.getEstimatedTime() != null) {
+            if (!description.isEmpty()) {
+                builder.append("\n");
+            }
+            builder.append("[studybuddy-meta]");
+            if (task.getPriority() != null && !task.getPriority().isBlank()) {
+                builder.append("priority=").append(task.getPriority()).append("|");
+            }
+            if (task.getDueDate() != null) {
+                builder.append("due=").append(task.getDueDate().toLocalDateTime().toLocalDate()).append("|");
+            }
+            if (task.getEstimatedTime() != null && !task.getEstimatedTime().isBlank()) {
+                builder.append("estimate=").append(task.getEstimatedTime());
+            }
+        }
+        return builder.toString();
+    }
+
+    private TaskMetadata parseMetadata(String storedDescription) {
+        TaskMetadata metadata = new TaskMetadata();
+        if (storedDescription == null || storedDescription.isBlank()) {
+            return metadata;
+        }
+
+        String[] parts = storedDescription.split("\\n", 2);
+        metadata.description = parts[0].trim();
+
+        if (storedDescription.contains("[studybuddy-meta]")) {
+            String metaBlock = storedDescription.substring(storedDescription.indexOf("[studybuddy-meta]") + "[studybuddy-meta]".length());
+            for (String entry : metaBlock.split("\\|")) {
+                if (entry.contains("priority=")) {
+                    metadata.priority = entry.replace("priority=", "").trim();
+                } else if (entry.contains("due=")) {
+                    String dueValue = entry.replace("due=", "").trim();
+                    try {
+                        metadata.dueDate = Timestamp.valueOf(java.time.LocalDate.parse(dueValue).atStartOfDay());
+                    } catch (Exception ignored) {
+                    }
+                } else if (entry.contains("estimate=")) {
+                    metadata.estimatedTime = entry.replace("estimate=", "").trim();
+                }
+            }
+        }
+
+        return metadata;
+    }
+
+    private static class TaskMetadata {
+        private String description = "";
+        private String priority = "Medium";
+        private Timestamp dueDate;
+        private String estimatedTime = "";
     }
 }

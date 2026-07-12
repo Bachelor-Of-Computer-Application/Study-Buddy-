@@ -54,12 +54,12 @@ public class HomeController {
     @FXML private Button notesNavBtn;
     @FXML private Button questionsNavBtn;
     @FXML private Button resourcesNavBtn;
+    @FXML private Button tasksNavBtn;
     @FXML private Button profileNavBtn;
 
     // Stats displayed in the home sidebar / welcome area
     @FXML private Text totalTasksCount;
     @FXML private Text completedTasksCount;
-    @FXML private Text studyHoursCount;
     @FXML private ImageView sidebarAvatarView;
 
     private User currentUser;
@@ -103,6 +103,8 @@ public class HomeController {
         // Automatically load DashboardView by default
         goToDashboard();
 
+        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, (_event) -> loadDashboardStats());
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> loadDashboardStats());
         EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> {
             currentUser = App.getCurrentUser();
             refreshSidebarAvatar();
@@ -124,8 +126,7 @@ public class HomeController {
 
     /**
      * Loads task statistics for the current user from SQL Server and
-     * updates the totalTasksCount, completedTasksCount, and studyHoursCount
-     * Text nodes.
+     * updates the totalTasksCount, completedTasksCount Text nodes.
      *
      * SQL (via TaskDAO.getTaskCount):
      *   SELECT COUNT(*) FROM Tasks WHERE userId = ?
@@ -145,11 +146,6 @@ public class HomeController {
         if (completedTasksCount != null) {
             int progress = taskService.getStudyProgress(userId);
             completedTasksCount.setText(progress + "%");
-        }
-
-        if (studyHoursCount != null) {
-            double hours = taskService.getStudyHours(userId);
-            studyHoursCount.setText(hours + "h");
         }
     }
 
@@ -246,6 +242,11 @@ public class HomeController {
     @FXML
     public void goToProgress() {
         loadCenterView("/com/studybuddy/fxml/DashboardView.fxml", dashboardNavBtn);
+    }
+    
+    @FXML
+    public void goToTasks() {
+        loadCenterView("/com/studybuddy/fxml/TaskView.fxml", tasksNavBtn);
     }
 
     @FXML

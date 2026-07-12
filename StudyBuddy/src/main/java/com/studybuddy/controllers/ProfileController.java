@@ -1,11 +1,13 @@
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
+import com.studybuddy.models.Achievement;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.User;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.AchievementService;
 import com.studybuddy.services.StatisticsService;
 import com.studybuddy.services.UserService;
 import com.studybuddy.utils.EventBus;
@@ -16,6 +18,8 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -58,7 +62,9 @@ public class ProfileController {
     @FXML private Label statResourcesUploaded;
     @FXML private Label statQuestionsAsked;
     @FXML private Label statAnswersPosted;
-    @FXML private Label statStudyHours;
+    @FXML private Label statTotalTasks;
+    @FXML private Label statCompletedTasks;
+    @FXML private Label statTaskProgress;
     @FXML private Label statAchievements;
 
     // Edit Profile Tab
@@ -91,12 +97,17 @@ public class ProfileController {
 
     // Activity Tab
     @FXML private ListView<String> activityListView;
+    
+    // Achievements & Badges Tabs
+    @FXML private VBox achievementsContainer;
+    @FXML private FlowPane badgesContainer;
 
     private final UserService userService = new UserService();
     private final StatisticsService statsService = new StatisticsService();
     private final AcademicService academicService = AcademicService.getInstance();
     private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
     private final com.studybuddy.services.TaskService taskService = new com.studybuddy.services.TaskService();
+    private final AchievementService achievementService = AchievementService.getInstance();
     private final ImageLoader imageLoader = ImageLoader.getInstance();
     private User currentUser;
     private static final double PROFILE_AVATAR_SIZE = 100;
@@ -236,6 +247,10 @@ public class ProfileController {
             loadProfileData();
             loadActivityLog();
         });
+        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, (_event) -> {
+            loadProfileData();
+            loadActivityLog();
+        });
         EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> {
             loadProfileData();
             loadActivityLog();
@@ -329,9 +344,15 @@ public class ProfileController {
             statQuestionsAsked.setText("0");
             statAnswersPosted.setText("0");
         }
-        double studyHours = taskService.getStudyHours(currentUser.getId());
-        statStudyHours.setText(String.format("%.1fh", studyHours));
-        statAchievements.setText(String.valueOf(currentUser.getAchievements()));
+        
+        // Task Stats
+        int totalTasks = taskService.getTotalTaskCount(currentUser.getId());
+        int completedTasks = taskService.getCompletedTaskCount(currentUser.getId());
+        int progress = taskService.getCompletedPercentage(currentUser.getId());
+        
+        statTotalTasks.setText(String.valueOf(totalTasks));
+        statCompletedTasks.setText(String.valueOf(completedTasks));
+        statTaskProgress.setText(progress + "%");
 
         // Populate Edit Profile Fields
         fullNameField.setText(currentUser.getFullName());
@@ -382,6 +403,117 @@ public class ProfileController {
 
         // Avatar Image
         refreshAvatarDisplay();
+        
+        // Achievements & Badges
+        loadAchievements();
+        loadBadges();
+    }
+    
+    private void loadAchievements() {
+        if (achievementsContainer == null || currentUser == null) return;
+        achievementsContainer.getChildren().clear();
+        
+        // Update the achievements count in stats
+        int unlockedCount = achievementService.countUnlockedAchievements(currentUser.getId());
+        statAchievements.setText(String.valueOf(unlockedCount));
+        
+        // Get all achievements and display them
+        var achievements = achievementService.getAchievementsForUser(currentUser.getId());
+        for (Achievement achievement : achievements) {
+            HBox achievementRow = createAchievementRow(achievement);
+            achievementsContainer.getChildren().add(achievementRow);
+        }
+    }
+    
+    private HBox createAchievementRow(Achievement achievement) {
+        HBox row = new HBox(14);
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        row.getStyleClass().add("badge-row");
+        
+        // Icon
+        Label iconLabel = new Label(achievement.getIcon());
+        iconLabel.setStyle("-fx-font-size: 32px;");
+        
+        // Info
+        VBox info = new VBox(3);
+        
+        Label nameLabel = new Label(achievement.getName());
+        nameLabel.getStyleClass().add("badge-name");
+        // If unlocked, add a success style
+        if (achievement.isUnlocked()) {
+            nameLabel.setStyle("-fx-text-fill: #22c55e; -fx-font-weight: bold;");
+        }
+        
+        Label descLabel = new Label(achievement.getDescription());
+        descLabel.getStyleClass().add("badge-desc");
+        
+        // Progress
+        String progressText = String.format("%d/%d (%d%%)",
+                achievement.getCurrentProgress(),
+                achievement.getTargetProgress(),
+                achievement.getProgressPercentage());
+        Label progressLabel = new Label(progressText);
+        progressLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
+        
+        info.getChildren().addAll(nameLabel, descLabel, progressLabel);
+        
+        row.getChildren().addAll(iconLabel, info);
+        return row;
+    }
+    
+    private void loadBadges() {
+        if (badgesContainer == null || currentUser == null) return;
+        
+        badgesContainer.getChildren().clear();
+        
+        int unlockedAchievements = achievementService.countUnlockedAchievements(currentUser.getId());
+        int completedTasks = taskService.getCompletedTaskCount(currentUser.getId());
+        
+        // Bronze Badge: 3 achievements or 5 completed tasks
+        boolean bronzeUnlocked = unlockedAchievements >= 3 || completedTasks >=5;
+        VBox bronzeBadge = createBadgeCard("🥉", "Bronze", "Unlocked by earning 3 achievements or completing 5 tasks", bronzeUnlocked);
+        
+        // Silver Badge: 6 achievements or 10 completed tasks
+        boolean silverUnlocked = unlockedAchievements >=6 || completedTasks >=10;
+        VBox silverBadge = createBadgeCard("🥈", "Silver", "Unlocked by earning 6 achievements or completing 10 tasks", silverUnlocked);
+        
+        // Gold Badge: 9 achievements or 15 completed tasks
+        boolean goldUnlocked = unlockedAchievements >=9 || completedTasks >=15;
+        VBox goldBadge = createBadgeCard("🥇", "Gold", "Unlocked by earning 9 achievements or completing 15 tasks", goldUnlocked);
+        
+        // Platinum Badge: 12 achievements or 20 completed tasks
+        boolean platinumUnlocked = unlockedAchievements >=12 || completedTasks >=20;
+        VBox platinumBadge = createBadgeCard("🏆", "Platinum", "Unlocked by earning 12 achievements or completing 20 tasks", platinumUnlocked);
+        
+        badgesContainer.getChildren().addAll(bronzeBadge, silverBadge, goldBadge, platinumBadge);
+    }
+    
+    private VBox createBadgeCard(String icon, String name, String description, boolean unlocked) {
+        VBox card = new VBox(12);
+        card.setPrefWidth(200);
+        card.setStyle("-fx-padding: 16; -fx-background-radius: 8; -fx-background-color: " + (unlocked ? "#111827" : "#374151") + "; -fx-alignment: center;");
+        
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle("-fx-font-size: 48px; -fx-opacity: " + (unlocked ? 1 : 0.3) + ";");
+        
+        Label nameLabel = new Label(name);
+        nameLabel.setStyle("-fx-text-fill: " + (unlocked ? "#e5e7eb" : "#6b7280") + "; -fx-font-size: 18px; -fx-font-weight: bold;");
+        
+        Label descLabel = new Label(description);
+        descLabel.setStyle("-fx-text-fill: " + (unlocked ? "#9ca3af" : "#6b7280") + "; -fx-font-size: 12px; -fx-text-alignment: center;");
+        descLabel.setWrapText(true);
+        
+        if (!unlocked) {
+            Label lockedLabel = new Label("🔒 Locked");
+            lockedLabel.setStyle("-fx-text-fill: #9ca3af; -fx-font-size: 12px; -fx-padding: 4 12; -fx-background-color: #1f2937; -fx-background-radius: 100;");
+            card.getChildren().addAll(iconLabel, nameLabel, descLabel, lockedLabel);
+        } else {
+            Label unlockedLabel = new Label("✨ Unlocked");
+            unlockedLabel.setStyle("-fx-text-fill: #22c55e; -fx-font-size: 12px; -fx-padding: 4 12; -fx-background-color: #064e3b; -fx-background-radius: 100;");
+            card.getChildren().addAll(iconLabel, nameLabel, descLabel, unlockedLabel);
+        }
+        
+        return card;
     }
 
     private void loadActivityLog() {

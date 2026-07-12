@@ -20,6 +20,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.FlowPane?>
 
 <BorderPane fx:id="rootPane" styleClass="root-pane" stylesheets="@../css/theme.css, @../css/profile.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.ProfileController">
 
@@ -106,9 +107,10 @@
                         <Label styleClass="section-header" text="Activity Stats" />
                         <GridPane hgap="14" vgap="14">
                             <columnConstraints>
-                                <ColumnConstraints percentWidth="33.3" />
-                                <ColumnConstraints percentWidth="33.3" />
-                                <ColumnConstraints percentWidth="33.3" />
+                                <ColumnConstraints percentWidth="25" />
+                                <ColumnConstraints percentWidth="25" />
+                                <ColumnConstraints percentWidth="25" />
+                                <ColumnConstraints percentWidth="25" />
                             </columnConstraints>
                             <VBox spacing="6" styleClass="stat-card" GridPane.columnIndex="0" GridPane.rowIndex="0">
                                 <Label styleClass="stat-label" text="Notes Created" />
@@ -122,15 +124,23 @@
                                 <Label styleClass="stat-label" text="Questions Asked" />
                                 <Label fx:id="statQuestionsAsked" styleClass="stat-number" text="0" />
                             </VBox>
-                            <VBox spacing="6" styleClass="stat-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                            <VBox spacing="6" styleClass="stat-card" GridPane.columnIndex="3" GridPane.rowIndex="0">
                                 <Label styleClass="stat-label" text="Answers Posted" />
                                 <Label fx:id="statAnswersPosted" styleClass="stat-number" text="0" />
                             </VBox>
+                            <VBox spacing="6" styleClass="stat-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label styleClass="stat-label" text="Total Tasks" />
+                                <Label fx:id="statTotalTasks" styleClass="stat-number" text="0" />
+                            </VBox>
                             <VBox spacing="6" styleClass="stat-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                <Label styleClass="stat-label" text="Study Hours" />
-                                <Label fx:id="statStudyHours" styleClass="stat-number" text="0.0h" />
+                                <Label styleClass="stat-label" text="Completed Tasks" />
+                                <Label fx:id="statCompletedTasks" styleClass="stat-number" text="0" />
                             </VBox>
                             <VBox spacing="6" styleClass="stat-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                <Label styleClass="stat-label" text="Task Progress" />
+                                <Label fx:id="statTaskProgress" styleClass="stat-number" text="0%" />
+                            </VBox>
+                            <VBox spacing="6" styleClass="stat-card" GridPane.columnIndex="3" GridPane.rowIndex="1">
                                 <Label styleClass="stat-label" text="Achievements" />
                                 <Label fx:id="statAchievements" styleClass="stat-number" text="0" />
                             </VBox>
@@ -267,33 +277,24 @@
                 </ScrollPane>
             </Tab>
 
-            <!-- ── 7. ACHIEVEMENTS ──────────────────────────────────── -->
+            <!-- ── 7. BADGES ──────────────────────────────────── -->
+            <Tab text="Badges">
+                <ScrollPane fitToWidth="true" styleClass="tab-scroll">
+                    <VBox spacing="16" styleClass="tab-content">
+                        <padding><Insets bottom="28" left="28" right="28" top="24"/></padding>
+                        <Label styleClass="section-header" text="My Badges"/>
+                        <FlowPane fx:id="badgesContainer" hgap="16" vgap="16"/>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+            
+            <!-- ── 8. ACHIEVEMENTS ──────────────────────────────────── -->
             <Tab text="Achievements">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="12" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
-                        <Label styleClass="section-header" text="Achievements &amp; Badges" />
-                        <HBox alignment="CENTER_LEFT" spacing="14" styleClass="badge-row">
-                            <Label styleClass="badge-icon" text="🥇" />
-                            <VBox spacing="3">
-                                <Label styleClass="badge-name" text="First Step" />
-                                <Label styleClass="badge-desc" text="Registered an account on Study Buddy." />
-                            </VBox>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="14" styleClass="badge-row">
-                            <Label styleClass="badge-icon" text="📝" />
-                            <VBox spacing="3">
-                                <Label styleClass="badge-name" text="Note Scholar" />
-                                <Label styleClass="badge-desc" text="Created your first personal study notes." />
-                            </VBox>
-                        </HBox>
-                        <HBox alignment="CENTER_LEFT" spacing="14" styleClass="badge-row">
-                            <Label styleClass="badge-icon" text="🙋" />
-                            <VBox spacing="3">
-                                <Label styleClass="badge-name" text="Curious Learner" />
-                                <Label styleClass="badge-desc" text="Asked an academic question to the community." />
-                            </VBox>
-                        </HBox>
+                        <padding><Insets bottom="28" left="28" right="28" top="24"/></padding>
+                        <Label styleClass="section-header" text="Achievements"/>
+                        <VBox fx:id="achievementsContainer" spacing="12"/>
                     </VBox>
                 </ScrollPane>
             </Tab>

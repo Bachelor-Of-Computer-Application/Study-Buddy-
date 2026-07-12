@@ -66,6 +66,10 @@ public class DashboardController implements Initializable {
     @FXML private Label lblTotalQuestions;
     @FXML private Label lblTotalTasks;
     @FXML private Label lblProgressPercentageStat;
+    @FXML private Label lblCompletedTasks;
+    @FXML private Label lblPendingTasks;
+    @FXML private Label lblInProgressTasks;
+    @FXML private Label lblTaskCompletionPercentage;
 
     // Chart & Progress
     @FXML private BarChart<String, Number> studyBarChart;
@@ -134,6 +138,7 @@ public class DashboardController implements Initializable {
         EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> refreshDashboard());
         EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (_event) -> refreshDashboard());
         EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> refreshDashboard());
+        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, (_event) -> refreshDashboard());
         EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> refreshDashboard());
         EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> refreshHeroAvatar());
         refreshHeroAvatar();
@@ -704,6 +709,13 @@ public class DashboardController implements Initializable {
             lblProgressPercentageStat.setText("0%");
             lblProgressPercentage.setText("0%");
             overallProgressBar.setProgress(0);
+            
+            // Initialize new task stat labels
+            lblCompletedTasks.setText("0");
+            lblPendingTasks.setText("0");
+            lblInProgressTasks.setText("0");
+            lblTaskCompletionPercentage.setText("0%");
+            
             try {
                 lblSharedResources.setText(String.valueOf(resourceService.countActiveResources()));
             } catch (Exception e) {
@@ -747,16 +759,22 @@ public class DashboardController implements Initializable {
         }
 
         // Tasks Statistics — from SQL Server via TaskService → TaskDAO
-        // SQL: SELECT COUNT(*) FROM Tasks WHERE userId = ?
         int totalTasks = taskService.getTotalTaskCount(userId);
         int completedTasks = taskService.getCompletedTaskCount(userId);
-        int pendingTasks = totalTasks - completedTasks;
+        int pendingTasks = taskService.getPendingTaskCount(userId);
+        int inProgressTasks = taskService.getInProgressTaskCount(userId);
         int progress = taskService.getCompletedPercentage(userId);
 
-        lblTotalTasks.setText(String.valueOf(pendingTasks));
+        lblTotalTasks.setText(String.valueOf(totalTasks));
         lblProgressPercentageStat.setText(progress + "%");
         lblProgressPercentage.setText(progress + "%");
         overallProgressBar.setProgress((double) progress / 100);
+        
+        // Update new task stat labels
+        lblCompletedTasks.setText(String.valueOf(completedTasks));
+        lblPendingTasks.setText(String.valueOf(pendingTasks));
+        lblInProgressTasks.setText(String.valueOf(inProgressTasks));
+        lblTaskCompletionPercentage.setText(progress + "%");
     }
 
     private void loadCharts() {

@@ -20,6 +20,9 @@ public class Task {
     private String title;
     private String description;
     private String status;
+    private String priority;
+    private Timestamp dueDate;
+    private String estimatedTime;
     private Timestamp createdAt;   // maps to SQL column: created_at
 
     // =========================
@@ -39,6 +42,24 @@ public class Task {
         this.title = title;
         this.description = description;
         this.status = status;
+    }
+
+    public Task(int id,
+                int userId,
+                String title,
+                String description,
+                String status,
+                String priority,
+                Timestamp dueDate,
+                String estimatedTime) {
+        this.id = id;
+        this.userId = userId;
+        this.title = title;
+        this.description = description;
+        this.status = status;
+        this.priority = priority;
+        this.dueDate = dueDate;
+        this.estimatedTime = estimatedTime;
     }
 
     public Task(int id,
@@ -97,6 +118,30 @@ public class Task {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public Timestamp getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(Timestamp dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public String getEstimatedTime() {
+        return estimatedTime;
+    }
+
+    public void setEstimatedTime(String estimatedTime) {
+        this.estimatedTime = estimatedTime;
     }
 
     public Timestamp getCreatedAt() {
