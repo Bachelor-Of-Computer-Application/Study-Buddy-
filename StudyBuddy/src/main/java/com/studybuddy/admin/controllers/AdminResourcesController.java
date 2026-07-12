@@ -12,6 +12,7 @@ import com.studybuddy.services.ResourceService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.SessionManager;
+import com.studybuddy.utils.StringUtils;
 import com.studybuddy.dao.UserActivityDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -294,18 +295,18 @@ public class AdminResourcesController {
 
         filteredList = masterList.stream()
             .filter(r -> q.isEmpty()
-                    || nullSafe(r.getTitle()).toLowerCase().contains(q)
-                    || nullSafe(r.getSubject()).toLowerCase().contains(q)
-                    || nullSafe(r.getSource()).toLowerCase().contains(q))
-            .filter(r -> subject == null || subject.isEmpty() || nullSafe(r.getSubject()).equalsIgnoreCase(subject))
+                    || StringUtils.nullSafe(r.getTitle()).toLowerCase().contains(q)
+                    || StringUtils.nullSafe(r.getSubject()).toLowerCase().contains(q)
+                    || StringUtils.nullSafe(r.getSource()).toLowerCase().contains(q))
+            .filter(r -> subject == null || subject.isEmpty() || StringUtils.nullSafe(r.getSubject()).equalsIgnoreCase(subject))
             .filter(r -> AcademicFilterHelper.matchesDeptSemFilter(
                     r.getDepartmentId(), r.getSemesterId(), r.getSubjectId(),
-                    dept, sem, subjectMap, allSubjects, nullSafe(r.getSubject())))
+                    dept, sem, subjectMap, allSubjects, StringUtils.nullSafe(r.getSubject())))
             .filter(r -> {
                 if (status == null || status.isEmpty()) return true;
                 if ("Active".equalsIgnoreCase(status)) return r.isActive();
                 if ("Inactive".equalsIgnoreCase(status)) return !r.isActive();
-                return status.equalsIgnoreCase(nullSafe(r.getStatus()));
+                return status.equalsIgnoreCase(StringUtils.nullSafe(r.getStatus()));
             })
             .collect(Collectors.toList());
 
@@ -496,5 +497,4 @@ public class AdminResourcesController {
 
     private void info(String msg) { new Alert(Alert.AlertType.INFORMATION, msg).showAndWait(); }
     private void warn(String msg) { Alert a = new Alert(Alert.AlertType.WARNING, msg); a.setHeaderText(null); a.showAndWait(); }
-    private String nullSafe(String s) { return s != null ? s : ""; }
 }

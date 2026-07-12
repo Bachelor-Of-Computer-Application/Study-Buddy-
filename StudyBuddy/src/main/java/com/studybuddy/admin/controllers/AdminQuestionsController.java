@@ -1,25 +1,38 @@
 package com.studybuddy.admin.controllers;
 
 import com.studybuddy.admin.services.AdminService;
+import com.studybuddy.admin.services.NotificationService;
 import com.studybuddy.models.Answer;
 import com.studybuddy.models.Department;
+import com.studybuddy.models.Notification;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
 import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.QuestionService;
 import com.studybuddy.utils.AcademicFilterHelper;
+import com.studybuddy.utils.EventBus;
+import com.studybuddy.utils.StringUtils;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +40,8 @@ import java.util.stream.Collectors;
  * Lock/unlock, delete question, delete answer, search, subject filter.
  */
 public class AdminQuestionsController {
+
+    private static final Logger logger = Logger.getLogger(AdminQuestionsController.class.getName());
 
     // Question Bank form
     @FXML private TextField bankTitleField;
@@ -58,6 +73,7 @@ public class AdminQuestionsController {
     @FXML private TableColumn<Question, Integer>  colViews;
     @FXML private TableColumn<Question, String>   colDate;
     @FXML private TableColumn<Question, String>   colStatus;
+    @FXML private TableColumn<Question, Void>     colActions;
 
     // ── Answer table ──────────────────────────────────────────────────────────
     @FXML private TableView<Answer>               answersTable;
@@ -101,6 +117,23 @@ public class AdminQuestionsController {
             } else {
                 clearDetail();
             }
+        });
+
+        // Double-click to open Question Details dialog
+        questionsTable.setRowFactory(tv -> {
+            TableRow<Question> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    Question selected = row.getItem();
+                    openQuestionDetailsDialog(selected);
+                }
+            });
+            return row;
+        });
+
+        // EventBus auto refresh
+        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, event -> {
+            javafx.application.Platform.runLater(this::loadData);
         });
     }
 
@@ -277,7 +310,7 @@ public class AdminQuestionsController {
             if (bankTitleField != null) {
                 bankTitleField.setText(full.getTitle() != null ? full.getTitle() : "");
             }
-            if (bankQuestionArea != null) bankQuestionArea.setText(nullSafe(full.getQuestionText()));
+            if (bankQuestionArea != null) bankQuestionArea.setText(StringUtils.nullSafe(full.getQuestionText()));
 
             if (bankDeptCombo != null) {
                 if (full.getDepartmentId() > 0) {
@@ -359,7 +392,7 @@ public class AdminQuestionsController {
         } catch (Exception e) {
             editingBankQuestion = row;
             if (bankTitleField != null) bankTitleField.setText(row.getTitle() != null ? row.getTitle() : "");
-            if (bankQuestionArea != null) bankQuestionArea.setText(nullSafe(row.getQuestionText()));
+            if (bankQuestionArea != null) bankQuestionArea.setText(StringUtils.nullSafe(row.getQuestionText()));
         }
     }
 
@@ -405,15 +438,15 @@ public class AdminQuestionsController {
 
         filteredList = masterList.stream()
             .filter(q1 -> q.isEmpty()
-                    || nullSafe(q1.getQuestionText()).toLowerCase().contains(q)
-                    || nullSafe(q1.getTitle()).toLowerCase().contains(q)
-                    || nullSafe(q1.getAuthorName()).toLowerCase().contains(q))
+                    || StringUtils.nullSafe(q1.getQuestionText()).toLowerCase().contains(q)
+                    || StringUtils.nullSafe(q1.getTitle()).toLowerCase().contains(q)
+                    || StringUtils.nullSafe(q1.getAuthorName()).toLowerCase().contains(q))
             .filter(q1 -> subject == null || subject.isEmpty()
-                    || nullSafe(q1.getSubject()).equalsIgnoreCase(subject))
+                    || StringUtils.nullSafe(q1.getSubject()).equalsIgnoreCase(subject))
             .filter(q1 -> AcademicFilterHelper.matchesDeptSemFilter(
                     q1.getDepartmentId() > 0 ? q1.getDepartmentId() : null,
                     q1.getSemesterId() > 0 ? q1.getSemesterId() : null,
-                    q1.getSubjectId(), dept, sem, subjectMap, allSubjects, nullSafe(q1.getSubject())))
+                    q1.getSubjectId(), dept, sem, subjectMap, allSubjects, StringUtils.nullSafe(q1.getSubject())))
             .filter(q1 -> {
                 if (status == null || status.isEmpty()) return true;
                 String itemStatus = q1.getStatus();
@@ -465,12 +498,12 @@ public class AdminQuestionsController {
     private void displayQuestion(Question q) {
         if (questionDetailArea != null) {
             questionDetailArea.setText(
-                    "Author : " + nullSafe(q.getAuthorName()) + "\n" +
-                    "Subject: " + nullSafe(q.getSubject()) + "\n" +
-                    "Tags   : " + nullSafe(q.getTags()) + "\n" +
+                    "Author : " + StringUtils.nullSafe(q.getAuthorName()) + "\n" +
+                    "Subject: " + StringUtils.nullSafe(q.getSubject()) + "\n" +
+                    "Tags   : " + StringUtils.nullSafe(q.getTags()) + "\n" +
                     "Votes  : " + q.getVotes() + "   Views: " + q.getViews() + "\n" +
                     "Status : " + (q.isLocked() ? "🔒 Locked" : "🔓 Open") + "\n\n" +
-                    nullSafe(q.getQuestionText())
+                    StringUtils.nullSafe(q.getQuestionText())
             );
         }
         // Load real answers from DB
@@ -542,7 +575,7 @@ public class AdminQuestionsController {
         Answer a = answersTable.getSelectionModel().getSelectedItem();
         if (a == null) { warn("Please select an answer to delete."); return; }
 
-        if (confirm("Delete this answer by " + nullSafe(a.getAuthorName()) + "?")) {
+        if (confirm("Delete this answer by " + StringUtils.nullSafe(a.getAuthorName()) + "?")) {
             boolean ok = adminService.deleteAnswer(a.getId(), q.getQuestionText());
             if (ok) {
                 q.getAnswers().remove(a);
@@ -555,6 +588,223 @@ public class AdminQuestionsController {
         }
     }
 
+    // =========================
+    // MARK AS BEST ANSWER (Requirements 3.1, 3.2, 3.3)
+    // =========================
+
+    /**
+     * Marks the selected answer as the best answer and transfers reward points.
+     * Only administrators can perform this action.
+     * Requirements: 3.1, 3.2, 3.3
+     */
+    @FXML
+    public void handleMarkBestAnswer() {
+        Question q = selectedQuestion(); if (q == null) return;
+        if (answersTable == null) { warn("Answer table not available."); return; }
+
+        Answer a = answersTable.getSelectionModel().getSelectedItem();
+        if (a == null) { warn("Please select an answer to mark as best."); return; }
+
+        // Check if already rewarded
+        if (a.isRewarded()) {
+            warn("This answer has already been marked as best answer.");
+            return;
+        }
+
+        // Check if question is approved (required for reward transfer)
+        boolean isApproved = false;
+        try {
+            isApproved = questionService.isQuestionApproved(q.getId());
+        } catch (Exception e) {
+            warn("Failed to check question approval status.");
+            return;
+        }
+        
+        if (!isApproved) {
+            warn("The question must be approved before rewarding the best answer.");
+            return;
+        }
+
+        // Build professional confirmation dialog
+        int rewardPoints = q.getRewardPoints();
+        String questionTitle = q.getTitle() != null ? q.getTitle() : q.getQuestionText();
+        String questionAuthor = q.getAuthorName() != null ? q.getAuthorName() : "Unknown";
+        String answerAuthor = a.getAuthorName() != null ? a.getAuthorName() : "Unknown";
+        String rewardStatus = q.getRewardStatus() != null ? q.getRewardStatus() : "Pending";
+        
+        // Create custom dialog
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Confirm Best Answer Selection");
+        dialog.setHeaderText("🏆 Select Best Answer & Transfer Reward Points");
+        
+        // Set dialog owner
+        if (questionsTable.getScene() != null && questionsTable.getScene().getWindow() != null) {
+            dialog.initOwner(questionsTable.getScene().getWindow());
+        }
+        
+        // Build content
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        
+        // Question details
+        Label questionLabel = new Label("Question Details:");
+        questionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        
+        GridPane questionGrid = new GridPane();
+        questionGrid.setHgap(10);
+        questionGrid.setVgap(5);
+        
+        questionGrid.add(new Label("Title:"), 0, 0);
+        questionGrid.add(new Label(questionTitle), 1, 0);
+        questionGrid.add(new Label("Author:"), 0, 1);
+        questionGrid.add(new Label(questionAuthor), 1, 1);
+        questionGrid.add(new Label("Approval Status:"), 0, 2);
+        Label approvalLabel = new Label("✅ Approved");
+        approvalLabel.setStyle("-fx-text-fill: #22c55e; -fx-font-weight: bold;");
+        questionGrid.add(approvalLabel, 1, 2);
+        
+        // Answer details
+        Label answerLabel = new Label("Answer Details:");
+        answerLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        
+        GridPane answerGrid = new GridPane();
+        answerGrid.setHgap(10);
+        answerGrid.setVgap(5);
+        
+        answerGrid.add(new Label("Answer Author:"), 0, 0);
+        answerGrid.add(new Label(answerAuthor), 1, 0);
+        answerGrid.add(new Label("Reward Points:"), 0, 1);
+        Label pointsLabel = new Label(String.valueOf(rewardPoints));
+        pointsLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #eab308;");
+        answerGrid.add(pointsLabel, 1, 1);
+        answerGrid.add(new Label("Current Status:"), 0, 2);
+        answerGrid.add(new Label(rewardStatus), 1, 2);
+        
+        // Warning and explanation of actions
+        Label warningLabel = new Label("This action will:\n" +
+                "• Mark this answer as the Best Answer\n" +
+                "• Transfer the reward points immediately\n" +
+                "• Notify the student\n" +
+                "• Update achievements and refresh dashboards");
+        warningLabel.setStyle("-fx-text-fill: #475569; -fx-wrap-text: true; -fx-font-size: 13px;");
+        warningLabel.setMaxWidth(400);
+
+        Label permanentLabel = new Label("⚠️ Note: Reward transfer is permanent and cannot be undone.");
+        permanentLabel.setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold; -fx-wrap-text: true;");
+        permanentLabel.setMaxWidth(400);
+
+        content.getChildren().addAll(questionLabel, questionGrid, answerLabel, answerGrid, warningLabel, permanentLabel);
+        
+        dialog.getDialogPane().setContent(content);
+        
+        // Add buttons
+        ButtonType confirmButtonType = new ButtonType("Transfer Reward", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        
+        dialog.getDialogPane().getButtonTypes().addAll(cancelButtonType, confirmButtonType);
+        
+        // Style the confirm button
+        Button confirmButton = (Button) dialog.getDialogPane().lookupButton(confirmButtonType);
+        confirmButton.setStyle("-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold;");
+        
+        // Show dialog and get result
+        java.util.Optional<ButtonType> result = dialog.showAndWait();
+        
+        if (result.isPresent() && result.get() == confirmButtonType) {
+            try {
+                boolean success = questionService.markBestAnswer(q.getId(), a.getId());
+
+                if (success) {
+                    // Refresh the answers list
+                    List<Answer> answers = adminService.getAnswersForQuestion(q.getId());
+                    q.setAnswers(answers);
+                    answersTable.setItems(FXCollections.observableArrayList(answers));
+                    questionsTable.refresh();
+
+                    // Send notification to the student
+                    try {
+                        NotificationService notificationService = NotificationService.getInstance();
+                        String notificationTitle = "🏆 Best Answer Selected";
+                        String notificationMessage = String.format(
+                            "Congratulations! Your answer has been selected as the Best Answer.\nQuestion: %s\nReward Earned: %d Achievement Points\nYour profile has been updated.",
+                            questionTitle, rewardPoints
+                        );
+                        
+                        // Get answer author's user ID from the answer
+                        int answerAuthorId = a.getUserId();
+                        
+                        // Create notification for the specific user
+                        Notification notification = new Notification();
+                        notification.setTitle(notificationTitle);
+                        notification.setMessage(notificationMessage);
+                        notification.setRecipientType("USER");
+                        notification.setRecipientValue(String.valueOf(answerAuthorId));
+                        notification.setPriority("HIGH");
+                        notification.setNotificationType("Achievement");
+                        
+                        notificationService.sendSmartNotification(notification);
+                    } catch (Exception e) {
+                        logger.warning("Failed to send reward notification: " + e.getMessage());
+                    }
+
+                    // Success Dialog
+                    Dialog<ButtonType> successDialog = new Dialog<>();
+                    successDialog.setTitle("Reward Successfully Sent");
+                    successDialog.setHeaderText("✅ Reward Successfully Sent");
+                    if (questionsTable.getScene() != null && questionsTable.getScene().getWindow() != null) {
+                        successDialog.initOwner(questionsTable.getScene().getWindow());
+                    }
+                    VBox successContent = new VBox(15);
+                    successContent.setPadding(new Insets(20));
+                    successContent.setAlignment(javafx.geometry.Pos.CENTER);
+
+                    Label successPointsLabel = new Label(rewardPoints + " Achievement Points transferred");
+                    successPointsLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #22c55e;");
+
+                    Label flowLabel = new Label(
+                        questionAuthor + "\n   ↓   \n" + answerAuthor
+                    );
+                    flowLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-alignment: center; -fx-text-alignment: center;");
+
+                    successContent.getChildren().addAll(successPointsLabel, flowLabel);
+                    successDialog.getDialogPane().setContent(successContent);
+                    successDialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+                    successDialog.showAndWait();
+                } else {
+                    warn("Failed to send reward. The answer may have already been rewarded.");
+                }
+            } catch (Exception e) {
+                warn("Error sending reward: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void openQuestionDetailsDialog(Question question) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/admin/fxml/AdminQuestionDetails.fxml"));
+            Parent root = loader.load();
+
+            AdminQuestionDetailsController controller = loader.getController();
+            controller.setQuestion(question);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Question Details");
+            dialogStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            dialogStage.setScene(new Scene(root, 800, 600));
+            controller.setStage(dialogStage);
+
+            dialogStage.showAndWait();
+
+            // Refresh the questions table after dialog closes
+            loadData();
+
+        } catch (Exception e) {
+            logger.severe("Failed to open question details dialog: " + e.getMessage());
+            warn("Failed to open question details: " + e.getMessage());
+        }
+    }
+
     // ── Setup ─────────────────────────────────────────────────────────────────
 
     private void setupQuestionsTable() {
@@ -563,7 +813,7 @@ public class AdminQuestionsController {
                 Question item = cellData.getValue();
                 String label = item.getTitle() != null && !item.getTitle().isBlank()
                         ? item.getTitle() : item.getQuestionText();
-                return new SimpleStringProperty(nullSafe(label));
+                return new SimpleStringProperty(StringUtils.nullSafe(label));
             });
         }
         if (colSubject  != null) colSubject.setCellValueFactory(new PropertyValueFactory<>("subject"));
@@ -581,6 +831,56 @@ public class AdminQuestionsController {
             }
             return new SimpleStringProperty(item.isLocked() ? "🔒 Locked" : "🔓 Open");
         });
+
+        if (colActions != null) {
+            colActions.setCellFactory(param -> new TableCell<>() {
+                private final Button btnView = new Button("👁 View Details");
+                private final Button btnReward = new Button("⭐ Reward Best Answer");
+                private final HBox container = new HBox(8, btnView, btnReward);
+
+                {
+                    btnView.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; -fx-padding: 4 8;");
+                    btnReward.setStyle("-fx-background-color: #eab308; -fx-text-fill: #0f172a; -fx-font-weight: bold; -fx-background-radius: 4; -fx-padding: 4 8;");
+                    container.setAlignment(javafx.geometry.Pos.CENTER);
+                    
+                    btnView.setOnAction(e -> {
+                        Question q = getTableView().getItems().get(getIndex());
+                        openQuestionDetailsDialog(q);
+                    });
+                    
+                    btnReward.setOnAction(e -> {
+                        Question q = getTableView().getItems().get(getIndex());
+                        // Temporarily select item to load answers table so handleMarkBestAnswer knows which answer to mark if they select one there
+                        getTableView().getSelectionModel().select(getIndex());
+                        // But we want to reward the best answer. Since table view row itself doesn't contain a specific answer, 
+                        // let's open details dialog or directly prompt for best answer.
+                        // Actually, since the row only has the question, rewarding a best answer requires selecting which answer.
+                        // So the most logical flow is: opening details window so they can select the best answer card.
+                        // Let's make btnReward open the details window where they can click "Select as Best Answer" on the specific answer card.
+                        openQuestionDetailsDialog(q);
+                    });
+                }
+
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setGraphic(null);
+                    } else {
+                        Question q = getTableView().getItems().get(getIndex());
+                        btnReward.setVisible(q.isApproved());
+                        btnReward.setManaged(q.isApproved());
+                        
+                        boolean hasAnswers = q.getAnswers() != null && !q.getAnswers().isEmpty();
+                        boolean rewardTransferred = "TRANSFERRED".equalsIgnoreCase(q.getRewardStatus());
+                        boolean disabled = !q.isApproved() || !hasAnswers || rewardTransferred;
+                        btnReward.setDisable(disabled);
+
+                        setGraphic(container);
+                    }
+                }
+            });
+        }
     }
 
     private void setupAnswersTable() {
@@ -614,11 +914,10 @@ public class AdminQuestionsController {
 
     private void info(String msg) { new Alert(Alert.AlertType.INFORMATION, msg).showAndWait(); }
     private void warn(String msg) { Alert a = new Alert(Alert.AlertType.WARNING, msg); a.setHeaderText(null); a.showAndWait(); }
-    private String nullSafe(String s) { return s != null ? s : ""; }
 
     private String displayLabel(Question q) {
         if (q.getTitle() != null && !q.getTitle().isBlank()) return q.getTitle();
-        String text = nullSafe(q.getQuestionText());
-        return text.length() > 60 ? text.substring(0, 60) + "…" : text;
+        String text = StringUtils.nullSafe(q.getQuestionText());
+        return text != null && text.length() > 60 ? text.substring(0, 60) + "…" : text;
     }
 }

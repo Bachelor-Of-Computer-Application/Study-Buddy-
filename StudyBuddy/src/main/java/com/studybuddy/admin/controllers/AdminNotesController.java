@@ -11,6 +11,7 @@ import com.studybuddy.services.NoteService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.SessionManager;
+import com.studybuddy.utils.StringUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -284,15 +285,15 @@ public class AdminNotesController {
 
         filteredList = masterList.stream()
             .filter(n -> q.isEmpty() || contains(q, n.getTitle(), n.getSubject(), n.getFileName(), n.getSource()))
-            .filter(n -> subjectName == null || subjectName.isEmpty() || nullSafe(n.getSubject()).equalsIgnoreCase(subjectName))
-            .filter(n -> status == null || status.isEmpty() || nullSafe(n.getStatus()).equalsIgnoreCase(status))
+            .filter(n -> subjectName == null || subjectName.isEmpty() || StringUtils.nullSafe(n.getSubject()).equalsIgnoreCase(subjectName))
+            .filter(n -> status == null || status.isEmpty() || StringUtils.nullSafe(n.getStatus()).equalsIgnoreCase(status))
             .filter(n -> {
                 List<Subject> allSubjects = academicService.getAllActiveSubjects();
                 Map<Integer, Subject> subjectMap = allSubjects.stream()
                         .collect(Collectors.toMap(Subject::getId, s -> s, (a, b) -> a));
                 return AcademicFilterHelper.matchesDeptSemFilter(
                         n.getDepartmentId(), n.getSemesterId(), n.getSubjectId(),
-                        dept, sem, subjectMap, allSubjects, nullSafe(n.getSubject()));
+                        dept, sem, subjectMap, allSubjects, StringUtils.nullSafe(n.getSubject()));
             })
             .filter(n -> {
                 if (visibility == null || visibility.isEmpty()) return true;
@@ -477,7 +478,6 @@ public class AdminNotesController {
         return dot >= 0 ? name.substring(dot + 1).toUpperCase() : "TXT";
     }
 
-    private String nullSafe(String s) { return s != null ? s : ""; }
     private boolean confirm(String msg) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION, msg, ButtonType.YES, ButtonType.NO);
         a.setHeaderText(null);

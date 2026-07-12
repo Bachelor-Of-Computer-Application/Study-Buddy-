@@ -47,6 +47,12 @@ public class AdminOverviewController {
     @FXML private Label lblUploadsToday;
     @FXML private Label lblPendingNotes;
     @FXML private Label lblPendingResources;
+    @FXML private Label lblPendingRewards;
+    @FXML private Label lblCompletedRewards;
+    @FXML private Label lblTotalPointsTransferred;
+    @FXML private Label lblAverageReward;
+    @FXML private Label lblHighestReward;
+    @FXML private Label lblRecentReward;
 
     // ── Chart ─────────────────────────────────────────────────────────────────
     @FXML private PieChart subjectPieChart;
@@ -125,11 +131,12 @@ public class AdminOverviewController {
         setTextAndLog(lblTotalResources,  "lblTotalResources",  stats.get("totalResources"));
         setTextAndLog(lblTotalQuestions,  "lblTotalQuestions",  stats.get("totalQuestions"));
         setTextAndLog(lblTotalAnswers,    "lblTotalAnswers",    stats.get("totalAnswers"));
-        setTextAndLog(lblTotalTasks,      "lblTotalTasks",      stats.get("totalTasks"));
-        setTextAndLog(lblNewUsersToday,   "lblNewUsersToday",   stats.get("newUsersToday"));
-        setTextAndLog(lblUploadsToday,    "lblUploadsToday",    stats.get("uploadsToday"));
-        setTextAndLog(lblPendingNotes,    "lblPendingNotes",    stats.get("pendingNotes"));
-        setTextAndLog(lblPendingResources,"lblPendingResources",stats.get("pendingResources"));
+        setTextAndLog(lblPendingRewards,         "lblPendingRewards",         stats.get("pendingRewards"));
+        setTextAndLog(lblCompletedRewards,       "lblCompletedRewards",       stats.get("completedRewards"));
+        setTextAndLog(lblTotalPointsTransferred, "lblTotalPointsTransferred", stats.get("totalPointsTransferred"));
+        setTextAndLog(lblAverageReward,          "lblAverageReward",          stats.get("averageReward"));
+        setTextAndLog(lblHighestReward,          "lblHighestReward",          stats.get("highestReward"));
+        setTextAndLog(lblRecentReward,           "lblRecentReward",           stats.get("recentReward"));
     }
 
     /** Sets label text AND prints proof that setText() was actually executed. */

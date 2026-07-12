@@ -1,6 +1,7 @@
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
+import com.studybuddy.dao.UserDAO;
 import com.studybuddy.models.Task;
 import com.studybuddy.models.User;
 import com.studybuddy.services.TaskService;
@@ -35,6 +36,7 @@ public class TaskController implements Initializable {
 
     // ── Services / state ─────────────────────────────────────────────────
     private final TaskService taskService = new TaskService();
+    private final UserDAO userDAO = new UserDAO();
     private User currentUser;
     private final ObservableList<Task> allTasks    = FXCollections.observableArrayList();
     private final ObservableList<Task> visibleTasks = FXCollections.observableArrayList();
@@ -757,7 +759,17 @@ public class TaskController implements Initializable {
 
     private void markComplete(Task task) {
         task.setStatus("completed");
-        if (!taskService.updateTask(task)) {
+        if (taskService.updateTask(task)) {
+            // Refresh user's achievement points in session
+            if (currentUser != null) {
+                try {
+                    int newPoints = userDAO.getAchievementPoints(currentUser.getId());
+                    currentUser.setAchievementPoints(newPoints);
+                } catch (Exception e) {
+                    System.err.println("Failed to refresh achievement points: " + e.getMessage());
+                }
+            }
+        } else {
             showAlert(Alert.AlertType.ERROR, "Update failed", "Could not mark task as complete.");
         }
         // EventBus will reload

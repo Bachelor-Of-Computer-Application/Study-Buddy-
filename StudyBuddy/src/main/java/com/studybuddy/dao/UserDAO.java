@@ -31,7 +31,8 @@ public class UserDAO {
     public int createUser(User user) {
         // fullName is included so the Edit Profile page shows the name the user
         // entered at registration rather than an empty field.
-        String sql = "INSERT INTO Users (name, fullName, email, password, role) VALUES (?, ?, ?, ?, ?)";
+        // Requirement 1: New users receive 100 achievement_points
+        String sql = "INSERT INTO Users (name, fullName, email, password, role, achievement_points) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -43,6 +44,8 @@ public class UserDAO {
             ps.setString(4, user.getPassword());
             // Default to STUDENT role if not specified
             ps.setString(5, user.getRole() == null || user.getRole().trim().isEmpty() ? "STUDENT" : user.getRole());
+            // Set achievement_points (default 100 for new users)
+            ps.setInt(6, user.getAchievementPoints() > 0 ? user.getAchievementPoints() : 100);
 
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -684,6 +687,76 @@ public class UserDAO {
     }
 
     // =========================
+    // ACHIEVEMENT POINTS
+    // =========================
+
+    /**
+     * Get user's achievement points balance.
+     * Requirement 6.1
+     *
+     * @param userId User's ID
+     * @return Integer value of achievement_points, or null if not found
+     */
+    public Integer getAchievementPoints(int userId) {
+        String sql = "SELECT achievement_points FROM Users WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("achievement_points");
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * Add points to user's achievement points balance.
+     * Requirement 6.2, 6.5
+     *
+     * @param userId User's ID
+     * @param points Points to add (must be positive)
+     * @return true if successful, false otherwise
+     */
+    public boolean addAchievementPoints(int userId, int points) {
+        // Validate that points is positive
+        if (points <= 0) {
+            return false;
+        }
+
+        String sql = "UPDATE Users SET achievement_points = achievement_points + ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, points);
+                    ps.setInt(2, userId);
+                    boolean success = ps.executeUpdate() > 0;
+                    conn.commit();
+                    return success;
+                }
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =========================
     // GET USER STATISTICS
     // =========================
 
@@ -739,6 +812,52 @@ public class UserDAO {
 
             return ps.executeUpdate() > 0;
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Deduct achievement points from user's balance.
+     * Validates that the user has sufficient balance before deducting.
+     * 
+     * @param userId User's ID
+     * @param points Points to deduct (must be positive)
+     * @return true if successful, false if insufficient balance, negative amount, or error
+     */
+    public boolean deductAchievementPoints(int userId, int points) {
+        // Validate: points must be positive
+        if (points <= 0) {
+            return false;
+        }
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // First, check if user has sufficient balance within the transaction
+                Integer currentBalance = getAchievementPoints(userId);
+                if (currentBalance == null || currentBalance < points) {
+                    conn.rollback();
+                    return false;
+                }
+
+                // Deduct the points
+                String sql = "UPDATE Users SET achievement_points = achievement_points - ? WHERE id = ? AND achievement_points >= ?";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, points);
+                    ps.setInt(2, userId);
+                    ps.setInt(3, points);
+                    boolean success = ps.executeUpdate() > 0;
+                    conn.commit();
+                    return success;
+                }
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -817,6 +936,7 @@ public class UserDAO {
         user.setQuestionsCount(getOptionalInt(rs, "questionsCount", 0));
         user.setAchievements(getOptionalInt(rs, "achievements", 0));
         user.setPoints(getOptionalInt(rs, "points", 0));
+        user.setAchievementPoints(getOptionalInt(rs, "achievement_points", 0));
 
         // Creation timestamp
         Timestamp createdAt = getOptionalTimestamp(rs, "created_at");

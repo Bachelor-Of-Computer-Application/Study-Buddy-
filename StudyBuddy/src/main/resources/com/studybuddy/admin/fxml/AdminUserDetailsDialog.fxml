@@ -4,11 +4,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="16" stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
-      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.studybuddy.admin.controllers.AdminUserDetailsController"
-      styleClass="admin-panel-bg"
-      padding="24 24 24 24">
+<ScrollPane fitToWidth="true" fitToHeight="true" styleClass="content-scroll"
+            stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.studybuddy.admin.controllers.AdminUserDetailsController">
+    <content>
+        <VBox spacing="16" styleClass="admin-panel-bg">
+            <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
     
     <!-- Header -->
     <HBox alignment="CENTER_LEFT" spacing="16">
@@ -87,6 +89,9 @@
                 <TableColumn fx:id="colItemStatus" text="Status" prefWidth="100"/>
                 <TableColumn fx:id="colItemDate" text="Date" prefWidth="180"/>
             </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+            </columnResizePolicy>
         </TableView>
     </VBox>
     
@@ -100,7 +105,11 @@
                 <TableColumn fx:id="colHistoryStatus" text="Status" prefWidth="100"/>
                 <TableColumn fx:id="colHistoryDate" text="Date" prefWidth="180"/>
             </columns>
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+            </columnResizePolicy>
         </TableView>
     </VBox>
-    
 </VBox>
+    </content>
+</ScrollPane>

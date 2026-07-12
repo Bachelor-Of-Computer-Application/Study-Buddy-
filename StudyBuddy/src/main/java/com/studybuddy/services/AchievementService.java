@@ -10,9 +10,6 @@ import java.util.List;
  * Service to calculate and track user achievements based on existing data.
  */
 public class AchievementService {
-    private final NoteDAO noteDAO = new NoteDAO();
-    private final ResourceDAO resourceDAO = new ResourceDAO();
-    private final QuestionDAO questionDAO = new QuestionDAO();
     private final TaskDAO taskDAO = new TaskDAO();
     private final StatisticsService statsService = new StatisticsService();
     
@@ -40,6 +37,7 @@ public class AchievementService {
                 "First Step",
                 "Registered an account on Study Buddy.",
                 "🥇",
+                10,
                 1
         );
         firstStep.setCurrentProgress(1);
@@ -52,6 +50,7 @@ public class AchievementService {
                 "Note Scholar",
                 "Created your first personal study notes.",
                 "📝",
+                15,
                 1
         );
         try {
@@ -67,6 +66,7 @@ public class AchievementService {
                 "Curious Learner",
                 "Asked an academic question to the community.",
                 "🙋",
+                15,
                 1
         );
         try {
@@ -82,6 +82,7 @@ public class AchievementService {
                 "Helpful Student",
                 "Submitted your first answer to a question.",
                 "💬",
+                20,
                 1
         );
         try {
@@ -97,6 +98,7 @@ public class AchievementService {
                 "Resource Contributor",
                 "Shared your first resource with the community.",
                 "📂",
+                20,
                 1
         );
         try {
@@ -112,6 +114,7 @@ public class AchievementService {
                 "Task Master",
                 "Completed 5 study tasks.",
                 "✅",
+                25,
                 5
         );
         int completedTasks = taskDAO.getCompletedTaskCount(userId);
@@ -125,6 +128,7 @@ public class AchievementService {
                 "Note Collector",
                 "Uploaded 5 study notes.",
                 "📚",
+                30,
                 5
         );
         try {
@@ -140,6 +144,7 @@ public class AchievementService {
                 "Inquisitive Mind",
                 "Asked 5 academic questions.",
                 "🧠",
+                30,
                 5
         );
         try {
@@ -155,6 +160,7 @@ public class AchievementService {
                 "Consistent Learner",
                 "Completed 10 study tasks.",
                 "📈",
+                40,
                 10
         );
         completedTasks = taskDAO.getCompletedTaskCount(userId);
@@ -168,6 +174,7 @@ public class AchievementService {
                 "Task Champion",
                 "Completed 20 study tasks.",
                 "🏆",
+                50,
                 20
         );
         taskChampion.setCurrentProgress(completedTasks);
@@ -180,6 +187,7 @@ public class AchievementService {
                 "Resource Provider",
                 "Shared 5 resources with the community.",
                 "🎓",
+                35,
                 5
         );
         try {
@@ -202,5 +210,19 @@ public class AchievementService {
             if (a.isUnlocked()) count++;
         }
         return count;
+    }
+    
+    /**
+     * Returns the total reward points from all unlocked achievements for a user
+     */
+    public int getTotalRewardPoints(int userId) {
+        List<Achievement> achievements = getAchievementsForUser(userId);
+        int totalPoints = 0;
+        for (Achievement a : achievements) {
+            if (a.isUnlocked()) {
+                totalPoints += a.getRewardPoints();
+            }
+        }
+        return totalPoints;
     }
 }

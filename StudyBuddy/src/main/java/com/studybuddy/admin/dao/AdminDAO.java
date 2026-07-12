@@ -46,12 +46,19 @@ public class AdminDAO {
                 "SELECT COUNT(*) FROM Users WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE)",
                 "SELECT COUNT(*) FROM Notes WHERE CAST(uploadDate AS DATE) = CAST(GETDATE() AS DATE) AND status != 'Deleted'",
                 "SELECT COUNT(*) FROM Notes WHERE status = 'Pending'",
-                "SELECT COUNT(*) FROM Resources WHERE isActive = 0"
+                "SELECT COUNT(*) FROM Resources WHERE isActive = 0",
+                "SELECT COUNT(*) FROM Questions WHERE approved = 1 AND (reward_status IS NULL OR reward_status = 'pending')",
+                "SELECT COUNT(*) FROM RewardTransactions WHERE status = 'COMPLETED'",
+                "SELECT COALESCE(SUM(points), 0) FROM RewardTransactions WHERE status = 'COMPLETED'",
+                "SELECT COALESCE(AVG(points), 0) FROM RewardTransactions WHERE status = 'COMPLETED'",
+                "SELECT COALESCE(MAX(points), 0) FROM RewardTransactions WHERE status = 'COMPLETED'",
+                "SELECT TOP 1 COALESCE(points, 0) FROM RewardTransactions WHERE status = 'COMPLETED' ORDER BY created_at DESC"
         };
         String[] keys = {
                 "totalUsers", "totalNotes", "totalResources", "totalQuestions",
                 "totalAnswers", "totalTasks", "newUsersToday", "uploadsToday",
-                "pendingNotes", "pendingResources"
+                "pendingNotes", "pendingResources",
+                "pendingRewards", "completedRewards", "totalPointsTransferred", "averageReward", "highestReward", "recentReward"
         };
 
         try (Connection conn = DatabaseUtil.getConnection()) {
@@ -915,6 +922,11 @@ public class AdminDAO {
                     a.setAnswerText(rs.getString("answer_text"));
                     a.setVotes(rs.getInt("votes"));
                     a.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toString() : "");
+                    try {
+                        a.setRewarded(rs.getBoolean("is_rewarded"));
+                    } catch (SQLException ignored) {
+                        a.setRewarded(false);
+                    }
                     list.add(a);
                 }
             }
@@ -1207,6 +1219,80 @@ public class AdminDAO {
             }
         } catch (SQLException e) {
             logger.warning("searchQuestions failed: " + e.getMessage());
+        }
+        return list;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Reward Transactions
+    // ══════════════════════════════════════════════════════════════════════════
+
+    public List<Map<String, Object>> getRewardTransactions(String search, String statusFilter, Integer userIdFilter) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT rt.transaction_id, rt.question_id, rt.answer_id, rt.from_user_id, rt.to_user_id, " +
+            "rt.points, rt.status, rt.created_at, " +
+            "q.question_text, q.title, " +
+            "fu.name AS from_user_name, tu.name AS to_user_name, " +
+            "a.answer_text " +
+            "FROM RewardTransactions rt " +
+            "JOIN Questions q ON rt.question_id = q.question_id " +
+            "JOIN Users fu ON rt.from_user_id = fu.id " +
+            "JOIN Users tu ON rt.to_user_id = tu.id " +
+            "LEFT JOIN Answers a ON rt.answer_id = a.answer_id " +
+            "WHERE 1=1 "
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (q.title LIKE ? OR q.question_text LIKE ? OR fu.name LIKE ? OR tu.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+
+        if (statusFilter != null && !statusFilter.trim().isEmpty() && !statusFilter.equals("All")) {
+            sql.append("AND rt.status = ? ");
+            params.add(statusFilter);
+        }
+
+        if (userIdFilter != null && userIdFilter > 0) {
+            sql.append("AND (rt.from_user_id = ? OR rt.to_user_id = ?) ");
+            params.add(userIdFilter);
+            params.add(userIdFilter);
+        }
+
+        sql.append("ORDER BY rt.created_at DESC");
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> transaction = new LinkedHashMap<>();
+                    transaction.put("transaction_id", rs.getInt("transaction_id"));
+                    transaction.put("question_id", rs.getInt("question_id"));
+                    transaction.put("answer_id", rs.getInt("answer_id"));
+                    transaction.put("from_user_id", rs.getInt("from_user_id"));
+                    transaction.put("to_user_id", rs.getInt("to_user_id"));
+                    transaction.put("points", rs.getInt("points"));
+                    transaction.put("status", rs.getString("status"));
+                    transaction.put("created_at", rs.getTimestamp("created_at"));
+                    transaction.put("question_title", rs.getString("title"));
+                    transaction.put("question_text", rs.getString("question_text"));
+                    transaction.put("from_user_name", rs.getString("from_user_name"));
+                    transaction.put("to_user_name", rs.getString("to_user_name"));
+                    transaction.put("answer_text", rs.getString("answer_text"));
+                    list.add(transaction);
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("getRewardTransactions failed: " + e.getMessage());
         }
         return list;
     }

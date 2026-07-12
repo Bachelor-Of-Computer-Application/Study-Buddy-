@@ -2,6 +2,7 @@ package com.studybuddy.dao;
 
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
+import com.studybuddy.utils.EventBus;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -280,6 +281,11 @@ public class ResourceDAO {
             stmt.setString(13, status);
             stmt.setString(14, resource.getCategory());
             stmt.executeUpdate();
+            
+            // Publish events for achievement progress updates
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            EventBus.getInstance().publish(new EventBus.ResourcesChangedEvent());
+            
             try (ResultSet keys = stmt.getGeneratedKeys()) {
                 if (keys.next()) {
                     return keys.getInt(1);

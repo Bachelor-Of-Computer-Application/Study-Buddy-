@@ -115,7 +115,7 @@ public class AdminReportsController {
         series.setName("Downloads");
         for (Map<String, Object> row : data) {
             String title = (String) row.get("title");
-            int    dl    = (int) row.get("downloads");
+            int    dl    = row.get("downloads") != null ? ((Number) row.get("downloads")).intValue() : 0;
             if (title != null && title.length() > 20) title = title.substring(0, 20) + "…";
             series.getData().add(new XYChart.Data<>(title, dl));
         }

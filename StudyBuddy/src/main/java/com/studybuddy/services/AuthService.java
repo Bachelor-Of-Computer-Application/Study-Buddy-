@@ -43,6 +43,8 @@ public class AuthService {
         // Automatically assign STUDENT role to all new registrations
         user.setRole("STUDENT");
         user.setPassword(PasswordHasher.hashPassword(password));
+        // Requirement 1: New students receive 100 achievement_points
+        user.setAchievementPoints(100);
 
         int userId = userDAO.createUser(user);
         if (userId == -1) return false;

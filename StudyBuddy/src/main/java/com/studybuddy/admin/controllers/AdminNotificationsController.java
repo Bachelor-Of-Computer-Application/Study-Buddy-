@@ -8,6 +8,7 @@ import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.FileStorageService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.SessionManager;
+import com.studybuddy.utils.StringUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -276,11 +277,11 @@ public class AdminNotificationsController {
         String type = historyTypeFilter != null ? historyTypeFilter.getValue() : null;
         List<Notification> filtered = historyMaster.stream()
                 .filter(n -> q.isEmpty()
-                        || nullSafe(n.getTitle()).toLowerCase().contains(q)
-                        || nullSafe(n.getMessage()).toLowerCase().contains(q)
-                        || nullSafe(n.getRecipientDisplay()).toLowerCase().contains(q))
+                        || StringUtils.nullSafe(n.getTitle()).toLowerCase().contains(q)
+                        || StringUtils.nullSafe(n.getMessage()).toLowerCase().contains(q)
+                        || StringUtils.nullSafe(n.getRecipientDisplay()).toLowerCase().contains(q))
                 .filter(n -> type == null || type.isEmpty()
-                        || type.equalsIgnoreCase(nullSafe(n.getNotificationType())))
+                        || type.equalsIgnoreCase(StringUtils.nullSafe(n.getNotificationType())))
                 .collect(Collectors.toList());
         historyTable.setItems(FXCollections.observableArrayList(filtered));
     }
@@ -307,5 +308,4 @@ public class AdminNotificationsController {
 
     private void info(String msg) { new Alert(Alert.AlertType.INFORMATION, msg).showAndWait(); }
     private void warn(String msg) { Alert a = new Alert(Alert.AlertType.WARNING, msg); a.setHeaderText(null); a.showAndWait(); }
-    private String nullSafe(String s) { return s != null ? s : ""; }
 }

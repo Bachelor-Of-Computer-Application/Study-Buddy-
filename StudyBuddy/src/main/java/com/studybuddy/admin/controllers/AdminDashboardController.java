@@ -59,6 +59,9 @@ public class AdminDashboardController {
     private Button btnActivityLogs;
 
     @FXML
+    private Button btnRewardHistory;
+
+    @FXML
     private Button btnSettings;
 
     private Button activeButton;
@@ -133,6 +136,12 @@ public class AdminDashboardController {
     public void showActivityLogs() {
         setActive(btnActivityLogs);
         loadView("/com/studybuddy/admin/fxml/AdminActivityLogs.fxml");
+    }
+
+    @FXML
+    public void showRewardHistory() {
+        setActive(btnRewardHistory);
+        loadView("/com/studybuddy/admin/fxml/AdminRewardHistory.fxml");
     }
 
     @FXML

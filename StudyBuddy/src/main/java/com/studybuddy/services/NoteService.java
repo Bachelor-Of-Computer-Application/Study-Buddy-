@@ -4,6 +4,7 @@ import com.studybuddy.dao.NoteDAO;
 import com.studybuddy.dao.SubjectDAO;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.User;
+import com.studybuddy.utils.EventBus;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,6 +84,7 @@ public class NoteService {
      */
     public void createNote(Note note, boolean autoApprove) throws SQLException {
         noteDAO.createNote(note, autoApprove);
+        EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
     }
 
     public int createNoteWithFile(Note note, File file, boolean autoApprove) throws SQLException, IOException {
@@ -100,6 +102,7 @@ public class NoteService {
             note.setFileType(ext);
         }
         noteDAO.createNote(note, autoApprove);
+        EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
         return note.getId();
     }
 

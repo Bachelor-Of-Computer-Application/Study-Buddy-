@@ -13,6 +13,7 @@ import com.studybuddy.services.AuthorizationService;
 import com.studybuddy.services.ResourceService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
+import com.studybuddy.utils.StringUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -310,10 +311,10 @@ public class ResourcesController {
 
     @FXML
     public void applyFilters() {
-        String query = searchField.getText().trim().toLowerCase();
-        Department dept = departmentFilter.getValue();
-        Semester sem = semesterFilter.getValue();
-        Subject selectedSubject = subjectFilter.getValue();
+        String query = searchField != null ? searchField.getText().trim().toLowerCase() : "";
+        Department dept = departmentFilter != null ? departmentFilter.getValue() : null;
+        Semester sem = semesterFilter != null ? semesterFilter.getValue() : null;
+        Subject selectedSubject = subjectFilter != null ? subjectFilter.getValue() : null;
         String subject = selectedSubject != null ? selectedSubject.getName() : null;
 
         List<Subject> allSubjects = academicService.getAllActiveSubjects();
@@ -544,10 +545,10 @@ public class ResourcesController {
         alert.setTitle("Resource Preview");
         alert.setHeaderText(r.getTitle());
         alert.setContentText(
-                "Subject: "     + nullSafe(r.getSubject())     + "\n" +
-                "Source: "      + nullSafe(r.getSource())       + "\n" +
-                "Description: " + nullSafe(r.getDescription())  + "\n" +
-                "File: "        + nullSafe(r.getFilePath()));
+                "Subject: "     + StringUtils.nullSafe(r.getSubject())     + "\n" +
+                "Source: "      + StringUtils.nullSafe(r.getSource())       + "\n" +
+                "Description: " + StringUtils.nullSafe(r.getDescription())  + "\n" +
+                "File: "        + StringUtils.nullSafe(r.getFilePath()));
         alert.showAndWait();
     }
 
@@ -588,5 +589,4 @@ public class ResourcesController {
         }
     }
 
-    private String nullSafe(String s) { return s != null ? s : ""; }
 }

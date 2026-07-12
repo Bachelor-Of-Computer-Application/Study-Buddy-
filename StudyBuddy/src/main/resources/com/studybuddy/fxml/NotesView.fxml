@@ -22,7 +22,7 @@
                     styleClass="scroll-pane" vbarPolicy="AS_NEEDED">
             <content>
                 <VBox spacing="18">
-                    <padding><Insets top="24" right="24" bottom="28" left="24"/></padding>
+                    <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
                     <!-- ── Page Header Card ──────────────────────────── -->
                     <HBox alignment="CENTER_LEFT" spacing="20"

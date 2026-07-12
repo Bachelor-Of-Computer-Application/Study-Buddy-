@@ -3,6 +3,7 @@ package com.studybuddy.dao;
 import com.studybuddy.models.Answer;
 import com.studybuddy.models.Question;
 import com.studybuddy.utils.DatabaseUtil;
+import com.studybuddy.utils.EventBus;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,12 +42,22 @@ public class QuestionDAO {
     public boolean createQuestion(int userId, String text, String subject,
                                   int subjectId, int points, String attachment,
                                   Integer departmentId, Integer semesterId) throws SQLException {
-        String sql = "INSERT INTO Questions " +
-                "(user_id, subject, subjectId, departmentId, semesterId, question_text, attachment_path, reward_points, created_at, votes, views, is_locked) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0, 0, 0)";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return createQuestion(conn, userId, text, subject, subjectId, points, attachment, departmentId, semesterId);
+        }
+    }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+    /**
+     * Inserts a question using an existing connection (for transactional operations).
+     */
+    public boolean createQuestion(Connection conn, int userId, String text, String subject,
+                                  int subjectId, int points, String attachment,
+                                  Integer departmentId, Integer semesterId) throws SQLException {
+        String sql = "INSERT INTO Questions " +
+                "(user_id, subject, subjectId, departmentId, semesterId, question_text, attachment_path, reward_points, reward_status, approved, created_at, votes, views, is_locked) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, GETDATE(), 0, 0, 0)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, subject);
             if (subjectId > 0) {
@@ -70,6 +81,244 @@ public class QuestionDAO {
     }
 
     // =========================
+    // CREATE QUESTION WITH REWARD
+    // =========================
+
+    /**
+     * Creates a question with an explicit reward points value.
+     * This is the primary method for creating questions in the achievement points system.
+     * Requirement: 2.1, 2.6
+     *
+     * @param userId The ID of the user creating the question
+     * @param text The question text content
+     * @param subject The subject name
+     * @param subjectId The subject ID from Subjects table (0 treated as NULL)
+     * @param rewardPoints The reward points offered for this question (0 or positive)
+     * @param attachment Optional file attachment path
+     * @param departmentId Optional department ID
+     * @param semesterId Optional semester ID
+     * @return true if the question was created successfully
+     * @throws SQLException if a database error occurs
+     */
+    public boolean createQuestionWithReward(int userId, String text, String subject,
+                                           int subjectId, int rewardPoints, String attachment,
+                                           Integer departmentId, Integer semesterId) throws SQLException {
+        // Delegate to existing createQuestion which already handles reward_points
+        return createQuestion(userId, text, subject, subjectId, rewardPoints, attachment, departmentId, semesterId);
+    }
+
+    // =========================
+    // MARK BEST ANSWER & TRANSFER POINTS (Requirements 3.1, 3.2, 3.3)
+    // =========================
+
+    /**
+     * Marks an answer as the best answer and transfers reward points from the question
+     * author to the answer author.
+     *
+     * This method performs the following operations atomically:
+     * 1. Validates the question exists and belongs to the requesting user
+     * 2. Validates the answer exists and belongs to the specified question
+     * 3. Checks the question has available reward points
+     * 4. Transfers points from question author to answer author
+     * 5. Updates the answer's is_rewarded status
+     * 6. Updates the question's best_answer_id and reward_status
+     * 7. Records the transaction in RewardTransactions table
+     *
+     * Requirements: 3.1, 3.2, 3.3
+     *
+     * @param questionId The ID of the question
+     * @param answerId The ID of the answer to mark as best
+     * @param questionAuthorId The ID of the question author (for authorization)
+     * @return true if the best answer was marked successfully, false otherwise
+     * @throws SQLException if a database error occurs
+     */
+    public boolean markBestAnswerAndTransferPoints(int questionId, int answerId, int questionAuthorId) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                // Step 1: Get question details
+                String questionSql = "SELECT user_id, reward_points, reward_status FROM Questions WHERE question_id = ?";
+                int questionAuthor = -1;
+                int rewardPoints = 0;
+
+                try (PreparedStatement ps = conn.prepareStatement(questionSql)) {
+                    ps.setInt(1, questionId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            questionAuthor = rs.getInt("user_id");
+                            rewardPoints = rs.getInt("reward_points");
+                            String rewardStatus = rs.getString("reward_status");
+                            // Prevent double-rewarding
+                            if ("TRANSFERRED".equals(rewardStatus)) {
+                                return false;
+                            }
+                        } else {
+                            return false; // Question not found
+                        }
+                    }
+                }
+
+                // Validate the requesting user is the question author
+                if (questionAuthor != questionAuthorId) {
+                    return false;
+                }
+
+                // Get zero reward check
+                if (rewardPoints <= 0) {
+                    // Still mark as best answer even with 0 points
+                }
+
+                // Step 2: Get answer details
+                String answerSql = "SELECT user_id, is_rewarded FROM Answers WHERE answer_id = ? AND question_id = ?";
+                int answerAuthorId = -1;
+                boolean answerAlreadyRewarded = false;
+
+                try (PreparedStatement ps = conn.prepareStatement(answerSql)) {
+                    ps.setInt(1, answerId);
+                    ps.setInt(2, questionId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            answerAuthorId = rs.getInt("user_id");
+                            answerAlreadyRewarded = rs.getBoolean("is_rewarded");
+                        } else {
+                            return false; // Answer not found or doesn't belong to this question
+                        }
+                    }
+                }
+
+                // Prevent self-awarding
+                if (answerAuthorId == questionAuthorId) {
+                    return false;
+                }
+
+                // Prevent double-rewarding the same answer
+                if (answerAlreadyRewarded) {
+                    return false;
+                }
+
+                // Step 3: If there are points to transfer, deduct from author and add to answerer
+                if (rewardPoints > 0) {
+                    // Deduct from question author
+                    String deductSql = "UPDATE Users SET achievement_points = achievement_points - ? WHERE id = ? AND achievement_points >= ?";
+                    try (PreparedStatement ps = conn.prepareStatement(deductSql)) {
+                        ps.setInt(1, rewardPoints);
+                        ps.setInt(2, questionAuthorId);
+                        ps.setInt(3, rewardPoints);
+                        int updated = ps.executeUpdate();
+                        if (updated == 0) {
+                            // User doesn't have enough points
+                            conn.rollback();
+                            return false;
+                        }
+                    }
+
+                    // Add to answer author
+                    String addSql = "UPDATE Users SET achievement_points = achievement_points + ? WHERE id = ?";
+                    try (PreparedStatement ps = conn.prepareStatement(addSql)) {
+                        ps.setInt(1, rewardPoints);
+                        ps.setInt(2, answerAuthorId);
+                        ps.executeUpdate();
+                    }
+                }
+
+                // Step 4: Mark answer as rewarded (is_rewarded = 1)
+                String updateAnswerSql = "UPDATE Answers SET is_rewarded = 1 WHERE answer_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(updateAnswerSql)) {
+                    ps.setInt(1, answerId);
+                    ps.executeUpdate();
+                }
+
+                // Step 5: Update question with best_answer_id and reward_status
+                String updateQuestionSql = "UPDATE Questions SET best_answer_id = ?, reward_status = ? WHERE question_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(updateQuestionSql)) {
+                    ps.setInt(1, answerId);
+                    ps.setString(2, rewardPoints > 0 ? "TRANSFERRED" : "ACCEPTED");
+                    ps.setInt(3, questionId);
+                    ps.executeUpdate();
+                }
+
+                // Step 6: Record the transaction in RewardTransactions table
+                String insertTransactionSql = "INSERT INTO RewardTransactions (question_id, answer_id, from_user_id, to_user_id, points, status, created_at) " +
+                                               "VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+                try (PreparedStatement ps = conn.prepareStatement(insertTransactionSql)) {
+                    ps.setInt(1, questionId);
+                    ps.setInt(2, answerId);
+                    ps.setInt(3, questionAuthorId);
+                    ps.setInt(4, answerAuthorId);
+                    ps.setInt(5, rewardPoints);
+                    ps.setString(6, rewardPoints > 0 ? "COMPLETED" : "ACCEPTED");
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+                
+                // Publish events for real-time UI updates
+                EventBus.getInstance().publish(new EventBus.PointsChangedEvent(answerAuthorId, 
+                    rewardPoints > 0 ? rewardPoints : 0));
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+                EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
+                
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    /**
+     * Checks if a question already has a best answer marked.
+     * Requirement: 3.1
+     *
+     * @param questionId The ID of the question
+     * @return true if a best answer has been marked, false otherwise
+     * @throws SQLException if a database error occurs
+     */
+    public boolean hasBestAnswer(int questionId) throws SQLException {
+        String sql = "SELECT best_answer_id FROM Questions WHERE question_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, questionId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int bestAnswerId = rs.getInt("best_answer_id");
+                    return bestAnswerId > 0;
+                }
+                return false;
+            }
+        }
+    }
+
+    /**
+     * Gets the best answer ID for a question.
+     *
+     * @param questionId The ID of the question
+     * @return The best answer ID, or 0 if none
+     * @throws SQLException if a database error occurs
+     */
+    public int getBestAnswerId(int questionId) throws SQLException {
+        String sql = "SELECT best_answer_id FROM Questions WHERE question_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, questionId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("best_answer_id");
+                }
+                return 0;
+            }
+        }
+    }
+
+    // =========================
     // GET ALL QUESTIONS
     // =========================
 
@@ -86,7 +335,8 @@ public class QuestionDAO {
                 "u.name, u.fullName, u.department, u.semester, " +
                 "q.subject, q.subjectId, q.departmentId, q.semesterId, q.question_text, COALESCE(q.tags, '') AS tags, " +
                 "q.attachment_path, " +
-                "q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
+                "q.reward_points, q.reward_status, COALESCE(q.approved, 0) AS approved, " +
+                "COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(10), q.created_at, 120) AS created_at, " +
                 "COALESCE(q.is_locked, 0) AS is_locked " +
                 "FROM Questions q " +
@@ -122,7 +372,8 @@ public class QuestionDAO {
                 "COALESCE(u.name, u.email, 'Unknown User') AS author_name, " +
                 "u.name, u.fullName, u.department, u.semester, " +
                 "q.subject, q.question_text, COALESCE(q.tags, '') AS tags, q.attachment_path, " +
-                "q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
+                "q.reward_points, q.reward_status, COALESCE(q.approved, 0) AS approved, " +
+                "COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(10), q.created_at, 120) AS created_at, " +
                 "COALESCE(q.is_locked, 0) AS is_locked " +
                 "FROM Questions q " +
@@ -169,7 +420,8 @@ public class QuestionDAO {
                 "COALESCE(u.name, u.email, 'Unknown User') AS author_name, " +
                 "u.name, u.fullName, u.department, u.semester, " +
                 "q.subject, q.question_text, COALESCE(q.tags, '') AS tags, q.attachment_path, " +
-                "q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
+                "q.reward_points, q.reward_status, COALESCE(q.approved, 0) AS approved, " +
+                "COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(10), q.created_at, 120) AS created_at, " +
                 "COALESCE(q.is_locked, 0) AS is_locked " +
                 "FROM Questions q " +
@@ -206,10 +458,12 @@ public class QuestionDAO {
      */
     public List<Answer> getAnswersByQuestionId(int questionId) throws SQLException {
         // answer_id aliased as id — matches mapAnswer() which reads rs.getInt("id")
+        // includes is_rewarded for requirement 9.4
         String sql = "SELECT a.answer_id AS id, a.question_id, a.user_id, " +
                 "COALESCE(u.name, u.email, 'Unknown User') AS author_name, " +
                 "a.answer_text, COALESCE(a.votes, 0) AS votes, " +
-                "CONVERT(varchar(10), a.created_at, 120) AS created_at " +
+                "CONVERT(varchar(10), a.created_at, 120) AS created_at, " +
+                "COALESCE(a.is_rewarded, 0) AS is_rewarded " +
                 "FROM Answers a " +
                 "LEFT JOIN Users u ON a.user_id = u.id " +
                 "WHERE a.question_id = ? " +
@@ -272,7 +526,12 @@ public class QuestionDAO {
             stmt.setInt(2, userId);
             stmt.setString(3, authorName);
             stmt.setString(4, answerText);
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            }
+            return success;
         }
     }
 
@@ -426,6 +685,30 @@ public class QuestionDAO {
     }
 
     // =========================
+    // GET QUESTION REWARD POINTS
+    // =========================
+
+    /**
+     * Gets the reward points assigned to a specific question.
+     * Requirement: 3.3
+     *
+     * @param questionId The ID of the question to get reward points for
+     * @return The reward points value, or 0 if question not found
+     */
+    public int getQuestionRewardPoints(int questionId) throws SQLException {
+        String sql = "SELECT reward_points FROM Questions WHERE question_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, questionId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("reward_points") : 0;
+            }
+        }
+    }
+
+    // =========================
     // GET AVAILABLE SUBJECTS
     // =========================
 
@@ -516,6 +799,22 @@ public class QuestionDAO {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    /**
+     * Counts best answers for a specific user (for dashboard hero stats).
+     * SQL: COUNT(*) FROM Answers WHERE user_id = ? AND is_rewarded = 1
+     */
+    public int countBestAnswersByUser(int userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Answers WHERE user_id = ? AND is_rewarded = 1";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
         }
     }
 
@@ -612,7 +911,8 @@ public class QuestionDAO {
                 "COALESCE(u.name, u.email, q.author_name, 'Unknown') AS author_name, " +
                 "u.name, u.fullName, u.department, u.semester, " +
                 "q.subject, q.subjectId, q.question_text, COALESCE(q.tags, '') AS tags, " +
-                "q.attachment_path, q.reward_points, COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
+                "q.attachment_path, q.reward_points, q.reward_status, COALESCE(q.approved, 0) AS approved, " +
+                "COALESCE(q.votes, 0) AS votes, COALESCE(q.views, 0) AS views, " +
                 "CONVERT(varchar(19), q.created_at, 120) AS created_at, COALESCE(q.is_locked, 0) AS is_locked, " +
                 "q.title, q.difficulty, q.question_type, q.status, q.departmentId, q.semesterId, " +
                 "d.name AS departmentName, s.name AS semesterName, " +
@@ -636,6 +936,54 @@ public class QuestionDAO {
             }
         }
         return list;
+    }
+
+    // =========================
+    // APPROVE QUESTION (Requirement 2.3)
+    // =========================
+
+    /**
+     * Approves a question, allowing the reward points to be transferred when a best answer is marked.
+     * Requirement: 2.3
+     *
+     * @param questionId The ID of the question to approve
+     * @return true if the question was approved successfully, false otherwise
+     * @throws SQLException if a database error occurs
+     */
+    public boolean approveQuestion(int questionId) throws SQLException {
+        String sql = "UPDATE Questions SET approved = 1 WHERE question_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, questionId);
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
+                EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            }
+            return success;
+        }
+    }
+
+    /**
+     * Gets the approval status of a question.
+     * Requirement: 2.3
+     *
+     * @param questionId The ID of the question
+     * @return true if the question is approved, false otherwise
+     * @throws SQLException if a database error occurs
+     */
+    public boolean isQuestionApproved(int questionId) throws SQLException {
+        String sql = "SELECT approved FROM Questions WHERE question_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, questionId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("approved");
+                }
+                return false;
+            }
+        }
     }
 
     public boolean deleteQuestionById(int id) throws SQLException {
@@ -764,6 +1112,18 @@ public class QuestionDAO {
             q.setUserSemester(null);
         }
 
+        // Load reward status and approval status
+        try {
+            String rewardStatus = rs.getString("reward_status");
+            if (rewardStatus != null) {
+                q.setRewardStatus(rewardStatus);
+            }
+        } catch (SQLException ignored) {}
+        try {
+            boolean approved = rs.getBoolean("approved");
+            q.setApproved(approved);
+        } catch (SQLException ignored) {}
+
         return q;
     }
 
@@ -776,7 +1136,7 @@ public class QuestionDAO {
      * Reads column alias "id" which is answer_id aliased in SELECT.
      */
     private Answer mapAnswer(ResultSet rs) throws SQLException {
-        return new Answer(
+        Answer answer = new Answer(
                 rs.getInt("id"),              // aliased from answer_id
                 rs.getInt("question_id"),
                 rs.getInt("user_id"),
@@ -785,6 +1145,16 @@ public class QuestionDAO {
                 rs.getInt("votes"),
                 rs.getString("created_at")
         );
+        // Set is_rewarded from query result (Requirement 9.4)
+        try {
+            int isRewarded = rs.getInt("is_rewarded");
+            if (!rs.wasNull()) {
+                answer.setRewarded(isRewarded == 1);
+            }
+        } catch (SQLException ignored) {
+            // Column may not exist in older schemas
+        }
+        return answer;
     }
 
     private static void setNullableInt(PreparedStatement stmt, int index, Integer value) throws SQLException {
@@ -792,6 +1162,155 @@ public class QuestionDAO {
             stmt.setNull(index, java.sql.Types.INTEGER);
         } else {
             stmt.setInt(index, value);
+        }
+    }
+
+    // =========================
+    // CHECK ANSWER IS REWARDED (Requirement 9.4)
+    // =========================
+
+    /**
+     * Checks if an answer has been marked as rewarded/best answer.
+     * Requirement: 9.4
+     *
+     * @param answerId The ID of the answer to check
+     * @return true if the answer is rewarded, false otherwise
+     * @throws SQLException if a database error occurs
+     */
+    public boolean isAnswerRewarded(int answerId) throws SQLException {
+        String sql = "SELECT is_rewarded FROM Answers WHERE answer_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, answerId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("is_rewarded");
+                }
+                return false;
+            }
+        }
+    }
+
+    // =========================
+    // MARK BEST ANSWER (Requirement 3)
+    // =========================
+
+    /**
+     * Marks an answer as the best answer and transfers reward points to the answer author.
+     * Only administrators can call this method.
+     * Requirements: 3.1, 3.2, 3.3
+     *
+     * This method:
+     * 1. Validates the answer exists and hasn't been rewarded yet
+     * 2. Gets the reward_points from the question
+     * 3. If there are reward points, transfers them from question author to answer author
+     * 4. Marks the answer as rewarded (is_rewarded = true)
+     * 5. All operations are atomic (all-or-nothing)
+     *
+     * @param questionId The ID of the question
+     * @param answerId The ID of the answer to mark as best
+     * @return true if the best answer was marked successfully, false otherwise
+     * @throws SQLException if a database error occurs
+     */
+    public boolean markBestAnswer(int questionId, int answerId) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                // Step 1: Load question reward state
+                int questionAuthorId = -1;
+                int rewardPoints = 0;
+                String rewardStatus = "NONE";
+                String questionSql = "SELECT user_id, reward_points, reward_status FROM Questions WHERE question_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(questionSql)) {
+                    ps.setInt(1, questionId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            questionAuthorId = rs.getInt("user_id");
+                            rewardPoints = rs.getInt("reward_points");
+                            rewardStatus = rs.getString("reward_status");
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+
+                if ("TRANSFERRED".equalsIgnoreCase(rewardStatus)) {
+                    return false;
+                }
+
+                // Step 2: Validate answer belongs to question and is not already rewarded
+                int answerAuthorId = -1;
+                String answerSql = "SELECT user_id, is_rewarded FROM Answers WHERE answer_id = ? AND question_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(answerSql)) {
+                    ps.setInt(1, answerId);
+                    ps.setInt(2, questionId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            if (rs.getBoolean("is_rewarded")) {
+                                return false;
+                            }
+                            answerAuthorId = rs.getInt("user_id");
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+
+                if (questionAuthorId == answerAuthorId) {
+                    return false;
+                }
+
+                int answerAuthorNewBalance = 0;
+
+                // Step 3: Transfer escrowed reward to answer author (already deducted at question post)
+                if (rewardPoints > 0) {
+                    String addSql = "UPDATE Users SET achievement_points = achievement_points + ? OUTPUT INSERTED.achievement_points WHERE id = ?";
+                    try (PreparedStatement ps = conn.prepareStatement(addSql)) {
+                        ps.setInt(1, rewardPoints);
+                        ps.setInt(2, answerAuthorId);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (!rs.next()) {
+                                conn.rollback();
+                                return false;
+                            }
+                            answerAuthorNewBalance = rs.getInt("achievement_points");
+                        }
+                    }
+                }
+
+                // Step 4: Mark answer rewarded and update question best-answer metadata
+                String updateAnswerSql = "UPDATE Answers SET is_rewarded = 1 WHERE answer_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(updateAnswerSql)) {
+                    ps.setInt(1, answerId);
+                    ps.executeUpdate();
+                }
+
+                String updateQuestionSql = "UPDATE Questions SET best_answer_id = ?, reward_status = ? WHERE question_id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(updateQuestionSql)) {
+                    ps.setInt(1, answerId);
+                    ps.setString(2, rewardPoints > 0 ? "TRANSFERRED" : "ACCEPTED");
+                    ps.setInt(3, questionId);
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+
+                if (rewardPoints > 0) {
+                    com.studybuddy.utils.EventBus.getInstance()
+                        .publish(new com.studybuddy.utils.EventBus.PointsChangedEvent(answerAuthorId, answerAuthorNewBalance));
+                }
+
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
     }
 }

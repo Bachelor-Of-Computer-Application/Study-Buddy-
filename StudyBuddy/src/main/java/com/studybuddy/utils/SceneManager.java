@@ -62,7 +62,9 @@ public class SceneManager {
         java.net.URL fxmlUrl = App.class.getResource("/com/studybuddy/fxml/RegisterView.fxml");
         if (fxmlUrl == null) {
             throw new IOException(
-                "[SceneManager] RegisterView.fxml not found on classpath."
+                "[SceneManager] RegisterView.fxml not found on classpath at " +
+                "/com/studybuddy/fxml/RegisterView.fxml — " +
+                "ensure src/main/resources is marked as a Resource Root in IntelliJ."
             );
         }
         FXMLLoader loader = new FXMLLoader(fxmlUrl);

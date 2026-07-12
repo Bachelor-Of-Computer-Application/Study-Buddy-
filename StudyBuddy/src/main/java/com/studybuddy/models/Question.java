@@ -32,6 +32,13 @@ public class Question {
     private String userDepartment;
     private String userSemester;
 
+    // Best answer tracking (Requirements 3.1, 3.2)
+    private int bestAnswerId;
+
+    // Reward status tracking (Requirements 2.3, 3.3)
+    private String rewardStatus = "pending"; // pending, paid, refunded
+    private boolean approved = false;
+
     public Question() {
     }
 
@@ -145,6 +152,21 @@ public class Question {
 
     public String getSemesterName() { return semesterName; }
     public void setSemesterName(String semesterName) { this.semesterName = semesterName; }
+
+    // Best answer methods (Requirements 3.1, 3.2)
+    public int getBestAnswerId() { return bestAnswerId; }
+    public void setBestAnswerId(int bestAnswerId) { this.bestAnswerId = bestAnswerId; }
+
+    public boolean hasBestAnswer() {
+        return bestAnswerId > 0;
+    }
+
+    // Reward status methods (Requirements 2.3, 3.3)
+    public String getRewardStatus() { return rewardStatus; }
+    public void setRewardStatus(String rewardStatus) { this.rewardStatus = rewardStatus; }
+
+    public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
 
     @Override
     public String toString() {

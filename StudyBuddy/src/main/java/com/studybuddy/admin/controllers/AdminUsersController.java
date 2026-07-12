@@ -5,6 +5,7 @@ import com.studybuddy.services.AcademicService;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.User;
+import com.studybuddy.utils.StringUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -131,14 +132,14 @@ public class AdminUsersController {
 
         filteredList = masterList.stream()
             .filter(u -> q.isEmpty()
-                    || nullSafe(u.getUsername()).toLowerCase().contains(q)
-                    || nullSafe(u.getDisplayFullName()).toLowerCase().contains(q)
-                    || nullSafe(u.getName()).toLowerCase().contains(q)
-                    || nullSafe(u.getEmail()).toLowerCase().contains(q))
-            .filter(u -> role   == null || role.isEmpty()   || nullSafe(u.getRole()).equalsIgnoreCase(role))
-            .filter(u -> dept   == null || dept.isEmpty()   || nullSafe(u.getDepartment()).equalsIgnoreCase(dept))
+                    || StringUtils.nullSafe(u.getUsername()).toLowerCase().contains(q)
+                    || StringUtils.nullSafe(u.getDisplayFullName()).toLowerCase().contains(q)
+                    || StringUtils.nullSafe(u.getName()).toLowerCase().contains(q)
+                    || StringUtils.nullSafe(u.getEmail()).toLowerCase().contains(q))
+            .filter(u -> role   == null || role.isEmpty()   || StringUtils.nullSafe(u.getRole()).equalsIgnoreCase(role))
+            .filter(u -> dept   == null || dept.isEmpty()   || StringUtils.nullSafe(u.getDepartment()).equalsIgnoreCase(dept))
             .filter(u -> sem    == null || sem.isEmpty()    || matchesSemesterFilter(u, sem))
-            .filter(u -> status == null || status.isEmpty() || nullSafe(u.getStatus()).equalsIgnoreCase(status))
+            .filter(u -> status == null || status.isEmpty() || StringUtils.nullSafe(u.getStatus()).equalsIgnoreCase(status))
             .collect(Collectors.toList());
 
         currentPage = 1;
@@ -146,7 +147,7 @@ public class AdminUsersController {
     }
 
     private boolean matchesSemesterFilter(User u, String semFilter) {
-        String userSem = nullSafe(u.getSemester());
+        String userSem = StringUtils.nullSafe(u.getSemester());
         if (userSem.equalsIgnoreCase(semFilter)) return true;
         try {
             for (Semester s : academicService.getAllSemesters()) {
@@ -246,10 +247,10 @@ public class AdminUsersController {
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
-        TextField nameF  = new TextField(nullSafe(u.getDisplayFullName()));
-        TextField usernameF = new TextField(nullSafe(u.getUsername()));
+        TextField nameF  = new TextField(StringUtils.nullSafe(u.getDisplayFullName()));
+        TextField usernameF = new TextField(StringUtils.nullSafe(u.getUsername()));
         usernameF.setDisable(true); // Username should not be editable
-        TextField emailF = new TextField(nullSafe(u.getEmail()));
+        TextField emailF = new TextField(StringUtils.nullSafe(u.getEmail()));
         ComboBox<Department> deptC = new ComboBox<>(FXCollections.observableArrayList(academicService.getAllActiveDepartments()));
         deptC.setCellFactory(lv -> new ListCell<>() {
             @Override protected void updateItem(Department item, boolean empty) {
@@ -267,16 +268,16 @@ public class AdminUsersController {
         });
         semC.setButtonCell(semC.getCellFactory().call(null));
         for (Department d : deptC.getItems()) {
-            if (d.getName().equalsIgnoreCase(nullSafe(u.getDepartment()))
-                    || d.getCode().equalsIgnoreCase(nullSafe(u.getDepartment()))) {
+            if (d.getName().equalsIgnoreCase(StringUtils.nullSafe(u.getDepartment()))
+                    || d.getCode().equalsIgnoreCase(StringUtils.nullSafe(u.getDepartment()))) {
                 deptC.setValue(d);
                 semC.setItems(FXCollections.observableArrayList(academicService.getSemestersByDepartment(d.getId())));
                 break;
             }
         }
         for (Semester s : semC.getItems()) {
-            if (s.getName().equalsIgnoreCase(nullSafe(u.getSemester()))
-                    || String.valueOf(s.getSemesterNumber()).equals(nullSafe(u.getSemester()))) {
+            if (s.getName().equalsIgnoreCase(StringUtils.nullSafe(u.getSemester()))
+                    || String.valueOf(s.getSemesterNumber()).equals(StringUtils.nullSafe(u.getSemester()))) {
                 semC.setValue(s);
                 break;
             }
@@ -288,7 +289,7 @@ public class AdminUsersController {
         });
         
         ComboBox<String> statusC = new ComboBox<>(FXCollections.observableArrayList("Active", "Suspended", "Banned", "Pending"));
-        statusC.setValue(nullSafe(u.getStatus()));
+        statusC.setValue(StringUtils.nullSafe(u.getStatus()));
 
         grid.addRow(0, new Label("Full Name:"), nameF);
         grid.addRow(1, new Label("Username:"), usernameF);
@@ -536,6 +537,11 @@ public class AdminUsersController {
             currentPage  = 1;
             updateTable();
             System.out.println(">>> UI: Background reload completed (" + fresh.size() + " users)");
+            
+            // Publish events AFTER the success dialog has closed and data is reloaded.
+            // This is safe because we're no longer in a showAndWait() modal state.
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.AdminChangesEvent());
+            com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.StatisticsChangedEvent());
         });
 
         reloadTask.setOnFailed(evt -> {
@@ -576,9 +582,9 @@ public class AdminUsersController {
 
     private void setupColumns() {
         if (colUsername   != null) colUsername.setCellValueFactory(cellData ->
-                new SimpleStringProperty(nullSafe(cellData.getValue().getUsername())));
+                new SimpleStringProperty(StringUtils.nullSafe(cellData.getValue().getUsername())));
         if (colFullName   != null) colFullName.setCellValueFactory(cellData ->
-                new SimpleStringProperty(nullSafe(cellData.getValue().getDisplayFullName())));
+                new SimpleStringProperty(StringUtils.nullSafe(cellData.getValue().getDisplayFullName())));
         if (colEmail      != null) colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         if (colDepartment != null) colDepartment.setCellValueFactory(new PropertyValueFactory<>("department"));
         if (colSemester   != null) colSemester.setCellValueFactory(new PropertyValueFactory<>("semester"));
@@ -630,6 +636,5 @@ public class AdminUsersController {
         Alert a = new Alert(type, msg); a.setHeaderText(null); a.showAndWait();
     }
 
-    private String nullSafe(String s) { return s != null ? s : ""; }
-    private String esc(String s)      { return s != null ? s.replace("\"", "\"\"") : ""; }
+    private String esc(String s) { return s != null ? s.replace("\"", "\"\"") : ""; }
 }

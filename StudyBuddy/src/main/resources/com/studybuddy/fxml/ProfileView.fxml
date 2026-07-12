@@ -71,7 +71,7 @@
             <Tab text="Overview">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="20" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
 
                         <Label styleClass="section-header" text="Profile Overview" />
 
@@ -154,7 +154,7 @@
             <Tab text="Edit Profile">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="16" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Edit Personal Details" />
 
                         <VBox spacing="6">
@@ -191,9 +191,6 @@
                             <Label styleClass="field-title" text="Semester" />
                             <ComboBox fx:id="semesterCombo" maxWidth="Infinity" styleClass="input-box" />
                         </VBox>
-
-
-                        <VBox spacing="6" />
                         <HBox spacing="10">
                             <Button onAction="#handleSavePersonal" styleClass="primary-btn" text="💾 Save Personal Info" />
                             <Button onAction="#handleResetPersonal" styleClass="secondary-btn" text="Reset" />
@@ -206,7 +203,7 @@
             <Tab text="Study Interests">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="16" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Study Interests &amp; Preferences" />
                         <VBox spacing="6">
                             <Label styleClass="field-title" text="Preferred Subjects" />
@@ -229,7 +226,7 @@
             <Tab text="Account Settings">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="16" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Account &amp; Security Settings" />
                         <VBox spacing="6">
                             <Label styleClass="field-title" text="Email Address" />
@@ -244,7 +241,7 @@
             <Tab text="Password">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="16" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Change Password" />
                         <VBox spacing="6">
                             <Label styleClass="field-title" text="Current Password" />
@@ -267,7 +264,7 @@
             <Tab text="Notifications">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="16" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Notification Preferences" />
                         <CheckBox fx:id="emailNotificationsCheck" styleClass="checkbox-style" text="Receive general email notifications" />
                         <CheckBox fx:id="resourceNotificationsCheck" styleClass="checkbox-style" text="Notify me when resources are updated" />
@@ -281,7 +278,7 @@
             <Tab text="Badges">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="16" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24"/></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="My Badges"/>
                         <FlowPane fx:id="badgesContainer" hgap="16" vgap="16"/>
                     </VBox>
@@ -292,18 +289,18 @@
             <Tab text="Achievements">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="12" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24"/></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Achievements"/>
                         <VBox fx:id="achievementsContainer" spacing="12"/>
                     </VBox>
                 </ScrollPane>
             </Tab>
 
-            <!-- ── 8. ACTIVITY ──────────────────────────────────────── -->
+            <!-- ── 9. ACTIVITY ──────────────────────────────────────── -->
             <Tab text="Activity">
                 <ScrollPane fitToWidth="true" styleClass="tab-scroll">
                     <VBox spacing="16" styleClass="tab-content">
-                        <padding><Insets bottom="28" left="28" right="28" top="24" /></padding>
+                        <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Recent Activities" />
                         <ListView fx:id="activityListView" prefHeight="350" styleClass="activity-list" />
                     </VBox>

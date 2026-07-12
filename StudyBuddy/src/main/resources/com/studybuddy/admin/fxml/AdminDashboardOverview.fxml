@@ -10,9 +10,7 @@
     xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.admin.controllers.AdminOverviewController">
     <content>
         <VBox spacing="24" styleClass="content-wrap">
-            <padding>
-                <Insets top="24" right="24" bottom="24" left="24"/>
-            </padding>
+            <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
             <!-- Header -->
             <HBox alignment="CENTER_LEFT" spacing="16">
@@ -68,42 +66,49 @@
             <!-- ── Stat Cards Row 2 ── -->
             <GridPane hgap="16" vgap="16">
                 <columnConstraints>
-                    <ColumnConstraints percentWidth="20"/>
-                    <ColumnConstraints percentWidth="20"/>
-                    <ColumnConstraints percentWidth="20"/>
-                    <ColumnConstraints percentWidth="20"/>
-                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="16.66"/>
+                    <ColumnConstraints percentWidth="16.66"/>
+                    <ColumnConstraints percentWidth="16.66"/>
+                    <ColumnConstraints percentWidth="16.66"/>
+                    <ColumnConstraints percentWidth="16.66"/>
+                    <ColumnConstraints percentWidth="16.66"/>
                 </columnConstraints>
 
                 <VBox styleClass="stat-card" GridPane.columnIndex="0" spacing="8">
-                    <Label text="✅" styleClass="stat-icon"/>
-                    <Label text="TASKS" styleClass="stat-title"/>
-                    <Label fx:id="lblTotalTasks" text="0" styleClass="stat-value-default"/>
-                    <Label text="All user tasks" styleClass="stat-desc"/>
+                    <Label text="⏳" styleClass="stat-icon"/>
+                    <Label text="PENDING REWARDS" styleClass="stat-title"/>
+                    <Label fx:id="lblPendingRewards" text="0" styleClass="stat-value-yellow"/>
+                    <Label text="Approved, unpaid" styleClass="stat-desc"/>
                 </VBox>
                 <VBox styleClass="stat-card" GridPane.columnIndex="1" spacing="8">
-                    <Label text="🆕" styleClass="stat-icon"/>
-                    <Label text="NEW USERS TODAY" styleClass="stat-title"/>
-                    <Label fx:id="lblNewUsersToday" text="0" styleClass="stat-value-green"/>
-                    <Label text="Registered today" styleClass="stat-desc"/>
+                    <Label text="✅" styleClass="stat-icon"/>
+                    <Label text="COMPLETED REWARDS" styleClass="stat-title"/>
+                    <Label fx:id="lblCompletedRewards" text="0" styleClass="stat-value-green"/>
+                    <Label text="Transferred rewards" styleClass="stat-desc"/>
                 </VBox>
                 <VBox styleClass="stat-card" GridPane.columnIndex="2" spacing="8">
-                    <Label text="📤" styleClass="stat-icon"/>
-                    <Label text="UPLOADS TODAY" styleClass="stat-title"/>
-                    <Label fx:id="lblUploadsToday" text="0" styleClass="stat-value-blue"/>
-                    <Label text="Uploaded today" styleClass="stat-desc"/>
+                    <Label text="🏆" styleClass="stat-icon"/>
+                    <Label text="TOTAL TRANSFERRED" styleClass="stat-title"/>
+                    <Label fx:id="lblTotalPointsTransferred" text="0" styleClass="stat-value-blue"/>
+                    <Label text="Total points sent" styleClass="stat-desc"/>
                 </VBox>
                 <VBox styleClass="stat-card" GridPane.columnIndex="3" spacing="8">
-                    <Label text="⏳" styleClass="stat-icon"/>
-                    <Label text="PENDING NOTES" styleClass="stat-title"/>
-                    <Label fx:id="lblPendingNotes" text="0" styleClass="stat-value-yellow"/>
-                    <Label text="Awaiting review" styleClass="stat-desc"/>
+                    <Label text="📊" styleClass="stat-icon"/>
+                    <Label text="AVERAGE REWARD" styleClass="stat-title"/>
+                    <Label fx:id="lblAverageReward" text="0" styleClass="stat-value-purple"/>
+                    <Label text="Average reward size" styleClass="stat-desc"/>
                 </VBox>
                 <VBox styleClass="stat-card" GridPane.columnIndex="4" spacing="8">
-                    <Label text="⚠️" styleClass="stat-icon"/>
-                    <Label text="PENDING RESOURCES" styleClass="stat-title"/>
-                    <Label fx:id="lblPendingResources" text="0" styleClass="stat-value-red"/>
-                    <Label text="Inactive resources" styleClass="stat-desc"/>
+                    <Label text="🔝" styleClass="stat-icon"/>
+                    <Label text="HIGHEST REWARD" styleClass="stat-title"/>
+                    <Label fx:id="lblHighestReward" text="0" styleClass="stat-value-red"/>
+                    <Label text="Max single transfer" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="5" spacing="8">
+                    <Label text="🆕" styleClass="stat-icon"/>
+                    <Label text="RECENT REWARD" styleClass="stat-title"/>
+                    <Label fx:id="lblRecentReward" text="0" styleClass="stat-value-default"/>
+                    <Label text="Last reward points" styleClass="stat-desc"/>
                 </VBox>
             </GridPane>
 

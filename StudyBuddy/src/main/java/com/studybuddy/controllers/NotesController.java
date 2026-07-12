@@ -11,11 +11,13 @@ import com.studybuddy.services.AuthorizationService;
 import com.studybuddy.services.NoteService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
+import com.studybuddy.utils.StringUtils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -90,35 +92,45 @@ public class NotesController implements Initializable {
     private void loadNotes() {
         if (currentUserId <= 0) {
             allNotes = new ArrayList<>();
-            displayNotes(allNotes);
+            displayNotes(allNotes, new ArrayList<>());
             return;
         }
         try {
+            // Load user's personal notes (both private and community) for My Notes tab
             allNotes = noteService.getNotesByUserId(currentUserId);
             if (allNotes == null) {
                 allNotes = new ArrayList<>();
             }
-            displayNotes(allNotes);
+            
+            // Load all approved community notes from all users for Community Notes tab
+            List<Note> communityNotes = noteService.getAllPublicNotes();
+            if (communityNotes == null) {
+                communityNotes = new ArrayList<>();
+            }
+            
+            displayNotes(allNotes, communityNotes);
         } catch (Exception e) {
             showError("Failed to load notes: " + e.getMessage());
         }
     }
 
-    private void displayNotes(List<Note> notes) {
+    private void displayNotes(List<Note> userNotes, List<Note> communityNotes) {
         myNotesContainer.getChildren().clear();
         communityNotesContainer.getChildren().clear();
 
         boolean hasPersonal = false;
         boolean hasCommunity = false;
 
-        for (Note note : notes) {
-            if (note.isPrivate()) {
-                myNotesContainer.getChildren().add(createPersonalNoteCard(note));
-                hasPersonal = true;
-            } else {
-                communityNotesContainer.getChildren().add(createCommunityNoteCard(note));
-                hasCommunity = true;
-            }
+        // Display user's own notes in My Notes tab (both private and community)
+        for (Note note : userNotes) {
+            myNotesContainer.getChildren().add(createPersonalNoteCard(note));
+            hasPersonal = true;
+        }
+
+        // Display all approved community notes from all users in Community Notes tab
+        for (Note note : communityNotes) {
+            communityNotesContainer.getChildren().add(createCommunityNoteCard(note));
+            hasCommunity = true;
         }
 
         emptyState.setVisible(!hasPersonal && !hasCommunity);
@@ -134,13 +146,13 @@ public class NotesController implements Initializable {
         titleLabel.getStyleClass().add("note-title");
         titleLabel.setWrapText(true);
 
-        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | " + fileTypeIcon(note.getFileType()) + " " + nullSafe(note.getFileType()));
+        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | " + fileTypeIcon(note.getFileType()) + " " + StringUtils.nullSafe(note.getFileType()));
         metaLabel.getStyleClass().add("note-date");
 
         HBox metaBox = new HBox(15);
-        Label subjectLabel = new Label("📚 " + nullSafe(note.getSubject()));
+        Label subjectLabel = new Label("📚 " + StringUtils.nullSafe(note.getSubject()));
         subjectLabel.getStyleClass().add("note-subject");
-        Label sourceLabel = new Label("🔗 " + nullSafe(note.getSource()));
+        Label sourceLabel = new Label("🔗 " + StringUtils.nullSafe(note.getSource()));
         sourceLabel.getStyleClass().add("note-desc");
         metaBox.getChildren().addAll(subjectLabel, sourceLabel);
 
@@ -184,13 +196,13 @@ public class NotesController implements Initializable {
         authorLabel.getStyleClass().add("note-desc");
         authorLabel.setWrapText(true);
 
-        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | " + fileTypeIcon(note.getFileType()) + " " + nullSafe(note.getFileType()));
+        Label metaLabel = new Label("📅 " + note.getUploadDate() + " | " + fileTypeIcon(note.getFileType()) + " " + StringUtils.nullSafe(note.getFileType()));
         metaLabel.getStyleClass().add("note-date");
 
         HBox metaBox = new HBox(15);
-        Label subjectLabel = new Label("📚 " + nullSafe(note.getSubject()));
+        Label subjectLabel = new Label("📚 " + StringUtils.nullSafe(note.getSubject()));
         subjectLabel.getStyleClass().add("note-subject");
-        Label sourceLabel = new Label("🔗 " + nullSafe(note.getSource()));
+        Label sourceLabel = new Label("🔗 " + StringUtils.nullSafe(note.getSource()));
         sourceLabel.getStyleClass().add("note-desc");
         metaBox.getChildren().addAll(subjectLabel, sourceLabel);
 
@@ -248,14 +260,15 @@ public class NotesController implements Initializable {
     public void showCreateNoteDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/fxml/CreateNoteDialog.fxml"));
-            VBox dialogContent = loader.load();
+            Parent dialogContent = loader.load();
 
             Stage dialog = new Stage();
             dialog.setTitle("Create New Note");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(dialogContent, 520, 620));
+            dialog.setScene(new Scene(dialogContent));
             dialog.setMinWidth(480);
             dialog.setMinHeight(500);
+            dialog.sizeToScene();
             dialog.showAndWait();
 
             loadNotes();
@@ -335,8 +348,8 @@ public class NotesController implements Initializable {
 
         List<Note> filtered = new ArrayList<>();
         for (Note note : allNotes) {
-            String noteSubject = nullSafe(note.getSubject());
-            String noteSource = nullSafe(note.getSource());
+            String noteSubject = StringUtils.nullSafe(note.getSubject());
+            String noteSource = StringUtils.nullSafe(note.getSource());
             if (subject != null && !noteSubject.equalsIgnoreCase(subject)) continue;
             if (source != null && !noteSource.equalsIgnoreCase(source)) continue;
 
@@ -347,19 +360,30 @@ public class NotesController implements Initializable {
             }
             filtered.add(note);
         }
-        displayNotes(filtered);
+        
+        // Load community notes separately (not filtered by user)
+        List<Note> communityNotes = new ArrayList<>();
+        try {
+            communityNotes = noteService.getAllPublicNotes();
+            if (communityNotes == null) {
+                communityNotes = new ArrayList<>();
+            }
+        } catch (Exception e) {
+            showError("Failed to load community notes: " + e.getMessage());
+        }
+        
+        displayNotes(filtered, communityNotes);
     }
 
     @FXML
     public void clearFilters() {
         AcademicFilterHelper.resetFilters(academicService, departmentFilter, semesterFilter, subjectFilter);
         sourceFilter.getSelectionModel().clearSelection();
-        displayNotes(allNotes);
+        
+        // Reload both user notes and community notes
+        loadNotes();
     }
 
-    private String nullSafe(String s) {
-        return s != null ? s : "";
-    }
 
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

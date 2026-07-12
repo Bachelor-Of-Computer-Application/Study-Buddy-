@@ -1,6 +1,7 @@
 package com.studybuddy.dao;
 
 import com.studybuddy.models.Note;
+import com.studybuddy.utils.EventBus;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -212,6 +213,10 @@ public class NoteDAO {
                 stmt.setNull(15, java.sql.Types.VARCHAR);
             }
             stmt.executeUpdate();
+            
+            // Publish events for achievement progress updates
+            EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            EventBus.getInstance().publish(new EventBus.NotesChangedEvent());
         }
     }
 

@@ -15,6 +15,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -78,11 +79,18 @@ public class AskQuestionController implements Initializable {
 
 
     private void loadUserPoints() {
-        int points = questionService.getUserPoints();
-        // userPointsLabel has no fx:id in the current FXML — guard against null
+        int points = questionService.getAchievementPoints();
         if (userPointsLabel != null) {
-            userPointsLabel.setText("You have " + points + " points");
+            userPointsLabel.setText("" + points);
         }
+    }
+
+    /**
+     * Refreshes the user's points display. Called after point deductions.
+     * Requirement 5: Refresh achievement_points after question creation.
+     */
+    public void refreshUserPoints() {
+        loadUserPoints();
     }
 
     private void setupButtonHoverEffects() {
@@ -110,6 +118,7 @@ public class AskQuestionController implements Initializable {
     public void handleMath(ActionEvent actionEvent) {
         if (questionTextArea == null) return;
         String currentText = questionTextArea.getText();
+        if (currentText == null) currentText = "";
         int cursorPosition = questionTextArea.getCaretPosition();
         String mathSymbol = "x² + y² = z²";
         questionTextArea.setText(currentText.substring(0, cursorPosition) + mathSymbol +
@@ -122,6 +131,7 @@ public class AskQuestionController implements Initializable {
     public void handleSymbols(ActionEvent actionEvent) {
         if (questionTextArea == null) return;
         String currentText = questionTextArea.getText();
+        if (currentText == null) currentText = "";
         int cursorPosition = questionTextArea.getCaretPosition();
         String symbol = "∑ ∆ ∞ ≠ ≤ ≥";
         questionTextArea.setText(currentText.substring(0, cursorPosition) + symbol +
@@ -162,13 +172,27 @@ public class AskQuestionController implements Initializable {
             Integer deptId = AcademicFilterHelper.resolveDepartmentId(departmentComboBox.getValue());
             Integer semId = AcademicFilterHelper.resolveSemesterId(semesterComboBox.getValue());
 
+            // Requirement 2: Parse reward points
             int rewardPoints = 0;
             String rewardStr = rewardPointsComboBox.getValue();
             if (rewardStr != null) {
                 try { rewardPoints = Integer.parseInt(rewardStr); } catch (NumberFormatException ignored) {}
             }
 
-            boolean success = questionService.saveQuestion(
+            // Requirement 2: Validate reward > 0 and balance before deducting
+            if (rewardPoints > 0) {
+                int currentPoints = questionService.getAchievementPoints();
+                if (rewardPoints > currentPoints) {
+                    showAlert(Alert.AlertType.WARNING, "Insufficient Points",
+                            "You don't have enough achievement points.",
+                            "You have " + currentPoints + " points but selected " + rewardPoints + " points as reward.");
+                    return;
+                }
+            }
+
+            int currentPoints = questionService.getAchievementPoints();
+            // Requirement 2: Deduct points and save question (atomic operation)
+            boolean success = questionService.saveQuestionWithDeduction(
                     questionText, subject, subjectId, rewardPoints, selectedAttachmentPath, deptId, semId
             );
 
@@ -188,14 +212,21 @@ public class AskQuestionController implements Initializable {
                         ex.printStackTrace();
                     }
                 }
-                
+
                 // Publish events
                 EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
                 EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
-                
+
+                // Refresh user's points in session
+                if (App.getCurrentUser() != null) {
+                    int newBalance = currentPoints - rewardPoints;
+                    App.getCurrentUser().setAchievementPoints(newBalance);
+                }
+                loadUserPoints();
+
                 showAlert(Alert.AlertType.INFORMATION, "Success",
                         "Your question has been submitted successfully!",
-                        "Question ID will be generated in the database.");
+                        rewardPoints > 0 ? rewardPoints + " points have been deducted from your balance." : "");
                 clearForm();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Error",
@@ -266,7 +297,7 @@ public class AskQuestionController implements Initializable {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/com/studybuddy/fxml/HomeView.fxml")
             );
-            BorderPane homeView = loader.load();
+            Parent homeView = loader.load();
             rootPane.getScene().setRoot(homeView);
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Error",
@@ -284,7 +315,7 @@ public class AskQuestionController implements Initializable {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/com/studybuddy/fxml/HomeView.fxml")
             );
-            BorderPane homeView = loader.load();
+            Parent homeView = loader.load();
             rootPane.getScene().setRoot(homeView);
 
             // After navigation, trigger profile view

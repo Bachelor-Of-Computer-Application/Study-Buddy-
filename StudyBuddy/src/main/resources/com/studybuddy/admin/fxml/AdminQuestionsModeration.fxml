@@ -96,7 +96,11 @@
                                 <TableColumn fx:id="colViews"    text="👁 Views"     prefWidth="75"  minWidth="50"/>
                                 <TableColumn fx:id="colDate"     text="Date"         prefWidth="130" minWidth="80"/>
                                 <TableColumn fx:id="colStatus"   text="Status"       prefWidth="90"  minWidth="65"/>
+                                <TableColumn fx:id="colActions"  text="Actions"      prefWidth="220" minWidth="150"/>
                             </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                            </columnResizePolicy>
                             <placeholder><Label text="No questions found." styleClass="table-empty-label"/></placeholder>
                         </TableView>
 
@@ -143,6 +147,9 @@
                                     <TableColumn fx:id="colAnswerVotes"  text="Votes"  prefWidth="70"  minWidth="50"/>
                                     <TableColumn fx:id="colAnswerDate"   text="Date"   prefWidth="130" minWidth="80"/>
                                 </columns>
+                                <columnResizePolicy>
+                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                                </columnResizePolicy>
                                 <placeholder><Label text="Select a question to see answers." styleClass="table-empty-label"/></placeholder>
                             </TableView>
                             <Button text="🗑 Delete Selected Answer" styleClass="danger-btn" onAction="#handleDeleteAnswer"/>

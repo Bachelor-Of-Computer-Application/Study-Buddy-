@@ -10,6 +10,7 @@ import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
 import com.studybuddy.services.AcademicService;
+import com.studybuddy.services.AchievementService;
 import com.studybuddy.services.DashboardService;
 import com.studybuddy.services.NoteService;
 import com.studybuddy.services.ResourceService;
@@ -22,7 +23,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -32,8 +32,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.UserActivity;
 import com.studybuddy.services.QuestionService;
@@ -59,6 +57,15 @@ public class DashboardController implements Initializable {
     @FXML private BorderPane rootPane;
     @FXML private Label welcomeLabel;
     @FXML private ImageView heroAvatarView;
+    @FXML private Label achievementPointsLabel;
+
+    // Hero Achievement Stats
+    @FXML private Label heroLevelLabel;
+    @FXML private Label heroAchievementsLabel;
+    @FXML private Label heroBestAnswersLabel;
+    @FXML private Label heroCompletedTasksLabel;
+    @FXML private Label heroResourcesLabel;
+    @FXML private Label heroNotesLabel;
 
     // Stat Cards
     @FXML private Label lblTotalNotes;
@@ -103,6 +110,7 @@ public class DashboardController implements Initializable {
     private Question selectedQuestion;
 
     private final AcademicService academicService = AcademicService.getInstance();
+    private final AchievementService achievementService = AchievementService.getInstance();
 
     // Recent Containers
     @FXML private HBox recentNotesContainer;
@@ -134,13 +142,26 @@ public class DashboardController implements Initializable {
         refreshDashboard();
         setupListeners();
 
-        // Subscribe to EventBus events
-        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> refreshDashboard());
-        EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> refreshHeroAvatar());
+        // Subscribe to EventBus events - use Platform.runLater() to ensure DB calls
+        // don't block the UI when events are published from background threads.
+        EventBus.getInstance().subscribe(EventBus.NotesChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.ResourcesChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.QuestionsChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshDashboard));
+        EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, 
+            (_event) -> javafx.application.Platform.runLater(this::refreshHeroAvatar));
+        EventBus.getInstance().subscribe(EventBus.PointsChangedEvent.class, 
+            (event) -> javafx.application.Platform.runLater(() -> {
+                if (currentUser != null && event.getUserId() == currentUser.getId()) {
+                    refreshAchievementPoints();
+                }
+            }));
         refreshHeroAvatar();
     }
 
@@ -149,6 +170,63 @@ public class DashboardController implements Initializable {
         currentUser = App.getCurrentUser();
         String path = currentUser != null ? currentUser.getProfileImagePath() : null;
         imageLoader.applyAvatarToView(heroAvatarView, path, HERO_AVATAR_SIZE);
+    }
+
+    private void refreshAchievementPoints() {
+        if (achievementPointsLabel == null) return;
+        currentUser = App.getCurrentUser();
+        if (currentUser != null) {
+            achievementPointsLabel.setText("✨ " + currentUser.getAchievementPoints() + " pts");
+        } else {
+            achievementPointsLabel.setText("✨ 0 pts");
+        }
+    }
+
+    private void refreshHeroStats() {
+        if (currentUser == null) return;
+        
+        try {
+            // Calculate level based on achievement points
+            int points = currentUser.getAchievementPoints();
+            int level = (points / 100) + 1;
+            if (heroLevelLabel != null) {
+                heroLevelLabel.setText("Level " + level);
+            }
+            
+            // Get achievement count from AchievementService
+            int achievementCount = achievementService.countUnlockedAchievements(currentUser.getId());
+            if (heroAchievementsLabel != null) {
+                heroAchievementsLabel.setText(String.valueOf(achievementCount));
+            }
+            
+            // Get best answers count from QuestionDAO
+            int bestAnswers = questionDAO.countBestAnswersByUser(currentUser.getId());
+            if (heroBestAnswersLabel != null) {
+                heroBestAnswersLabel.setText(String.valueOf(bestAnswers));
+            }
+            
+            // Get completed tasks from TaskService
+            int completedTasks = taskService.getCompletedTaskCount(currentUser.getId());
+            if (heroCompletedTasksLabel != null) {
+                heroCompletedTasksLabel.setText(String.valueOf(completedTasks));
+            }
+            
+            // Get resources shared from ResourceService
+            int resourcesShared = resourceService.countResourcesByUser(currentUser.getId());
+            if (heroResourcesLabel != null) {
+                heroResourcesLabel.setText(String.valueOf(resourcesShared));
+            }
+            
+            // Get notes uploaded from NoteService
+            int notesUploaded = noteService.countNotesByUser(currentUser.getId());
+            if (heroNotesLabel != null) {
+                heroNotesLabel.setText(String.valueOf(notesUploaded));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Failed to refresh hero stats: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void initializeComboBoxes() {
@@ -164,6 +242,7 @@ public class DashboardController implements Initializable {
     public void refreshDashboard() {
         refreshStats();
         refreshMyUploads();
+        loadRecentAndTrending();
     }
 
     @FXML public void handleMyUploadsTabChange(javafx.event.ActionEvent event) {
@@ -696,6 +775,12 @@ public class DashboardController implements Initializable {
             welcomeLabel.setText("Welcome Back, Guest! 👋");
         }
 
+        // Refresh achievement points
+        refreshAchievementPoints();
+        
+        // Refresh hero stats
+        refreshHeroStats();
+
         loadDashboardStats();
         loadCharts();
         loadApprovedNotes();
@@ -989,25 +1074,7 @@ public class DashboardController implements Initializable {
 
     @FXML
     public void handleUploadNotes() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/studybuddy/fxml/CreateNoteDialog.fxml"));
-            VBox dialogContent = loader.load();
-
-            Stage dialog = new Stage();
-            dialog.setTitle("Create New Note");
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            Scene scene = new Scene(dialogContent, 750, 800);
-            dialog.setScene(scene);
-            dialog.setResizable(true);
-            dialog.setMinWidth(650);
-            dialog.setMinHeight(700);
-            dialog.showAndWait();
-            
-            refreshDashboard();
-        } catch (IOException e) {
-            showAlert("Error", "Failed to open create note dialog: " + e.getMessage());
-            e.printStackTrace();
-        }
+        loadCenterView("/com/studybuddy/fxml/NotesView.fxml");
     }
 
     @FXML
@@ -1023,6 +1090,11 @@ public class DashboardController implements Initializable {
     @FXML
     public void handleGoToProfile() {
         loadCenterView("/com/studybuddy/fxml/ProfileView.fxml");
+    }
+
+    @FXML
+    public void handleGoToAchievements() {
+        loadCenterView("/com/studybuddy/fxml/AchievementsView.fxml");
     }
 
     @FXML

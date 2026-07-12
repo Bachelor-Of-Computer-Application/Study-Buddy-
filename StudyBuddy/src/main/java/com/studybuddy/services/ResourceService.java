@@ -4,6 +4,7 @@ import com.studybuddy.dao.ResourceDAO;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
 import com.studybuddy.models.User;
+import com.studybuddy.utils.EventBus;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +34,7 @@ public class ResourceService {
      */
     public void shareAsResource(Note note, String filePath, boolean autoApprove) throws SQLException {
         resourceDAO.shareAsResource(note, filePath, autoApprove);
+        EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
     }
 
     // =========================
@@ -127,7 +129,9 @@ public class ResourceService {
         }
         resource.setStatus(autoApprove ? "Approved" : "Pending");
         resource.setActive(autoApprove);
-        return resourceDAO.createResource(resource, autoApprove);
+        int id = resourceDAO.createResource(resource, autoApprove);
+        EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+        return id;
     }
 
     public boolean updateResource(Resource resource) throws SQLException {
