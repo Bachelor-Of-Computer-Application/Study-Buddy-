@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.studybuddy.admin.controllers.AdminResourcesController">
+    <content>
+        <VBox spacing="16" styleClass="admin-panel-bg">
+            <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <VBox spacing="3" HBox.hgrow="ALWAYS">
+                    <Label text="Resource Management" styleClass="section-title"/>
+                    <Label fx:id="lblTotalCount" text="Loading…" styleClass="section-subtitle"/>
+                </VBox>
+                <Button text="↻ Refresh" styleClass="secondary-btn" onAction="#handleRefresh"/>
+            </HBox>
+
+            <!-- Upload Form -->
+            <VBox styleClass="panel-card" spacing="12">
+                <Label text="Upload / Edit Resource" styleClass="panel-title"/>
+                <GridPane hgap="12" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120"/><ColumnConstraints hgrow="ALWAYS"/>
+                        <ColumnConstraints minWidth="120"/><ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <Label text="Name *" styleClass="input-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="uploadNameField" styleClass="input-field" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+                    <Label text="Description" styleClass="input-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="uploadDescriptionField" styleClass="text-area" prefHeight="50" wrapText="true"
+                              GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
+                    <Label text="Department *" styleClass="input-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="uploadDepartmentCombo" styleClass="combo-box" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                    <Label text="Semester *" styleClass="input-label" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                    <ComboBox fx:id="uploadSemesterCombo" styleClass="combo-box" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+                    <Label text="Subject *" styleClass="input-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="uploadSubjectCombo" styleClass="combo-box" maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                    <Label text="Category" styleClass="input-label" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+                    <ComboBox fx:id="uploadCategoryCombo" styleClass="combo-box" maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="3"/>
+                    <Label text="File *" styleClass="input-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                    <HBox spacing="8" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.columnSpan="2">
+                        <TextField fx:id="uploadFileField" editable="false" styleClass="input-field" HBox.hgrow="ALWAYS"/>
+                        <Button text="Browse…" styleClass="secondary-btn" onAction="#handleSelectUploadFile"/>
+                    </HBox>
+                    <ComboBox fx:id="uploadStatusCombo" promptText="Status" styleClass="combo-box" GridPane.rowIndex="4" GridPane.columnIndex="3"/>
+                </GridPane>
+                <HBox spacing="10">
+                    <Button text="📤 Upload" styleClass="primary-btn" onAction="#handleUploadResource"/>
+                    <Button text="✏ Update" styleClass="warning-btn" onAction="#handleUpdateResource"/>
+                    <Button text="↺ Reset" styleClass="secondary-btn" onAction="#handleResetUploadForm"/>
+                </HBox>
+            </VBox>
+
+            <FlowPane hgap="8" vgap="8" alignment="CENTER_LEFT" styleClass="filter-bar">
+                <TextField fx:id="searchField" promptText="🔍 Search…" styleClass="search-field" prefWidth="200"/>
+                <ComboBox fx:id="departmentFilter" promptText="Department" styleClass="combo-box" prefWidth="130"/>
+                <ComboBox fx:id="semesterFilter" promptText="Semester" styleClass="combo-box" prefWidth="110"/>
+                <ComboBox fx:id="subjectFilter" promptText="Subject" styleClass="combo-box" prefWidth="120"/>
+                <ComboBox fx:id="statusFilter" promptText="Status" styleClass="combo-box" prefWidth="100"/>
+                <Button text="Filter" styleClass="primary-btn" onAction="#applyFilters"/>
+                <Button text="Clear" styleClass="secondary-btn" onAction="#clearFilters"/>
+            </FlowPane>
+
+            <TableView fx:id="resourcesTable" prefHeight="280" styleClass="table-view">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+                    <TableColumn fx:id="colTitle" text="Resource Name" prefWidth="180"/>
+                    <TableColumn fx:id="colSubject" text="Subject" prefWidth="110"/>
+                    <TableColumn fx:id="colUploader" text="Uploaded By" prefWidth="110"/>
+                    <TableColumn fx:id="colDownloads" text="Downloads" prefWidth="90"/>
+                    <TableColumn fx:id="colStatus" text="Status" prefWidth="90"/>
+                    <TableColumn fx:id="colDate" text="Uploaded Date" prefWidth="130"/>
+                </columns>
+                <placeholder><Label text="No resources found." styleClass="table-empty-label"/></placeholder>
+            </TableView>
+
+            <HBox alignment="CENTER" spacing="14">
+                <Button fx:id="btnPrevPage" text="◀ Prev" styleClass="secondary-btn" onAction="#handlePrevPage"/>
+                <Label fx:id="lblPageNumber" text="Page 1 of 1"/>
+                <Button fx:id="btnNextPage" text="Next ▶" styleClass="secondary-btn" onAction="#handleNextPage"/>
+            </HBox>
+
+            <VBox styleClass="panel-card" spacing="10">
+                <Label text="Row Actions" styleClass="panel-title"/>
+                <HBox spacing="8">
+                    <Button text="👁 Preview" styleClass="secondary-btn" onAction="#handlePreview"/>
+                    <Button text="⬇ Download" styleClass="primary-btn" onAction="#handleDownload"/>
+                    <Button text="✏ Edit" styleClass="warning-btn" onAction="#handleEditResource"/>
+                    <Button text="✅ Approve" styleClass="success-btn" onAction="#handleApproveResource"/>
+                    <Button text="🙈 Hide" styleClass="secondary-btn" onAction="#handleHideResource"/>
+                    <Button text="🗑 Delete" styleClass="danger-btn" onAction="#handleDelete"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

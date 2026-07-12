@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" styleClass="content-scroll" stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.admin.controllers.AdminOverviewController">
+    <content>
+        <VBox spacing="24" styleClass="content-wrap">
+            <padding>
+                <Insets top="24" right="24" bottom="24" left="24"/>
+            </padding>
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Dashboard Overview" styleClass="section-title"/>
+                    <Label text="Real-time statistics and activity summary" styleClass="section-subtitle"/>
+                </VBox>
+                <Button text="↻  Refresh" styleClass="secondary-btn" onAction="#refreshStats"/>
+            </HBox>
+
+            <!-- ── Stat Cards Row 1 ── -->
+            <GridPane hgap="16" vgap="16">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                </columnConstraints>
+
+                <VBox styleClass="stat-card" GridPane.columnIndex="0" spacing="8">
+                    <Label text="👥" styleClass="stat-icon"/>
+                    <Label text="TOTAL USERS" styleClass="stat-title"/>
+                    <Label fx:id="lblTotalUsers" text="0" styleClass="stat-value-blue"/>
+                    <Label text="Registered accounts" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="1" spacing="8">
+                    <Label text="📝" styleClass="stat-icon"/>
+                    <Label text="TOTAL NOTES" styleClass="stat-title"/>
+                    <Label fx:id="lblTotalNotes" text="0" styleClass="stat-value-green"/>
+                    <Label text="Non-deleted notes" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="2" spacing="8">
+                    <Label text="📂" styleClass="stat-icon"/>
+                    <Label text="RESOURCES" styleClass="stat-title"/>
+                    <Label fx:id="lblTotalResources" text="0" styleClass="stat-value-purple"/>
+                    <Label text="Active resources" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="3" spacing="8">
+                    <Label text="❓" styleClass="stat-icon"/>
+                    <Label text="QUESTIONS" styleClass="stat-title"/>
+                    <Label fx:id="lblTotalQuestions" text="0" styleClass="stat-value-yellow"/>
+                    <Label text="All-time questions" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="4" spacing="8">
+                    <Label text="💬" styleClass="stat-icon"/>
+                    <Label text="ANSWERS" styleClass="stat-title"/>
+                    <Label fx:id="lblTotalAnswers" text="0" styleClass="stat-value-blue"/>
+                    <Label text="All-time answers" styleClass="stat-desc"/>
+                </VBox>
+            </GridPane>
+
+            <!-- ── Stat Cards Row 2 ── -->
+            <GridPane hgap="16" vgap="16">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                    <ColumnConstraints percentWidth="20"/>
+                </columnConstraints>
+
+                <VBox styleClass="stat-card" GridPane.columnIndex="0" spacing="8">
+                    <Label text="✅" styleClass="stat-icon"/>
+                    <Label text="TASKS" styleClass="stat-title"/>
+                    <Label fx:id="lblTotalTasks" text="0" styleClass="stat-value-default"/>
+                    <Label text="All user tasks" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="1" spacing="8">
+                    <Label text="🆕" styleClass="stat-icon"/>
+                    <Label text="NEW USERS TODAY" styleClass="stat-title"/>
+                    <Label fx:id="lblNewUsersToday" text="0" styleClass="stat-value-green"/>
+                    <Label text="Registered today" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="2" spacing="8">
+                    <Label text="📤" styleClass="stat-icon"/>
+                    <Label text="UPLOADS TODAY" styleClass="stat-title"/>
+                    <Label fx:id="lblUploadsToday" text="0" styleClass="stat-value-blue"/>
+                    <Label text="Uploaded today" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="3" spacing="8">
+                    <Label text="⏳" styleClass="stat-icon"/>
+                    <Label text="PENDING NOTES" styleClass="stat-title"/>
+                    <Label fx:id="lblPendingNotes" text="0" styleClass="stat-value-yellow"/>
+                    <Label text="Awaiting review" styleClass="stat-desc"/>
+                </VBox>
+                <VBox styleClass="stat-card" GridPane.columnIndex="4" spacing="8">
+                    <Label text="⚠️" styleClass="stat-icon"/>
+                    <Label text="PENDING RESOURCES" styleClass="stat-title"/>
+                    <Label fx:id="lblPendingResources" text="0" styleClass="stat-value-red"/>
+                    <Label text="Inactive resources" styleClass="stat-desc"/>
+                </VBox>
+            </GridPane>
+
+            <!-- ── Chart + Recent Users ── -->
+            <GridPane hgap="20" vgap="20">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="45"/>
+                    <ColumnConstraints percentWidth="55"/>
+                </columnConstraints>
+
+                <!-- Pie chart -->
+                <VBox styleClass="panel-card" spacing="14" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="Notes by Subject" styleClass="panel-title"/>
+                    <PieChart fx:id="subjectPieChart" prefHeight="240" legendVisible="true"/>
+                </VBox>
+
+                <!-- Recent Users -->
+                <VBox styleClass="panel-card" spacing="14" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="Recent Users" styleClass="panel-title"/>
+                    <TableView fx:id="recentUsersTable" prefHeight="240" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="recentUserName" text="Name" prefWidth="160"/>
+                            <TableColumn fx:id="recentUserEmail" text="Email" prefWidth="200"/>
+                            <TableColumn fx:id="recentUserRole" text="Role" prefWidth="90"/>
+                        </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
+                    </TableView>
+                </VBox>
+            </GridPane>
+
+            <!-- ── Recent Uploads + Recent Questions ── -->
+            <GridPane hgap="20" vgap="20">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+
+                <!-- Recent Uploads -->
+                <VBox styleClass="panel-card" spacing="14" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    <Label text="Recent Uploads" styleClass="panel-title"/>
+                    <TableView fx:id="recentUploadsTable" prefHeight="200" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="recentNoteTitle" text="Title" prefWidth="180"/>
+                            <TableColumn fx:id="recentNoteSubject" text="Subject" prefWidth="130"/>
+                            <TableColumn fx:id="recentNoteStatus" text="Status" prefWidth="90"/>
+                        </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
+                    </TableView>
+                </VBox>
+
+                <!-- Recent Questions -->
+                <VBox styleClass="panel-card" spacing="14" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    <Label text="Recent Questions" styleClass="panel-title"/>
+                    <TableView fx:id="recentQuestionsTable" prefHeight="200" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="recentQText" text="Question" prefWidth="220"/>
+                            <TableColumn fx:id="recentQSubject" text="Subject" prefWidth="110"/>
+                            <TableColumn fx:id="recentQVotes" text="Votes" prefWidth="60"/>
+                        </columns>
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                        </columnResizePolicy>
+                    </TableView>
+                </VBox>
+            </GridPane>
+
+        </VBox>
+    </content>
+</ScrollPane>

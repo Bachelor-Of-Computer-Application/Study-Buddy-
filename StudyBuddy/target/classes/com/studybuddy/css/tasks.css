@@ -1,0 +1,549 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Study Buddy – Study Tasks Page  (tasks.css)
+   Loaded after theme.css. All task-specific component styles live here.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Page shell ──────────────────────────────────────────────────────── */
+.tasks-root {
+    -fx-background-color: #f8fafc;
+    -fx-font-family:      "Segoe UI";
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HERO BANNER  (matches Notes page-header-card)
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-hero {
+    -fx-background-color: linear-gradient(to right, #4f46e5, #7c3aed);
+    -fx-background-radius: 16px;
+    -fx-padding:          26 28 26 28;
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.30), 14, 0, 0, 5);
+}
+.tasks-hero-title {
+    -fx-font-size:   24px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #ffffff;
+}
+.tasks-hero-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255,255,255,0.85);
+    -fx-wrap-text: true;
+}
+.tasks-hero-btn {
+    -fx-background-color:  #ffffff;
+    -fx-text-fill:         #4f46e5;
+    -fx-font-size:         13px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 999px;
+    -fx-border-color:      rgba(255,255,255,0.6);
+    -fx-border-radius:     999px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           10 22 10 22;
+    -fx-cursor:            hand;
+    -fx-effect:            dropshadow(three-pass-box, rgba(79,70,229,0.25), 6, 0, 0, 2);
+}
+.tasks-hero-btn:hover {
+    -fx-background-color: #eef2ff;
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.45), 10, 0, 0, 3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   STATISTICS CARDS ROW
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-stat-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 14px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     14px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.06), 8, 0, 0, 2);
+    -fx-padding:           18 20 18 20;
+    -fx-cursor:            default;
+}
+.tasks-stat-card:hover {
+    -fx-border-color: #c7d2fe;
+    -fx-effect:       dropshadow(three-pass-box, rgba(79,70,229,0.14), 14, 0, 0, 5);
+}
+
+.tasks-stat-icon-wrap {
+    -fx-background-radius: 10px;
+    -fx-min-width:  40px;  -fx-pref-width:  40px;  -fx-max-width:  40px;
+    -fx-min-height: 40px;  -fx-pref-height: 40px;  -fx-max-height: 40px;
+    -fx-alignment:  center;
+}
+.tasks-stat-icon-pending   { -fx-background-color: #fef3c7; }
+.tasks-stat-icon-progress  { -fx-background-color: #e0f2fe; }
+.tasks-stat-icon-completed { -fx-background-color: #d1fae5; }
+.tasks-stat-icon-overdue   { -fx-background-color: #fee2e2; }
+
+.tasks-stat-icon {
+    -fx-font-size: 20px;
+}
+.tasks-stat-value {
+    -fx-font-size:   28px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+}
+.tasks-stat-value-pending   { -fx-text-fill: #b45309; }
+.tasks-stat-value-progress  { -fx-text-fill: #0369a1; }
+.tasks-stat-value-completed { -fx-text-fill: #15803d; }
+.tasks-stat-value-overdue   { -fx-text-fill: #dc2626; }
+
+.tasks-stat-label {
+    -fx-font-size:   11px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #64748b;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CREATE TASK CARD
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-create-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 16px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     16px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.06), 12, 0, 0, 3);
+    -fx-padding:           24;
+}
+.tasks-create-card:hover {
+    -fx-border-color: #c7d2fe;
+}
+.tasks-card-title {
+    -fx-font-size:   17px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+}
+.tasks-field-label {
+    -fx-font-size:   12px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #475569;
+}
+
+/* Input controls */
+.tasks-input {
+    -fx-background-color:  #ffffff;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     10px;
+    -fx-background-radius: 10px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           0 14;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+    -fx-prompt-text-fill:  #9ca3af;
+    -fx-pref-height:       42px;
+}
+.tasks-input:focused {
+    -fx-border-color: #4f46e5;
+    -fx-border-width: 2px;
+    -fx-effect:       dropshadow(three-pass-box, rgba(79,70,229,0.15), 8, 0, 0, 0);
+}
+
+.tasks-combo {
+    -fx-background-color:  #ffffff;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     10px;
+    -fx-background-radius: 10px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           4 8;
+    -fx-font-size:         13px;
+    -fx-pref-height:       42px;
+    -fx-cursor:            hand;
+}
+.tasks-combo:focused, .tasks-combo:showing {
+    -fx-border-color: #4f46e5;
+    -fx-border-width: 2px;
+}
+.tasks-combo .list-cell {
+    -fx-font-size: 13px;
+    -fx-text-fill: #0f172a;
+    -fx-padding:   6 12;
+}
+.tasks-combo .list-view .list-cell:hover {
+    -fx-background-color: #eef2ff;
+    -fx-text-fill:        #4f46e5;
+}
+.tasks-combo .list-view .list-cell:selected {
+    -fx-background-color: #4f46e5;
+    -fx-text-fill:        #ffffff;
+}
+.tasks-combo .arrow-button { -fx-background-color: transparent; }
+.tasks-combo .arrow          { -fx-background-color: #64748b; }
+
+.tasks-date {
+    -fx-background-color:  #ffffff;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     10px;
+    -fx-background-radius: 10px;
+    -fx-border-width:      1.5px;
+    -fx-pref-height:       42px;
+    -fx-cursor:            hand;
+}
+.tasks-date:focused { -fx-border-color: #4f46e5; }
+
+.tasks-desc {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     10px;
+    -fx-background-radius: 10px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           10 14;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+    -fx-prompt-text-fill:  #9ca3af;
+    -fx-pref-height:       90px;
+}
+.tasks-desc:focused {
+    -fx-border-color:      #4f46e5;
+    -fx-border-width:      2px;
+    -fx-background-color:  #ffffff;
+    -fx-effect:            dropshadow(three-pass-box, rgba(79,70,229,0.12), 8, 0, 0, 0);
+}
+.tasks-desc .content {
+    -fx-background-color: transparent;
+}
+
+/* Add Task button */
+.tasks-btn-add {
+    -fx-background-color:  linear-gradient(to right, #4f46e5, #6366f1);
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         14px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 999px;
+    -fx-padding:           11 28 11 28;
+    -fx-cursor:            hand;
+    -fx-effect:            dropshadow(three-pass-box, rgba(79,70,229,0.30), 10, 0, 0, 3);
+}
+.tasks-btn-add:hover {
+    -fx-background-color: linear-gradient(to right, #4338ca, #4f46e5);
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.45), 14, 0, 0, 5);
+}
+.tasks-btn-add:pressed {
+    -fx-background-color: #3730a3;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SEARCH + FILTER BAR
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-toolbar {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 14px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     14px;
+    -fx-border-width:      1px;
+    -fx-padding:           14 18 14 18;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.04), 6, 0, 0, 1);
+}
+
+.tasks-search-wrap {
+    -fx-background-color:  #f8fafc;
+    -fx-background-radius: 999px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     999px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           0 16;
+    -fx-pref-height:       42px;
+}
+.tasks-search-wrap:hover { -fx-border-color: #a5b4fc; }
+
+/* Inner TextField inside search-wrap — transparent */
+.tasks-search-wrap .text-field,
+.tasks-search-field {
+    -fx-background-color:  transparent;
+    -fx-border-color:      transparent;
+    -fx-background-radius: 0;
+    -fx-border-radius:     0;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+    -fx-prompt-text-fill:  #94a3b8;
+    -fx-padding:           0;
+}
+
+/* Filter chip pills */
+.tasks-filter-pill {
+    -fx-background-color:  #f1f5f9;
+    -fx-background-radius: 999px;
+    -fx-border-color:      transparent;
+    -fx-border-radius:     999px;
+    -fx-text-fill:         #64748b;
+    -fx-font-size:         12px;
+    -fx-font-weight:       bold;
+    -fx-padding:           8 16 8 16;
+    -fx-cursor:            hand;
+    -fx-pref-height:       36px;
+}
+.tasks-filter-pill:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill:        #1e293b;
+}
+.tasks-filter-pill:selected {
+    -fx-background-color: linear-gradient(to right, #4f46e5, #6366f1);
+    -fx-text-fill:        #ffffff;
+    -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.28), 8, 0, 0, 2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TASK CARDS (list view)
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-card {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 14px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     14px;
+    -fx-border-width:      1px;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.05), 8, 0, 0, 2);
+}
+.tasks-card:hover {
+    -fx-border-color: #c7d2fe;
+    -fx-effect:       dropshadow(three-pass-box, rgba(79,70,229,0.14), 14, 0, 0, 5);
+}
+
+/* Left priority accent strip */
+.tasks-priority-strip {
+    -fx-background-radius: 14 0 0 14;
+    -fx-min-width:  5px;
+    -fx-pref-width: 5px;
+    -fx-max-width:  5px;
+}
+.tasks-strip-high   { -fx-background-color: #ef4444; }
+.tasks-strip-medium { -fx-background-color: #f59e0b; }
+.tasks-strip-low    { -fx-background-color: #10b981; }
+
+.tasks-card-body {
+    -fx-padding: 18 20 14 16;
+    -fx-spacing: 10;
+}
+
+.tasks-card-title {
+    -fx-font-size:   15px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #0f172a;
+    -fx-wrap-text:   true;
+}
+.tasks-card-subject {
+    -fx-font-size:   11px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #4f46e5;
+    -fx-background-color: #eef2ff;
+    -fx-background-radius: 999px;
+    -fx-padding:     3 10 3 10;
+}
+.tasks-card-desc {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-wrap-text: true;
+}
+.tasks-card-meta {
+    -fx-font-size: 11px;
+    -fx-text-fill: #94a3b8;
+}
+.tasks-card-meta-overdue {
+    -fx-font-size:   11px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #ef4444;
+}
+
+/* Badges inside cards */
+.tasks-badge {
+    -fx-padding:           4 12 4 12;
+    -fx-background-radius: 999px;
+    -fx-font-size:         10px;
+    -fx-font-weight:       bold;
+}
+.tasks-badge-pending   { -fx-background-color: #f3f4f6; -fx-text-fill: #374151; }
+.tasks-badge-progress  { -fx-background-color: #e0f2fe; -fx-text-fill: #0369a1; }
+.tasks-badge-completed { -fx-background-color: #dcfce7; -fx-text-fill: #15803d; }
+.tasks-badge-overdue   { -fx-background-color: #fee2e2; -fx-text-fill: #dc2626; }
+.tasks-badge-high      { -fx-background-color: #fee2e2; -fx-text-fill: #dc2626; }
+.tasks-badge-medium    { -fx-background-color: #fef3c7; -fx-text-fill: #b45309; }
+.tasks-badge-low       { -fx-background-color: #dcfce7; -fx-text-fill: #15803d; }
+
+/* Action buttons on cards */
+.tasks-btn-edit {
+    -fx-background-color:  #f1f5f9;
+    -fx-text-fill:         #475569;
+    -fx-font-size:         11px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-padding:           6 13 6 13;
+    -fx-cursor:            hand;
+}
+.tasks-btn-edit:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill:        #0f172a;
+}
+
+.tasks-btn-delete {
+    -fx-background-color:  #fef2f2;
+    -fx-text-fill:         #ef4444;
+    -fx-font-size:         11px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-padding:           6 13 6 13;
+    -fx-cursor:            hand;
+}
+.tasks-btn-delete:hover {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill:        #dc2626;
+}
+
+.tasks-btn-complete {
+    -fx-background-color:  #f0fdf4;
+    -fx-text-fill:         #15803d;
+    -fx-font-size:         11px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-padding:           6 13 6 13;
+    -fx-cursor:            hand;
+}
+.tasks-btn-complete:hover {
+    -fx-background-color: #dcfce7;
+}
+
+/* ── In-card edit mode ───────────────────────────────────────────────── */
+.tasks-edit-input {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-background-radius: 8px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           0 12;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+    -fx-pref-height:       38px;
+}
+.tasks-edit-input:focused {
+    -fx-border-color:      #4f46e5;
+    -fx-background-color:  #ffffff;
+    -fx-border-width:      2px;
+}
+.tasks-edit-combo {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-background-radius: 8px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           2 8;
+    -fx-font-size:         13px;
+    -fx-pref-height:       38px;
+    -fx-cursor:            hand;
+}
+.tasks-edit-combo:focused, .tasks-edit-combo:showing {
+    -fx-border-color: #4f46e5;
+    -fx-border-width: 2px;
+}
+.tasks-edit-area {
+    -fx-background-color:  #f8fafc;
+    -fx-border-color:      #d1d5db;
+    -fx-border-radius:     8px;
+    -fx-background-radius: 8px;
+    -fx-border-width:      1.5px;
+    -fx-padding:           8 12;
+    -fx-font-size:         13px;
+    -fx-text-fill:         #0f172a;
+    -fx-pref-height:       64px;
+}
+.tasks-edit-area:focused {
+    -fx-border-color:      #4f46e5;
+    -fx-background-color:  #ffffff;
+    -fx-border-width:      2px;
+}
+.tasks-edit-area .content { -fx-background-color: transparent; }
+
+.tasks-btn-save {
+    -fx-background-color:  #4f46e5;
+    -fx-text-fill:         #ffffff;
+    -fx-font-size:         12px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-padding:           7 18 7 18;
+    -fx-cursor:            hand;
+}
+.tasks-btn-save:hover { -fx-background-color: #4338ca; }
+
+.tasks-btn-cancel {
+    -fx-background-color:  #f1f5f9;
+    -fx-text-fill:         #64748b;
+    -fx-font-size:         12px;
+    -fx-font-weight:       bold;
+    -fx-background-radius: 8px;
+    -fx-padding:           7 18 7 18;
+    -fx-cursor:            hand;
+}
+.tasks-btn-cancel:hover { -fx-background-color: #e2e8f0; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   EMPTY STATE
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-empty {
+    -fx-background-color:  #ffffff;
+    -fx-background-radius: 16px;
+    -fx-border-color:      #e2e8f0;
+    -fx-border-radius:     16px;
+    -fx-border-width:      1.5px;
+    -fx-border-style:      dashed;
+    -fx-padding:           52 40 52 40;
+    -fx-alignment:         center;
+    -fx-effect:            dropshadow(three-pass-box, rgba(15,23,42,0.04), 8, 0, 0, 2);
+}
+.tasks-empty-icon {
+    -fx-font-size: 52px;
+}
+.tasks-empty-title {
+    -fx-font-size:   18px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #475569;
+}
+.tasks-empty-sub {
+    -fx-font-size: 13px;
+    -fx-text-fill: #94a3b8;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SCROLL PANE (task list)
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color:     transparent;
+}
+.tasks-scroll > .viewport {
+    -fx-background-color: #f8fafc;
+}
+.tasks-scroll .scroll-bar:vertical {
+    -fx-background-color:  #f1f5f9;
+    -fx-pref-width:        6px;
+    -fx-background-radius: 4px;
+}
+.tasks-scroll .scroll-bar .thumb {
+    -fx-background-color:  #cbd5e1;
+    -fx-background-radius: 4px;
+}
+.tasks-scroll .scroll-bar .thumb:hover {
+    -fx-background-color: #94a3b8;
+}
+.tasks-scroll .scroll-bar .track,
+.tasks-scroll .scroll-bar .track-background,
+.tasks-scroll .scroll-bar .increment-button,
+.tasks-scroll .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-border-color:     transparent;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SECTION DIVIDER LABEL
+   ══════════════════════════════════════════════════════════════════════ */
+.tasks-section-label {
+    -fx-font-size:   11px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #64748b;
+    -fx-padding:     0 0 2 2;
+}
+
+/* Completed task — dim the title */
+.tasks-card-title-done {
+    -fx-font-size:   15px;
+    -fx-font-weight: bold;
+    -fx-text-fill:   #94a3b8;
+    -fx-strikethrough: true;
+    -fx-wrap-text:   true;
+}

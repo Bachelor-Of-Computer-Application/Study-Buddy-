@@ -5,34 +5,46 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e00f47bb-a355-449d-a53c-45b249b4d2d9" name="Changes" comment="">
-<<<<<<< Updated upstream
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/jars.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/jars.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/javafx_jmods_26_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/javafx_jmods_26_0.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/lib.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../STUDY-BUDDY.docx" beforeDir="false" afterPath="$PROJECT_DIR$/../STUDY-BUDDY.docx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/jars.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/javafx_jmods_26_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/lib.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_7_9_2026_4_29_PM_[Changes]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_7_9_2026_4_29_PM__Changes_.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/ProfileController.java" afterDir="false" />
-=======
-      <change beforePath="$PROJECT_DIR$/.idea/IntelliLang.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/studybuddy.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
->>>>>>> Stashed changes
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/controllers/AdminActivityLogsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/controllers/AdminActivityLogsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/controllers/AdminUsersController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/controllers/AdminUsersController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/dao/ActivityLogDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/dao/ActivityLogDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/services/ActivityLogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/admin/services/ActivityLogService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/EditTaskDialogController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/EditTaskDialogController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/HomeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/TaskController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/controllers/TaskController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/dao/TaskDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/dao/TaskDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/models/Achievement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/models/Achievement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/models/Task.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/models/Task.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/services/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/services/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/services/QuestionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/services/QuestionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/studybuddy/services/TaskService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/studybuddy/services/TaskService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/admin/fxml/AdminDashboardView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/admin/fxml/AdminDashboardView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/admin/fxml/AdminUsersModeration.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/admin/fxml/AdminUsersModeration.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/css/home.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/css/home.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/css/tasks.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/css/tasks.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/DashboardView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/DashboardView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/ProfileView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/ProfileView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/TaskView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/TaskView.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-<<<<<<< Updated upstream
   <component name="EmbeddingIndexingInfo">
     <option name="cachedIndexableFilesCount" value="143" />
   </component>
-=======
->>>>>>> Stashed changes
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
@@ -64,40 +76,6 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-<<<<<<< Updated upstream
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Application.App.executor&quot;: &quot;Run&quot;,
-    &quot;Application.StudyBuddyAdmin.executor&quot;: &quot;Run&quot;,
-    &quot;Application.studybuddy.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
-  }
-}</component>
-=======
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
@@ -122,16 +100,15 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
+    "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "ml.llm.LLMThirdPartyAiProvidersConfigurable",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
     "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
->>>>>>> Stashed changes
   <component name="RunManager" selected="Application.studybuddy">
     <configuration name="StudyBuddyAdmin" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.studybuddy.admin.AdminApp" />
@@ -171,7 +148,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1783506257133</updated>
-<<<<<<< Updated upstream
       <workItem from="1783525747677" duration="1040000" />
       <workItem from="1783527249499" duration="425000" />
       <workItem from="1783527816001" duration="1089000" />
@@ -186,15 +162,6 @@
       <workItem from="1783742169719" duration="9876000" />
       <workItem from="1783758892162" duration="1367000" />
       <workItem from="1783760729254" duration="1643000" />
-=======
-      <workItem from="1783525747677" duration="2927000" />
-      <workItem from="1783663597275" duration="24000" />
-      <workItem from="1783663645231" duration="9415000" />
-      <workItem from="1783674136487" duration="1046000" />
-      <workItem from="1783675319823" duration="2229000" />
-      <workItem from="1783679675101" duration="2443000" />
-      <workItem from="1783759700165" duration="881000" />
->>>>>>> Stashed changes
     </task>
     <servers />
   </component>
