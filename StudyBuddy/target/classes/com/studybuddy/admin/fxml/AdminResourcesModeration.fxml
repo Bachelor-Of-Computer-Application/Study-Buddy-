@@ -74,6 +74,9 @@
                     <TableColumn fx:id="colStatus" text="Status" prefWidth="90"/>
                     <TableColumn fx:id="colDate" text="Uploaded Date" prefWidth="130"/>
                 </columns>
+                <columnResizePolicy>
+                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+                </columnResizePolicy>
                 <placeholder><Label text="No resources found." styleClass="table-empty-label"/></placeholder>
             </TableView>
 

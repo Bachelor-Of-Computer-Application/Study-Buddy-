@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" fitToHeight="true" styleClass="content-scroll"
+            stylesheets="@../../css/theme.css, @../css/admin-dashboard.css"
+            xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.studybuddy.admin.controllers.AdminRewardHistoryController">
+    <content>
+        <VBox spacing="16" styleClass="admin-panel-bg">
+            <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <VBox spacing="3" HBox.hgrow="ALWAYS">
+            <Label text="🏆 Reward History" styleClass="section-title"/>
+            <Label fx:id="lblTotalCount" text="" styleClass="section-subtitle"/>
+        </VBox>
+        <Button text="📥 Export CSV" styleClass="secondary-btn" onAction="#handleExportCSV"/>
+        <Button text="↻ Refresh" styleClass="secondary-btn" onAction="#handleRefresh"/>
+    </HBox>
+
+    <!-- Filter Bar -->
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
+        <!-- Search -->
+        <TextField fx:id="searchField"
+                   promptText="🔍  Search question, student…"
+                   styleClass="search-field"
+                   prefWidth="280"/>
+        <Button text="Search" styleClass="primary-btn" onAction="#handleSearch"/>
+
+        <Separator orientation="VERTICAL" styleClass="filter-separator"/>
+
+        <!-- Status filter -->
+        <Label text="Status:" styleClass="input-label"/>
+        <ComboBox fx:id="statusFilter" promptText="All Status" prefWidth="140" styleClass="filter-combo"/>
+
+        <!-- Student filter -->
+        <Label text="Student:" styleClass="input-label"/>
+        <ComboBox fx:id="studentFilter" promptText="All Students" prefWidth="200" styleClass="filter-combo"/>
+
+        <Button text="Clear Filters" styleClass="secondary-btn" onAction="#handleClearFilters"/>
+    </HBox>
+
+    <!-- Transactions Table -->
+    <TableView fx:id="transactionsTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+        <columns>
+            <TableColumn fx:id="colDateTime"   text="Date &amp; Time"  prefWidth="160" minWidth="120"/>
+            <TableColumn fx:id="colQuestion"   text="Question Title" prefWidth="250" minWidth="150"/>
+            <TableColumn fx:id="colPoints"     text="Reward Points" prefWidth="100" minWidth="80"/>
+            <TableColumn fx:id="colFromStudent" text="From Student"  prefWidth="140" minWidth="100"/>
+            <TableColumn fx:id="colToStudent"   text="To Student"    prefWidth="140" minWidth="100"/>
+            <TableColumn fx:id="colAnswer"     text="Best Answer"   prefWidth="200" minWidth="120"/>
+            <TableColumn fx:id="colStatus"     text="Status"        prefWidth="100" minWidth="80"/>
+        </columns>
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS"/>
+        </columnResizePolicy>
+        <placeholder>
+            <Label text="No reward transactions found. Rewards are recorded here when admins select best answers."
+                   styleClass="admin-logs-empty" wrapText="true"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Info note -->
+    <Label text="ℹ  Every reward transfer is automatically recorded here. The table refreshes automatically after each reward transfer."
+           wrapText="true"
+           styleClass="admin-logs-hint"/>
+        </VBox>
+    </content>
+</ScrollPane>

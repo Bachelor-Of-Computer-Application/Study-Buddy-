@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="e00f47bb-a355-449d-a53c-45b249b4d2d9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/AchievementsView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/studybuddy/fxml/AchievementsView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/studybuddy/admin/controllers/AdminDashboardController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/studybuddy/admin/controllers/AdminDashboardController.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/studybuddy/admin/controllers/AdminNotesController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/studybuddy/admin/controllers/AdminNotesController.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/com/studybuddy/admin/controllers/AdminNotificationsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/studybuddy/admin/controllers/AdminNotificationsController.class" afterDir="false" />
@@ -144,7 +143,7 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Application.StudyBuddyAdmin">
+  <component name="RunManager" selected="Application.studybuddy">
     <configuration name="StudyBuddyAdmin" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.studybuddy.admin.AdminApp" />
       <module name="StudyBuddy" />
@@ -206,7 +205,7 @@
       <workItem from="1783845096680" duration="473000" />
       <workItem from="1783845597944" duration="6908000" />
       <workItem from="1783893457539" duration="190000" />
-      <workItem from="1783906081875" duration="1905000" />
+      <workItem from="1783906081875" duration="4140000" />
     </task>
     <servers />
   </component>

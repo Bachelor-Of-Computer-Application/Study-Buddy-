@@ -21,7 +21,7 @@
     <!-- LEFT – Branding panel (same as Login for consistency) -->
     <left>
         <VBox alignment="CENTER" spacing="24" styleClass="auth-left-panel">
-            <padding><Insets top="60" right="40" bottom="60" left="40"/></padding>
+            <padding><Insets top="60" right="40" bottom="60" left="40" /></padding>
 
             <ImageView fitWidth="150" fitHeight="50" preserveRatio="true" smooth="true" cache="true"
                        styleClass="auth-logo-image app-brand-logo">
@@ -49,7 +49,7 @@
     <center>
         <VBox alignment="CENTER" styleClass="auth-right-panel" HBox.hgrow="ALWAYS">
             <VBox styleClass="auth-form-card" spacing="16" maxWidth="420">
-                <padding><Insets top="36" right="40" bottom="36" left="40"/></padding>
+                <padding><Insets top="40" right="40" bottom="40" left="40" /></padding>
 
                 <!-- Heading -->
                 <VBox spacing="6">
@@ -100,8 +100,6 @@
                 <Button text="Sign in instead" onAction="#onGoToRegistrationClick"
                         styleClass="auth-secondary-btn" maxWidth="Infinity"/>
 
-                <Label text="registration."
-                       styleClass="auth-note" wrapText="true"/>
             </VBox>
         </VBox>
     </center>

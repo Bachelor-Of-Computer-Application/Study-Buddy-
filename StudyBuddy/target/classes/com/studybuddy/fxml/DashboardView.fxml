@@ -47,9 +47,7 @@
         <ScrollPane fitToWidth="true" styleClass="main-scroll">
             <content>
                 <VBox spacing="20" styleClass="main-content">
-                    <padding>
-                        <Insets top="24" right="24" bottom="28" left="24"/>
-                    </padding>
+                    <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
                     <!-- ── Hero Banner ─────────────────────────────────── -->
                     <HBox alignment="CENTER_LEFT" spacing="20" styleClass="hero-banner">
@@ -57,9 +55,41 @@
                             <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome Back! 👋"/>
                             <Label styleClass="hero-sub" text="Track your progress, explore notes, and ask questions."/>
                         </VBox>
+                        <VBox alignment="CENTER_RIGHT" spacing="4">
+                            <Label fx:id="achievementPointsLabel" styleClass="achievement-points-label" text="✨ 0 pts"/>
+                            <Label styleClass="achievement-points-sub" text="Achievement Points"/>
+                        </VBox>
                         <StackPane styleClass="hero-avatar-wrap">
                             <ImageView fx:id="heroAvatarView" pickOnBounds="true"/>
                         </StackPane>
+                    </HBox>
+
+                    <!-- ── Achievement Stats Row ─────────────────────────── -->
+                    <HBox alignment="CENTER_LEFT" spacing="16" styleClass="achievement-stats-row">
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label fx:id="heroLevelLabel" styleClass="hero-stat-value" text="Level 1"/>
+                            <Label styleClass="hero-stat-label" text="Current Level"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label fx:id="heroAchievementsLabel" styleClass="hero-stat-value" text="0"/>
+                            <Label styleClass="hero-stat-label" text="Achievements"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label fx:id="heroBestAnswersLabel" styleClass="hero-stat-value" text="0"/>
+                            <Label styleClass="hero-stat-label" text="Best Answers"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label fx:id="heroCompletedTasksLabel" styleClass="hero-stat-value" text="0"/>
+                            <Label styleClass="hero-stat-label" text="Completed Tasks"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label fx:id="heroResourcesLabel" styleClass="hero-stat-value" text="0"/>
+                            <Label styleClass="hero-stat-label" text="Resources Shared"/>
+                        </VBox>
+                        <VBox spacing="2" alignment="CENTER">
+                            <Label fx:id="heroNotesLabel" styleClass="hero-stat-value" text="0"/>
+                            <Label styleClass="hero-stat-label" text="Notes Uploaded"/>
+                        </VBox>
                     </HBox>
 
                     <!-- ── Quick Actions ───────────────────────────────── -->
@@ -68,6 +98,7 @@
                         <Button onAction="#handleUploadNotes" styleClass="quick-action-btn, quick-btn-note" text="📝 Create Note"/>
                         <Button onAction="#handleUploadResourceAction" styleClass="quick-action-btn, quick-btn-resource" text="📤 Upload Resource"/>
                         <Button onAction="#handleGoToQuestions" styleClass="quick-action-btn, quick-btn-question" text="🙋 Ask Question"/>
+                        <Button onAction="#handleGoToAchievements" styleClass="quick-action-btn, quick-btn-achievement" text="🏆 Achievements"/>
                         <Button onAction="#handleGoToProfile" styleClass="quick-action-btn, quick-btn-profile" text="👤 Profile"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Button onAction="#refreshDashboard" styleClass="refresh-btn" text="🔄 Refresh"/>
@@ -201,7 +232,7 @@
                         <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
                             <HBox alignment="CENTER_LEFT" spacing="12">
                                 <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-sky">
-                                    <Label text="�" styleClass="stat-icon-sm"/>
+                                    <Label text="🔄" styleClass="stat-icon-sm"/>
                                 </HBox>
                                 <VBox spacing="2">
                                     <Label text="IN PROGRESS" styleClass="stat-label"/>
@@ -211,7 +242,7 @@
                             <Label text="In progress tasks" styleClass="stat-desc"/>
                         </VBox>
                         
-                        <!-- Task Card 4: Study Progress (again or something else, but keep 4 columns) -->
+                        <!-- Task Card 4: Completion Rate -->
                         <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
                             <HBox alignment="CENTER_LEFT" spacing="12">
                                 <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-purple">
