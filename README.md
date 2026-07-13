@@ -190,18 +190,6 @@ Available to Everyone
 
 ---
 
-## 📸 Screenshots
-
-| Login | Dashboard |
-|--------|-----------|
-| *(Add Screenshot)* | *(Add Screenshot)* |
-
-| Notes | Admin Dashboard |
-|--------|-----------------|
-| *(Add Screenshot)* | *(Add Screenshot)* |
-
----
-
 ## 📚 Key Learning Outcomes
 
 - JavaFX Desktop Development
