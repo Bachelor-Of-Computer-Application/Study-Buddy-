@@ -59,6 +59,8 @@ public class EventBus {
     public static class ProfileChangedEvent {}
     public static class AdminChangesEvent {}
     public static class StatisticsChangedEvent {}
+    public static class NotificationsChangedEvent {}
+    public static class ActivityChangedEvent {}
 
     // Requirement 5: Profile refresh after point transactions
     public static class PointsChangedEvent {

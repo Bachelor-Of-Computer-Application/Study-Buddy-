@@ -145,12 +145,22 @@ public class AdminNotificationsController {
             warn("Attachment failed: " + e.getMessage()); return;
         }
 
-        if (notificationService.sendSmartNotification(n)) {
-            clearForm();
-            loadHistory();
-            info("Notification sent successfully.");
-        } else {
-            warn("Failed to send. Check recipient targeting and run database/migration_admin_enhancements.sql.");
+        try {
+            if (notificationService.sendSmartNotification(n)) {
+                clearForm();
+                loadHistory();
+                info("Notification sent successfully.");
+            } else {
+                warn("Failed to send. Recipient list is empty (no matching users found).");
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Notification Error");
+            alert.setHeaderText("Notification could not be sent");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
         }
     }
 

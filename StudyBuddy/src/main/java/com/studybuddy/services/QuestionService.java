@@ -25,8 +25,12 @@ public class QuestionService {
                                   Integer departmentId, Integer semesterId) {
         try {
             int userId = getCurrentUserId();
-            return questionDAO.createQuestion(userId, text, subject, subjectId, points, attachment,
+            boolean ok = questionDAO.createQuestion(userId, text, subject, subjectId, points, attachment,
                     departmentId, semesterId);
+            if (ok) {
+                com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Question Posted", "Question", subject);
+            }
+            return ok;
         } catch (SQLException e) {
             System.err.println("[QuestionService] ❌ Failed to save question: " + e.getMessage());
             e.printStackTrace();
@@ -122,6 +126,7 @@ public class QuestionService {
      * Returns the point balance for the current user.
      * @deprecated Use {@link #getAchievementPoints()} for the achievement points system.
      */
+    @Deprecated
     public int getUserPoints() {
         return getAchievementPoints();
     }
@@ -184,8 +189,11 @@ public class QuestionService {
     public boolean deleteQuestion(int id) throws SQLException {
         Question q = questionDAO.getQuestionById(id);
         boolean deleted = questionDAO.deleteQuestionById(id);
-        if (deleted && q != null && q.getAttachmentPath() != null && !q.getAttachmentPath().isBlank()) {
-            FileStorageService.getInstance().deleteFile(q.getAttachmentPath());
+        if (deleted && q != null) {
+            if (q.getAttachmentPath() != null && !q.getAttachmentPath().isBlank()) {
+                FileStorageService.getInstance().deleteFile(q.getAttachmentPath());
+            }
+            com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Question Deleted", "Question", q.getQuestionText());
         }
         return deleted;
     }
@@ -205,11 +213,15 @@ public class QuestionService {
      */
     public boolean markBestAnswer(int questionId, int answerId) {
         try {
-            return questionDAO.markBestAnswer(questionId, answerId);
+            boolean ok = questionDAO.markBestAnswer(questionId, answerId);
+            if (ok) {
+                com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Best Answer Selected", "Question", "Q#" + questionId);
+            }
+            return ok;
         } catch (SQLException e) {
             System.err.println("[QuestionService] Failed to mark best answer: " + e.getMessage());
             e.printStackTrace();
-            return false;
+            throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }
 
@@ -230,7 +242,7 @@ public class QuestionService {
         } catch (SQLException e) {
             System.err.println("[QuestionService] Failed to approve question: " + e.getMessage());
             e.printStackTrace();
-            return false;
+            throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }
 
@@ -247,7 +259,21 @@ public class QuestionService {
         } catch (SQLException e) {
             System.err.println("[QuestionService] Failed to check question approval: " + e.getMessage());
             e.printStackTrace();
-            return false;
+            throw new RuntimeException("Database error: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean approveAnswer(int answerId) {
+        try {
+            boolean ok = questionDAO.approveAnswer(answerId);
+            if (ok) {
+                com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Answer Approved", "Answer", "Answer#" + answerId);
+            }
+            return ok;
+        } catch (SQLException e) {
+            System.err.println("[QuestionService] Failed to approve answer: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.studybuddy.admin.services;
 import com.studybuddy.admin.dao.ActivityLogDAO;
 import com.studybuddy.models.ActivityLog;
 import com.studybuddy.utils.SessionManager;
+import com.studybuddy.utils.EventBus;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,21 +40,21 @@ public class ActivityLogService {
      * @param targetName specific item name, e.g. "john@example.com"
      */
     public void logAction(String action, String targetType, String targetName) {
-        int adminId = 0;
-        String adminName = "Admin";
+        int actorId = 0;
+        String actorName = "Unknown";
         
         if (SessionManager.getCurrentAdmin() != null) {
-            adminId   = SessionManager.getCurrentAdmin().getId();
-            adminName = SessionManager.getCurrentAdmin().getName();
-            
-            // Debug: Log admin ID before insertion
-            logger.info("[ActivityLog] Admin ID: " + adminId + ", Admin Name: " + adminName);
+            actorId   = SessionManager.getCurrentAdmin().getId();
+            actorName = SessionManager.getCurrentAdmin().getName();
+        } else if (SessionManager.getInstance().getCurrentUser() != null) {
+            actorId   = SessionManager.getInstance().getCurrentUser().getId();
+            actorName = SessionManager.getInstance().getCurrentUser().getName();
         } else {
-            logger.warning("[ActivityLog] SessionManager.getCurrentAdmin() is NULL! Cannot log activity.");
-            return; // Don't insert if no admin is logged in
+            logger.warning("[ActivityLog] No user or admin logged in! Cannot log activity: " + action);
+            return; // Don't insert if no one is logged in
         }
         
-        logAction(adminId, adminName, action, targetType, targetName);
+        logAction(actorId, actorName, action, targetType, targetName);
     }
 
     /**
@@ -71,8 +72,11 @@ public class ActivityLogService {
         boolean success = activityLogDAO.insertLog(log);
         
         if (!success) {
-            logger.severe("[ActivityLog] Failed to insert log. AdminId=" + adminId + 
+            logger.severe("[ActivityLog] Failed to insert log. ActorId=" + adminId + 
                          ", Action=" + action + ", Target=" + targetName);
+        } else {
+            // Publish event on successful insert
+            EventBus.getInstance().publish(new EventBus.ActivityChangedEvent());
         }
     }
 
@@ -80,6 +84,10 @@ public class ActivityLogService {
 
     public List<ActivityLog> getLogs() {
         return activityLogDAO.getAllLogs();
+    }
+
+    public List<ActivityLog> getUserActivity(int userId, int limit) {
+        return activityLogDAO.getLogsByUserId(userId, limit);
     }
 
     public List<ActivityLog> searchLogs(String query) {

@@ -967,6 +967,16 @@ public class AdminDAO {
                     } catch (SQLException ignored) {
                         a.setRewarded(false);
                     }
+                    try {
+                        a.setApproved(rs.getBoolean("is_approved"));
+                    } catch (SQLException ignored) {
+                        a.setApproved(false);
+                    }
+                    try {
+                        a.setStatus(rs.getString("status"));
+                    } catch (SQLException ignored) {
+                        a.setStatus("Pending");
+                    }
                     list.add(a);
                 }
             }
@@ -1272,22 +1282,24 @@ public class AdminDAO {
         StringBuilder sql = new StringBuilder(
             "SELECT rt.transaction_id, rt.question_id, rt.answer_id, rt.from_user_id, rt.to_user_id, " +
             "rt.points, rt.status, rt.created_at, " +
-            "q.question_text, q.title, " +
+            "q.question_text, q.title, q.reward_status, " +
             "fu.name AS from_user_name, tu.name AS to_user_name, " +
-            "a.answer_text " +
+            "a.answer_text, au.name AS admin_name " +
             "FROM RewardTransactions rt " +
             "JOIN Questions q ON rt.question_id = q.question_id " +
             "JOIN Users fu ON rt.from_user_id = fu.id " +
             "JOIN Users tu ON rt.to_user_id = tu.id " +
             "LEFT JOIN Answers a ON rt.answer_id = a.answer_id " +
+            "LEFT JOIN Users au ON rt.approved_by = au.id " +
             "WHERE 1=1 "
         );
 
         List<Object> params = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (q.title LIKE ? OR q.question_text LIKE ? OR fu.name LIKE ? OR tu.name LIKE ?) ");
+            sql.append("AND (q.title LIKE ? OR q.question_text LIKE ? OR fu.name LIKE ? OR tu.name LIKE ? OR au.name LIKE ?) ");
             String like = "%" + search.trim() + "%";
+            params.add(like);
             params.add(like);
             params.add(like);
             params.add(like);
@@ -1328,6 +1340,8 @@ public class AdminDAO {
                     transaction.put("from_user_name", rs.getString("from_user_name"));
                     transaction.put("to_user_name", rs.getString("to_user_name"));
                     transaction.put("answer_text", rs.getString("answer_text"));
+                    transaction.put("reward_status", rs.getString("reward_status"));
+                    transaction.put("admin_name", rs.getString("admin_name"));
                     list.add(transaction);
                 }
             }

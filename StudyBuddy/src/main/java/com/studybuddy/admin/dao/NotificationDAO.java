@@ -10,12 +10,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+
 /**
  * DAO for Notifications with smart recipient targeting.
  */
 public class NotificationDAO {
 
-    private static final Logger logger = Logger.getLogger(NotificationDAO.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(NotificationDAO.class.getName());
     private static NotificationDAO instance;
 
     private NotificationDAO() {}
@@ -59,7 +60,7 @@ public class NotificationDAO {
                     addIds(ids, conn, "SELECT id FROM Users WHERE status = 'Active' OR status IS NULL");
             }
         } catch (SQLException e) {
-            logger.warning("resolveUserIds failed: " + e.getMessage());
+            LOGGER.warning("resolveUserIds failed: " + e.getMessage());
         }
         return new ArrayList<>(ids);
     }
@@ -130,7 +131,7 @@ public class NotificationDAO {
         }
     }
 
-    public boolean sendNotification(Notification n) {
+    public boolean sendNotification(Notification n) throws SQLException {
         List<Integer> userIds = resolveUserIds(n);
         if (userIds.isEmpty()) return false;
 
@@ -143,6 +144,33 @@ public class NotificationDAO {
             conn.setAutoCommit(false);
             try {
                 for (int userId : userIds) {
+                    int recipientId = userId;
+                    int senderId = n.getSentBy();
+                    String title = n.getTitle();
+                    String message = n.getMessage();
+
+
+                    if (recipientId <= 0) {
+                        String errMsg = "Invalid Notification: recipientId (" + recipientId + ") must be > 0";
+                        LOGGER.warning(errMsg);
+                        throw new SQLException(errMsg);
+                    }
+                    if (senderId <= 0) {
+                        String errMsg = "Invalid Notification: senderId (" + senderId + ") must be > 0";
+                        LOGGER.warning(errMsg);
+                        throw new SQLException(errMsg);
+                    }
+                    if (title == null) {
+                        String errMsg = "Invalid Notification: title is null";
+                        LOGGER.warning(errMsg);
+                        throw new SQLException(errMsg);
+                    }
+                    if (message == null) {
+                        String errMsg = "Invalid Notification: message is null";
+                        LOGGER.warning(errMsg);
+                        throw new SQLException(errMsg);
+                    }
+
                     ps.setInt(1, userId);
                     ps.setString(2, n.getTitle());
                     ps.setString(3, n.getMessage());
@@ -163,6 +191,12 @@ public class NotificationDAO {
                 }
                 ps.executeBatch();
                 conn.commit();
+
+                LOGGER.info("Notification delivered successfully.");
+
+                // Requirement 7: Publish event after successful insert
+                com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.NotificationsChangedEvent());
+
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
@@ -170,9 +204,6 @@ public class NotificationDAO {
             } finally {
                 conn.setAutoCommit(true);
             }
-        } catch (SQLException e) {
-            logger.warning("Failed to send notification: " + e.getMessage());
-            return false;
         }
     }
 
@@ -183,7 +214,7 @@ public class NotificationDAO {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            logger.warning("Failed to delete notification: " + e.getMessage());
+            LOGGER.warning("Failed to delete notification: " + e.getMessage());
             return false;
         }
     }
@@ -195,7 +226,7 @@ public class NotificationDAO {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            logger.warning("Failed to mark notification as read: " + e.getMessage());
+            LOGGER.warning("Failed to mark notification as read: " + e.getMessage());
             return false;
         }
     }
@@ -207,7 +238,7 @@ public class NotificationDAO {
             ps.setInt(1, userId);
             return ps.executeUpdate() >= 0;
         } catch (SQLException e) {
-            logger.warning("Failed to mark all read: " + e.getMessage());
+            LOGGER.warning("Failed to mark all read: " + e.getMessage());
             return false;
         }
     }
@@ -231,7 +262,7 @@ public class NotificationDAO {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) {
-            logger.warning("Failed to fetch notifications: " + e.getMessage());
+            LOGGER.warning("Failed to fetch notifications: " + e.getMessage());
         }
         return list;
     }
@@ -243,7 +274,7 @@ public class NotificationDAO {
              ResultSet rs = ps.executeQuery()) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) {
-            logger.warning("Failed to count unread: " + e.getMessage());
+            LOGGER.warning("Failed to count unread: " + e.getMessage());
         }
         return 0;
     }
@@ -259,7 +290,7 @@ public class NotificationDAO {
                 while (rs.next()) list.add(mapRow(rs));
             }
         } catch (SQLException e) {
-            logger.warning("Failed to fetch user notifications: " + e.getMessage());
+            LOGGER.warning("Failed to fetch user notifications: " + e.getMessage());
         }
         return list;
     }
@@ -274,7 +305,7 @@ public class NotificationDAO {
                 if (rs.next()) return rs.getInt(1);
             }
         } catch (SQLException e) {
-            logger.warning("Failed to count user unread: " + e.getMessage());
+            LOGGER.warning("Failed to count user unread: " + e.getMessage());
         }
         return 0;
     }
@@ -310,7 +341,7 @@ public class NotificationDAO {
                 while (rs.next()) list.add(mapRow(rs));
             }
         } catch (SQLException e) {
-            logger.warning("searchNotificationsForUser failed: " + e.getMessage());
+            LOGGER.warning("searchNotificationsForUser failed: " + e.getMessage());
         }
         return list;
     }

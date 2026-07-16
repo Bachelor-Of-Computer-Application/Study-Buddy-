@@ -52,6 +52,7 @@ public class AuthService {
         // Add default tasks for the new user
         taskDAO.addDefaultTasks(userId);
 
+        com.studybuddy.admin.services.ActivityLogService.getInstance().logAction(userId, name, "Student Registered", "Session", email);
         return true;
     }
 
@@ -71,6 +72,10 @@ public class AuthService {
     }
 
     public static void logout() {
+        User u = session.getCurrentUser();
+        if (u != null) {
+            com.studybuddy.admin.services.ActivityLogService.getInstance().logAction(u.getId(), u.getName(), "Student Logout", "Session", u.getEmail());
+        }
         session.logout();
     }
 

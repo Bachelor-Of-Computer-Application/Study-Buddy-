@@ -60,6 +60,9 @@
                 <Label fx:id="joinedDateLabel" styleClass="meta-item" text="📅 Joined: —" />
                 <Label fx:id="userRoleLabel" styleClass="meta-item" text="🎓 Role: Student" />
             </VBox>
+
+            <!-- Notifications Button -->
+            <Button fx:id="btnNotifications" alignment="CENTER" maxWidth="Infinity" onAction="#handleShowNotifications" styleClass="secondary-btn" text="🔔 Notifications" />
         </VBox>
     </left>
 
@@ -302,7 +305,10 @@
                     <VBox spacing="16" styleClass="tab-content">
                         <padding><Insets bottom="24" left="28" right="28" top="24" /></padding>
                         <Label styleClass="section-header" text="Recent Activities" />
-                        <ListView fx:id="activityListView" prefHeight="350" styleClass="activity-list" />
+                        <!-- Hidden ListView kept for backward-compat bindings, not shown -->
+                        <ListView fx:id="activityListView" prefHeight="0" maxHeight="0" managed="false" visible="false" />
+                        <!-- Modern vertical timeline populated programmatically -->
+                        <VBox fx:id="activityTimelineContainer" spacing="0" />
                     </VBox>
                 </ScrollPane>
             </Tab>

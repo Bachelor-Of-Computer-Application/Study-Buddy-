@@ -85,6 +85,7 @@ public class NoteService {
     public void createNote(Note note, boolean autoApprove) throws SQLException {
         noteDAO.createNote(note, autoApprove);
         EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+        com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Note Uploaded", "Note", note.getTitle());
     }
 
     public int createNoteWithFile(Note note, File file, boolean autoApprove) throws SQLException, IOException {
@@ -103,6 +104,7 @@ public class NoteService {
         }
         noteDAO.createNote(note, autoApprove);
         EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+        com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Note Uploaded", "Note", note.getTitle());
         return note.getId();
     }
 
@@ -120,6 +122,7 @@ public class NoteService {
         AuthorizationService.getInstance().requireOwnership(user, note.getUserId());
         FileStorageService.getInstance().deleteFile(note.getFilePath());
         noteDAO.hardDeleteNote(id);
+        com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Note Deleted", "Note", note.getTitle());
         return true;
     }
 

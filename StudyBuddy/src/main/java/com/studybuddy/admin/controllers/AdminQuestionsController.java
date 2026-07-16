@@ -850,14 +850,23 @@ public class AdminQuestionsController {
                     
                     btnReward.setOnAction(e -> {
                         Question q = getTableView().getItems().get(getIndex());
-                        // Temporarily select item to load answers table so handleMarkBestAnswer knows which answer to mark if they select one there
-                        getTableView().getSelectionModel().select(getIndex());
-                        // But we want to reward the best answer. Since table view row itself doesn't contain a specific answer, 
-                        // let's open details dialog or directly prompt for best answer.
-                        // Actually, since the row only has the question, rewarding a best answer requires selecting which answer.
-                        // So the most logical flow is: opening details window so they can select the best answer card.
-                        // Let's make btnReward open the details window where they can click "Select as Best Answer" on the specific answer card.
-                        openQuestionDetailsDialog(q);
+                        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Are you sure you want to reward the best answer for this question with " + q.getRewardPoints() + " points?",
+                            ButtonType.YES, ButtonType.NO);
+                        alert.setHeaderText("Confirm Reward Payment");
+                        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+                            try {
+                                boolean success = questionService.markBestAnswer(q.getId(), q.getBestAnswerId());
+                                if (success) {
+                                    info("Reward successfully transferred!");
+                                    loadData();
+                                } else {
+                                    warn("Failed to transfer reward. Question may already be rewarded.");
+                                }
+                            } catch (Exception ex) {
+                                warn("Error transferring reward: " + ex.getMessage());
+                            }
+                        }
                     });
                 }
 
@@ -868,13 +877,12 @@ public class AdminQuestionsController {
                         setGraphic(null);
                     } else {
                         Question q = getTableView().getItems().get(getIndex());
-                        btnReward.setVisible(q.isApproved());
-                        btnReward.setManaged(q.isApproved());
+                        boolean bestAnswerExists = q.getBestAnswerId() > 0;
+                        boolean isPending = "PENDING".equalsIgnoreCase(q.getRewardStatus());
                         
-                        boolean hasAnswers = q.getAnswers() != null && !q.getAnswers().isEmpty();
-                        boolean rewardTransferred = "TRANSFERRED".equalsIgnoreCase(q.getRewardStatus());
-                        boolean disabled = !q.isApproved() || !hasAnswers || rewardTransferred;
-                        btnReward.setDisable(disabled);
+                        btnReward.setVisible(bestAnswerExists);
+                        btnReward.setManaged(bestAnswerExists);
+                        btnReward.setDisable(!isPending);
 
                         setGraphic(container);
                     }

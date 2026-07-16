@@ -24,6 +24,7 @@ import java.util.List;
  * mapQuestion() / mapAnswer() methods work without changes.
  */
 public class QuestionDAO {
+    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(QuestionDAO.class.getName());
 
     // =========================
     // CREATE QUESTION
@@ -55,7 +56,7 @@ public class QuestionDAO {
                                   Integer departmentId, Integer semesterId) throws SQLException {
         String sql = "INSERT INTO Questions " +
                 "(user_id, subject, subjectId, departmentId, semesterId, question_text, attachment_path, reward_points, reward_status, approved, created_at, votes, views, is_locked) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, GETDATE(), 0, 0, 0)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 0, GETDATE(), 0, 0, 0)";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
@@ -149,8 +150,11 @@ public class QuestionDAO {
                             questionAuthor = rs.getInt("user_id");
                             rewardPoints = rs.getInt("reward_points");
                             String rewardStatus = rs.getString("reward_status");
-                            // Prevent double-rewarding
-                            if ("TRANSFERRED".equals(rewardStatus)) {
+                            // Prevent double-rewarding — check all terminal states case-insensitively
+                            if (rewardStatus != null && (
+                                    "REWARDED".equalsIgnoreCase(rewardStatus) ||
+                                    "TRANSFERRED".equalsIgnoreCase(rewardStatus) ||
+                                    "ACCEPTED".equalsIgnoreCase(rewardStatus))) {
                                 return false;
                             }
                         } else {
@@ -162,11 +166,6 @@ public class QuestionDAO {
                 // Validate the requesting user is the question author
                 if (questionAuthor != questionAuthorId) {
                     return false;
-                }
-
-                // Get zero reward check
-                if (rewardPoints <= 0) {
-                    // Still mark as best answer even with 0 points
                 }
 
                 // Step 2: Get answer details
@@ -199,7 +198,7 @@ public class QuestionDAO {
 
                 // Step 3: If there are points to transfer, deduct from author and add to answerer
                 if (rewardPoints > 0) {
-                    // Deduct from question author
+                    // Deduct from question author (escrowed at question post time)
                     String deductSql = "UPDATE Users SET achievement_points = achievement_points - ? WHERE id = ? AND achievement_points >= ?";
                     try (PreparedStatement ps = conn.prepareStatement(deductSql)) {
                         ps.setInt(1, rewardPoints);
@@ -207,13 +206,12 @@ public class QuestionDAO {
                         ps.setInt(3, rewardPoints);
                         int updated = ps.executeUpdate();
                         if (updated == 0) {
-                            // User doesn't have enough points
                             conn.rollback();
                             return false;
                         }
                     }
 
-                    // Add to answer author
+                    // Credit to answer author
                     String addSql = "UPDATE Users SET achievement_points = achievement_points + ? WHERE id = ?";
                     try (PreparedStatement ps = conn.prepareStatement(addSql)) {
                         ps.setInt(1, rewardPoints);
@@ -229,36 +227,51 @@ public class QuestionDAO {
                     ps.executeUpdate();
                 }
 
-                // Step 5: Update question with best_answer_id and reward_status
-                String updateQuestionSql = "UPDATE Questions SET best_answer_id = ?, reward_status = ? WHERE question_id = ?";
+                // Step 5: Update question — set best_answer_id and standardised reward_status
+                String updateQuestionSql = "UPDATE Questions SET best_answer_id = ?, reward_status = 'REWARDED' WHERE question_id = ?";
                 try (PreparedStatement ps = conn.prepareStatement(updateQuestionSql)) {
                     ps.setInt(1, answerId);
-                    ps.setString(2, rewardPoints > 0 ? "TRANSFERRED" : "ACCEPTED");
-                    ps.setInt(3, questionId);
+                    ps.setInt(2, questionId);
                     ps.executeUpdate();
                 }
 
-                // Step 6: Record the transaction in RewardTransactions table
-                String insertTransactionSql = "INSERT INTO RewardTransactions (question_id, answer_id, from_user_id, to_user_id, points, status, created_at) " +
-                                               "VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
-                try (PreparedStatement ps = conn.prepareStatement(insertTransactionSql)) {
-                    ps.setInt(1, questionId);
-                    ps.setInt(2, answerId);
-                    ps.setInt(3, questionAuthorId);
-                    ps.setInt(4, answerAuthorId);
-                    ps.setInt(5, rewardPoints);
-                    ps.setString(6, rewardPoints > 0 ? "COMPLETED" : "ACCEPTED");
-                    ps.executeUpdate();
+                // Step 6: Record the transaction in RewardTransactions table (guarded — table may not exist in all environments)
+                try {
+                    String insertTransactionSql = "INSERT INTO RewardTransactions (question_id, answer_id, from_user_id, to_user_id, points, status, created_at) " +
+                                                   "VALUES (?, ?, ?, ?, ?, 'COMPLETED', GETDATE())";
+                    try (PreparedStatement ps = conn.prepareStatement(insertTransactionSql)) {
+                        ps.setInt(1, questionId);
+                        ps.setInt(2, answerId);
+                        ps.setInt(3, questionAuthorId);
+                        ps.setInt(4, answerAuthorId);
+                        ps.setInt(5, rewardPoints);
+                        ps.executeUpdate();
+                    }
+                } catch (SQLException ignored) {
+                    // RewardTransactions table is optional; proceed without it
+                }
+
+                // Step 7: Log activity inside the transaction
+                try {
+                    String activitySql = "INSERT INTO UserActivities (user_id, user_full_name, action, target_type, target_name, created_at) " +
+                                         "VALUES (?, 'Admin', 'Best Answer Rewarded', 'Question', ?, GETDATE())";
+                    try (PreparedStatement ps = conn.prepareStatement(activitySql)) {
+                        ps.setInt(1, questionAuthorId);
+                        ps.setString(2, "Question #" + questionId + " — Answer #" + answerId);
+                        ps.executeUpdate();
+                    }
+                } catch (SQLException ignored) {
+                    // Activity log is best-effort; proceed without it
                 }
 
                 conn.commit();
-                
-                // Publish events for real-time UI updates
-                EventBus.getInstance().publish(new EventBus.PointsChangedEvent(answerAuthorId, 
-                    rewardPoints > 0 ? rewardPoints : 0));
+
+                // Publish events after successful commit
+                EventBus.getInstance().publish(new EventBus.PointsChangedEvent(answerAuthorId,
+                        rewardPoints > 0 ? rewardPoints : 0));
                 EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
                 EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
-                
+
                 return true;
 
             } catch (SQLException e) {
@@ -986,6 +999,44 @@ public class QuestionDAO {
         }
     }
 
+    public boolean approveAnswer(int answerId) throws SQLException {
+        String sql = "UPDATE Answers SET is_approved = 1, status = 'Approved' WHERE answer_id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = DatabaseConnection.getConnection();
+            conn.setAutoCommit(false);
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, answerId);
+            boolean success = stmt.executeUpdate() > 0;
+            conn.commit();
+            if (success) {
+                LOGGER.info("Answer approved successfully.");
+                EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
+            }
+            return success;
+        } catch (SQLException e) {
+            LOGGER.log(java.util.logging.Level.SEVERE, "SQLException: " + e.getMessage(), e);
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    LOGGER.info("Rollback completed");
+                } catch (SQLException ex) {
+                    LOGGER.log(java.util.logging.Level.SEVERE, "Rollback failed: " + ex.getMessage(), ex);
+                }
+            }
+            throw e;
+        } finally {
+            if (stmt != null) {
+                try { stmt.close(); } catch (SQLException ignored) {}
+            }
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
+                try { conn.close(); } catch (SQLException ignored) {}
+            }
+        }
+    }
+
     public boolean deleteQuestionById(int id) throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -1219,11 +1270,13 @@ public class QuestionDAO {
             conn.setAutoCommit(false);
 
             try {
-                // Step 1: Load question reward state
+                // Step 1: Load question reward state and title info
                 int questionAuthorId = -1;
                 int rewardPoints = 0;
                 String rewardStatus = "NONE";
-                String questionSql = "SELECT user_id, reward_points, reward_status FROM Questions WHERE question_id = ?";
+                String questionTitle = "";
+                String questionText = "";
+                String questionSql = "SELECT user_id, reward_points, reward_status, title, question_text FROM Questions WHERE question_id = ?";
                 try (PreparedStatement ps = conn.prepareStatement(questionSql)) {
                     ps.setInt(1, questionId);
                     try (ResultSet rs = ps.executeQuery()) {
@@ -1231,19 +1284,26 @@ public class QuestionDAO {
                             questionAuthorId = rs.getInt("user_id");
                             rewardPoints = rs.getInt("reward_points");
                             rewardStatus = rs.getString("reward_status");
+                            questionTitle = rs.getString("title");
+                            questionText = rs.getString("question_text");
                         } else {
                             return false;
                         }
                     }
                 }
 
-                if ("TRANSFERRED".equalsIgnoreCase(rewardStatus)) {
+                // Prevent double-rewarding — check all terminal states
+                if (rewardStatus != null && (
+                        "REWARDED".equalsIgnoreCase(rewardStatus) ||
+                        "TRANSFERRED".equalsIgnoreCase(rewardStatus) ||
+                        "ACCEPTED".equalsIgnoreCase(rewardStatus))) {
                     return false;
                 }
 
                 // Step 2: Validate answer belongs to question and is not already rewarded
                 int answerAuthorId = -1;
-                String answerSql = "SELECT user_id, is_rewarded FROM Answers WHERE answer_id = ? AND question_id = ?";
+                String answerAuthorName = "Student";
+                String answerSql = "SELECT user_id, is_rewarded, author_name FROM Answers WHERE answer_id = ? AND question_id = ?";
                 try (PreparedStatement ps = conn.prepareStatement(answerSql)) {
                     ps.setInt(1, answerId);
                     ps.setInt(2, questionId);
@@ -1253,6 +1313,7 @@ public class QuestionDAO {
                                 return false;
                             }
                             answerAuthorId = rs.getInt("user_id");
+                            answerAuthorName = rs.getString("author_name");
                         } else {
                             return false;
                         }
@@ -1288,25 +1349,116 @@ public class QuestionDAO {
                     ps.executeUpdate();
                 }
 
-                String updateQuestionSql = "UPDATE Questions SET best_answer_id = ?, reward_status = ? WHERE question_id = ?";
+                String updateQuestionSql = "UPDATE Questions SET best_answer_id = ?, reward_status = 'REWARDED' WHERE question_id = ?";
                 try (PreparedStatement ps = conn.prepareStatement(updateQuestionSql)) {
                     ps.setInt(1, answerId);
-                    ps.setString(2, rewardPoints > 0 ? "TRANSFERRED" : "ACCEPTED");
-                    ps.setInt(3, questionId);
+                    ps.setInt(2, questionId);
                     ps.executeUpdate();
+                }
+
+                // Resolve Admin Info
+                int adminIdVal = 1;
+                String adminNameVal = "Admin";
+                com.studybuddy.models.User currentAdmin = com.studybuddy.utils.SessionManager.getCurrentAdmin();
+                if (currentAdmin != null) {
+                    adminIdVal = currentAdmin.getId();
+                    adminNameVal = currentAdmin.getName();
+                }
+
+                // Step 5: Record the transaction in RewardTransactions table
+                String insertTransactionSql = "INSERT INTO RewardTransactions (question_id, answer_id, from_user_id, to_user_id, points, status, approved_by, created_at) " +
+                                               "VALUES (?, ?, ?, ?, ?, 'COMPLETED', ?, GETDATE())";
+                try (PreparedStatement ps = conn.prepareStatement(insertTransactionSql)) {
+                    ps.setInt(1, questionId);
+                    ps.setInt(2, answerId);
+                    ps.setInt(3, questionAuthorId);
+                    ps.setInt(4, answerAuthorId);
+                    ps.setInt(5, rewardPoints);
+                    ps.setInt(6, adminIdVal);
+                    ps.executeUpdate();
+                }
+
+                // Step 6: Create & Insert Student Notification
+                String displayTitle = questionTitle != null && !questionTitle.isBlank() ? questionTitle : questionText;
+                if (displayTitle != null && displayTitle.length() > 60) {
+                    displayTitle = displayTitle.substring(0, 57) + "...";
+                }
+                String notifMsg = "Your answer has been selected as the Best Answer.\n" +
+                                  "You have earned " + rewardPoints + " Achievement Points.\n" +
+                                  "Question:\n\"" + displayTitle + "\"\n" +
+                                  "Rewarded by Admin.";
+                String notifSql = "INSERT INTO Notifications (userId, title, message, type, notificationType, priority, isRead, isArchived, sentBy, created_at) " +
+                                  "VALUES (?, ?, ?, 'REWARD', 'Achievement', 'HIGH', 0, 0, ?, GETDATE())";
+
+                int recipientId = answerAuthorId;
+                int senderId = adminIdVal;
+                String title = "🏆 Congratulations!";
+                String message = notifMsg;
+
+                if (recipientId <= 0) {
+                    String errMsg = "Invalid Notification: recipientId (" + recipientId + ") must be > 0";
+                    LOGGER.warning(errMsg);
+                    throw new SQLException(errMsg);
+                }
+                if (senderId <= 0) {
+                    String errMsg = "Invalid Notification: senderId (" + senderId + ") must be > 0";
+                    LOGGER.warning(errMsg);
+                    throw new SQLException(errMsg);
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(notifSql)) {
+                    ps.setInt(1, recipientId);
+                    ps.setString(2, title);
+                    ps.setString(3, message);
+                    ps.setInt(4, senderId);
+                    ps.executeUpdate();
+                }
+
+                // Step 7: Create & Insert Admin Activity Log
+                String actionText = "Admin \"" + adminNameVal + "\" rewarded Student \"" + answerAuthorName + "\" with " + rewardPoints + " Achievement Points for Best Answer. Question: \"" + (questionTitle != null && !questionTitle.isEmpty() ? questionTitle : "Question #" + questionId) + "\"";
+                String logSql = "INSERT INTO ActivityLogs (admin_id, admin_name, action, target_type, target_name, status, remarks, created_at) " +
+                                "VALUES (?, ?, ?, 'Question', ?, 'SUCCESS', ?, GETDATE())";
+                try (PreparedStatement psLog = conn.prepareStatement(logSql)) {
+                    psLog.setInt(1, adminIdVal);
+                    psLog.setString(2, adminNameVal);
+                    psLog.setString(3, actionText);
+                    psLog.setString(4, questionTitle != null && !questionTitle.isEmpty() ? questionTitle : "Question #" + questionId);
+                    psLog.setString(5, "Best Answer reward transaction completed successfully.");
+                    psLog.executeUpdate();
+                }
+
+                // Step 8: Log to UserActivities as well for student audit
+                String activitySql = "INSERT INTO UserActivities (user_id, user_full_name, action, target_type, target_name, created_at) " +
+                                     "VALUES (?, 'Admin', 'Best Answer Rewarded', 'Question', ?, GETDATE())";
+                try (PreparedStatement psActivity = conn.prepareStatement(activitySql)) {
+                    psActivity.setInt(1, answerAuthorId);
+                    psActivity.setString(2, "Question #" + questionId + " — Answer #" + answerId);
+                    psActivity.executeUpdate();
                 }
 
                 conn.commit();
 
+                LOGGER.info("Reward transaction completed successfully.");
+
+                // Publish events
                 if (rewardPoints > 0) {
                     com.studybuddy.utils.EventBus.getInstance()
                         .publish(new com.studybuddy.utils.EventBus.PointsChangedEvent(answerAuthorId, answerAuthorNewBalance));
                 }
+                com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.QuestionsChangedEvent());
+                com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.StatisticsChangedEvent());
+                com.studybuddy.utils.EventBus.getInstance().publish(new com.studybuddy.utils.EventBus.NotificationsChangedEvent());
 
                 return true;
 
             } catch (SQLException e) {
-                conn.rollback();
+                LOGGER.log(java.util.logging.Level.SEVERE, "SQLException: " + e.getMessage(), e);
+                try {
+                    conn.rollback();
+                    LOGGER.info("Rollback completed");
+                } catch (SQLException rollbackEx) {
+                    LOGGER.log(java.util.logging.Level.SEVERE, "Rollback failed: " + rollbackEx.getMessage(), rollbackEx);
+                }
                 throw e;
             } finally {
                 conn.setAutoCommit(true);

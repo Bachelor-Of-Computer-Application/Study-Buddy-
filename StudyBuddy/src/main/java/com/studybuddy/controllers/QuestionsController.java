@@ -564,6 +564,7 @@ public class QuestionsController {
             reloadAnswersFromDb(selectedQuestion);
             
             EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+            com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Answer Posted", "Answer", "Q#" + selectedQuestion.getId());
 
             Alert success = new Alert(Alert.AlertType.INFORMATION,
                     "Your answer has been posted successfully.");
@@ -684,6 +685,8 @@ public class QuestionsController {
                         successAlert.setTitle("Success");
                         successAlert.setHeaderText(null);
                         successAlert.showAndWait();
+
+                        com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Best Answer Selected", "Question", "Q#" + selectedQuestion.getId());
 
                         // Refresh
                         reloadAnswersFromDb(selectedQuestion);

@@ -110,6 +110,20 @@ public class HomeController {
 
         EventBus.getInstance().subscribe(EventBus.TasksChangedEvent.class, (_event) -> loadDashboardStats());
         EventBus.getInstance().subscribe(EventBus.StatisticsChangedEvent.class, (_event) -> loadDashboardStats());
+        
+        // Requirement 5: Refresh achievement_points when points change
+        EventBus.getInstance().subscribe(EventBus.PointsChangedEvent.class, (event) -> {
+            if (currentUser != null && event.getUserId() == currentUser.getId()) {
+                currentUser = App.getCurrentUser();
+            }
+        });
+
+        refreshNotificationCount();
+
+        EventBus.getInstance().subscribe(EventBus.NotificationsChangedEvent.class, (event) -> {
+            javafx.application.Platform.runLater(this::refreshNotificationCount);
+        });
+        
         EventBus.getInstance().subscribe(EventBus.ProfileChangedEvent.class, (_event) -> {
             currentUser = App.getCurrentUser();
             refreshSidebarAvatar();
@@ -340,6 +354,28 @@ public class HomeController {
         }
     }
 
+    private void refreshNotificationCount() {
+        if (currentUser == null) return;
+        try {
+            int unread = com.studybuddy.admin.services.NotificationService.getInstance().getUnreadCountByUserId(currentUser.getId());
+            if (profileNavBtn != null && profileNavBtn.getGraphic() instanceof HBox) {
+                HBox hbox = (HBox) profileNavBtn.getGraphic();
+                for (javafx.scene.Node child : hbox.getChildren()) {
+                    if (child instanceof javafx.scene.text.Text) {
+                        javafx.scene.text.Text textNode = (javafx.scene.text.Text) child;
+                        if (unread > 0) {
+                            textNode.setText("Profile (" + unread + ")");
+                        } else {
+                            textNode.setText("Profile");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void showNotificationsDialog() {
         if (currentUser == null) return;
         
@@ -370,8 +406,19 @@ public class HomeController {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    String prefix = item.isRead() ? "✓ " : "🔔 ";
-                    setText(prefix + item.getTitle() + "\n" + item.getMessage());
+                    String icon = "🔔";
+                    if ("REWARD".equalsIgnoreCase(item.getRecipientType()) || "REWARD".equalsIgnoreCase(item.getNotificationType())) {
+                        icon = "🏆";
+                    } else if ("HIGH".equalsIgnoreCase(item.getPriority()) || "URGENT".equalsIgnoreCase(item.getPriority())) {
+                        icon = "🚨";
+                    }
+                    String dateStr = "N/A";
+                    String timeStr = "N/A";
+                    if (item.getSentAt() != null) {
+                        dateStr = item.getSentAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                        timeStr = item.getSentAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                    }
+                    setText(icon + " " + item.getTitle() + " (" + dateStr + " " + timeStr + ")" + "\n" + item.getMessage());
                     if (item.isRead()) {
                         getStyleClass().setAll("hint-text");
                     } else {
@@ -381,15 +428,29 @@ public class HomeController {
             }
         });
         
-        Runnable refreshList = () -> {
+        Runnable updateUIOnly = () -> {
             List<Notification> list = NotificationService.getInstance().getNotificationsByUserId(currentUser.getId());
             listView.setItems(FXCollections.observableArrayList(list));
             long count = list.stream().filter(n -> !n.isRead()).count();
             unreadLabel.setText("Unread Count: " + count);
         };
-        
+
+        Runnable refreshList = () -> {
+            updateUIOnly.run();
+            EventBus.getInstance().publish(new EventBus.NotificationsChangedEvent());
+        };
+
         refreshList.run();
-        
+
+        // Subscribe Dialog to events to keep in sync in real-time
+        EventBus.EventListener<EventBus.NotificationsChangedEvent> dialogListener = event -> {
+            javafx.application.Platform.runLater(updateUIOnly);
+        };
+        EventBus.getInstance().subscribe(EventBus.NotificationsChangedEvent.class, dialogListener);
+        dialog.setOnHidden(e -> {
+            EventBus.getInstance().unsubscribe(EventBus.NotificationsChangedEvent.class, dialogListener);
+        });
+
         Button markReadBtn = new Button("✓ Mark as Read");
         markReadBtn.getStyleClass().add("btn-primary");
         markReadBtn.setOnAction(e -> {
@@ -399,7 +460,14 @@ public class HomeController {
                 refreshList.run();
             }
         });
-        
+
+        Button markAllReadBtn = new Button("✓ Mark All Read");
+        markAllReadBtn.getStyleClass().add("btn-success");
+        markAllReadBtn.setOnAction(e -> {
+            NotificationService.getInstance().markAllReadForUser(currentUser.getId());
+            refreshList.run();
+        });
+
         Button deleteBtn = new Button("🗑 Delete");
         deleteBtn.getStyleClass().add("btn-danger");
         deleteBtn.setOnAction(e -> {
@@ -409,15 +477,15 @@ public class HomeController {
                 refreshList.run();
             }
         });
-        
+
         Button closeBtn = new Button("Close");
         closeBtn.getStyleClass().add("btn-secondary");
         closeBtn.setOnAction(e -> dialog.close());
         
-        HBox actions = new HBox(10, markReadBtn, deleteBtn, closeBtn);
+        HBox actions = new HBox(10, markReadBtn, markAllReadBtn, deleteBtn, closeBtn);
         layout.getChildren().addAll(headerLabel, unreadLabel, listView, actions);
         
-        dialog.setScene(new Scene(layout, 400, 380));
+        dialog.setScene(new Scene(layout, 550, 380));
         dialog.show();
     }
 

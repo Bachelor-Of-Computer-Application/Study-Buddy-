@@ -131,6 +131,7 @@ public class ResourceService {
         resource.setActive(autoApprove);
         int id = resourceDAO.createResource(resource, autoApprove);
         EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
+        com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Resource Uploaded", "Resource", resource.getTitle());
         return id;
     }
 
@@ -144,6 +145,7 @@ public class ResourceService {
         AuthorizationService.getInstance().requireOwnership(user, r.getUploadedBy());
         resourceDAO.hardDeleteResource(id);
         FileStorageService.getInstance().deleteFile(r.getFilePath());
+        com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Resource Deleted", "Resource", r.getTitle());
         return true;
     }
 

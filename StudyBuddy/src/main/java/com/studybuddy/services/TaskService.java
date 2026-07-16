@@ -60,7 +60,11 @@ public class TaskService {
      * SQL: INSERT INTO Tasks (userId, title, description, status) VALUES (?, ?, ?, ?)
      */
     public boolean addTask(Task task) {
-        return taskDAO.createTask(task);
+        boolean ok = taskDAO.createTask(task);
+        if (ok) {
+            com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Task Created", "Task", task.getTitle());
+        }
+        return ok;
     }
 
     // =========================
@@ -72,11 +76,20 @@ public class TaskService {
      */
     public boolean updateTask(Task task) {
         boolean isCompleting = "completed".equalsIgnoreCase(task.getStatus());
+        boolean ok;
         if (isCompleting && !task.isRewarded()) {
             int points = getPointsForPriority(task.getPriority());
-            return taskDAO.updateTaskWithReward(task, points);
+            ok = taskDAO.updateTaskWithReward(task, points);
+            if (ok) {
+                com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Task Completed", "Task", task.getTitle());
+            }
+        } else {
+            ok = taskDAO.updateTask(task);
+            if (ok) {
+                com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Task Updated", "Task", task.getTitle());
+            }
         }
-        return taskDAO.updateTask(task);
+        return ok;
     }
 
     /**
@@ -104,7 +117,11 @@ public class TaskService {
      * Deletes a task by its ID.
      */
     public boolean deleteTask(int taskId) {
-        return taskDAO.deleteTask(taskId);
+        boolean ok = taskDAO.deleteTask(taskId);
+        if (ok) {
+            com.studybuddy.admin.services.ActivityLogService.getInstance().logAction("Task Deleted", "Task", "Task#" + taskId);
+        }
+        return ok;
     }
 
     // =========================

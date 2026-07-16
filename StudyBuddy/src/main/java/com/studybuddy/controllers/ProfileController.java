@@ -5,7 +5,7 @@ import com.studybuddy.models.Achievement;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.User;
-import com.studybuddy.models.UserActivity;
+
 import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.AchievementService;
 import com.studybuddy.services.StatisticsService;
@@ -23,12 +23,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+
 import java.util.List;
 import javafx.scene.control.TextFormatter;
 
@@ -46,6 +47,7 @@ public class ProfileController {
     @FXML private Label pointsBadgeLabel;
     @FXML private Label joinedDateLabel;
     @FXML private Label userRoleLabel;
+    @FXML private Button btnNotifications;
 
     // Overview Tab
     @FXML private Label ovFullName;
@@ -97,6 +99,7 @@ public class ProfileController {
 
     // Activity Tab
     @FXML private ListView<String> activityListView;
+    @FXML private VBox activityTimelineContainer;
     
     // Achievements & Badges Tabs
     @FXML private VBox achievementsContainer;
@@ -105,10 +108,11 @@ public class ProfileController {
     private final UserService userService = new UserService();
     private final StatisticsService statsService = new StatisticsService();
     private final AcademicService academicService = AcademicService.getInstance();
-    private final com.studybuddy.dao.UserActivityDAO activityDAO = new com.studybuddy.dao.UserActivityDAO();
+
     private final com.studybuddy.services.TaskService taskService = new com.studybuddy.services.TaskService();
     private final AchievementService achievementService = AchievementService.getInstance();
     private final ImageLoader imageLoader = ImageLoader.getInstance();
+    private final com.studybuddy.admin.services.ActivityLogService activityLogService = com.studybuddy.admin.services.ActivityLogService.getInstance();
     private User currentUser;
     private static final double PROFILE_AVATAR_SIZE = 100;
 
@@ -268,6 +272,17 @@ public class ProfileController {
                 loadProfileData();
             }
         });
+
+        // Auto-refresh Activity Timeline when any activity is logged
+        EventBus.getInstance().subscribe(EventBus.ActivityChangedEvent.class, (_event) -> {
+            javafx.application.Platform.runLater(this::loadActivityLog);
+        });
+
+        refreshNotificationBadge();
+
+        EventBus.getInstance().subscribe(EventBus.NotificationsChangedEvent.class, (event) -> {
+            javafx.application.Platform.runLater(this::refreshNotificationBadge);
+        });
     }
 
     private void setupAvatarInteractions() {
@@ -420,6 +435,129 @@ public class ProfileController {
         loadAchievements();
         loadBadges();
     }
+
+    // ── Activity Timeline ─────────────────────────────────────────────────────
+
+    private void loadActivityLog() {
+        if (activityTimelineContainer == null || currentUser == null) return;
+
+        javafx.application.Platform.runLater(() -> {
+            activityTimelineContainer.getChildren().clear();
+
+            List<com.studybuddy.models.ActivityLog> logs =
+                    activityLogService.getUserActivity(currentUser.getId(), 20);
+
+            if (logs.isEmpty()) {
+                Label empty = new Label("No recent activity to display.");
+                empty.setStyle("-fx-text-fill: #6b7280; -fx-font-size: 13px; -fx-padding: 20 0 0 0;");
+                activityTimelineContainer.getChildren().add(empty);
+                return;
+            }
+
+            // Group by day label
+            java.time.LocalDate lastDate = null;
+            java.time.LocalDate today = java.time.LocalDate.now();
+            java.time.LocalDate yesterday = today.minusDays(1);
+
+            for (com.studybuddy.models.ActivityLog log : logs) {
+                java.time.LocalDate logDate = log.getCreatedAt() != null
+                        ? log.getCreatedAt().toLocalDate() : today;
+
+                if (!logDate.equals(lastDate)) {
+                    lastDate = logDate;
+                    String dateLabel;
+                    if (logDate.equals(today))         dateLabel = "Today";
+                    else if (logDate.equals(yesterday)) dateLabel = "Yesterday";
+                    else dateLabel = logDate.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy"));
+
+                    Label groupHeader = new Label(dateLabel);
+                    groupHeader.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #94a3b8; " +
+                            "-fx-padding: 16 0 6 12;");
+                    activityTimelineContainer.getChildren().add(groupHeader);
+                }
+
+                activityTimelineContainer.getChildren().add(buildTimelineCard(log));
+            }
+        });
+    }
+
+    private VBox buildTimelineCard(com.studybuddy.models.ActivityLog log) {
+        // Outer wrapper — provides the vertical line connector
+        VBox wrapper = new VBox();
+        wrapper.setStyle("-fx-padding: 0 0 0 12;");
+
+        HBox row = new HBox(12);
+        row.setAlignment(javafx.geometry.Pos.TOP_LEFT);
+        row.setStyle("-fx-padding: 6 8 6 0;");
+
+        // Icon circle
+        Label iconLabel = new Label(activityIcon(log.getTargetType(), log.getAction()));
+        iconLabel.setStyle("-fx-font-size: 20px; -fx-min-width: 36px; -fx-min-height: 36px; " +
+                "-fx-alignment: center; -fx-background-color: #1e293b; -fx-background-radius: 50%; " +
+                "-fx-border-radius: 50%;");
+
+        // Text column
+        VBox textCol = new VBox(2);
+        HBox.setHgrow(textCol, javafx.scene.layout.Priority.ALWAYS);
+
+        Label actionLabel = new Label(log.getAction());
+        actionLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #e2e8f0;");
+
+        Label targetLabel = new Label(log.getTargetType() + ": " + log.getTargetName());
+        targetLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #94a3b8;");
+        targetLabel.setWrapText(true);
+
+        Label timeLabel = new Label(relativeTime(log.getCreatedAt()));
+        timeLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: #64748b;");
+
+        textCol.getChildren().addAll(actionLabel, targetLabel, timeLabel);
+        row.getChildren().addAll(iconLabel, textCol);
+
+        // Thin left-border line card
+        row.setStyle(row.getStyle() + " -fx-border-color: transparent transparent transparent #334155; " +
+                "-fx-border-width: 0 0 0 2; -fx-background-color: #0f172a; " +
+                "-fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 10 12 10 16; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 1);");
+
+        // Hover effect via mouse enter/exit
+        row.setOnMouseEntered(e -> row.setStyle(row.getStyle().replace("#0f172a", "#1e293b")));
+        row.setOnMouseExited(e -> row.setStyle(row.getStyle().replace("#1e293b", "#0f172a")));
+
+        VBox margin = new VBox(row);
+        margin.setStyle("-fx-padding: 0 0 6 0;");
+        wrapper.getChildren().add(margin);
+        return wrapper;
+    }
+
+    private String activityIcon(String targetType, String action) {
+        if (action == null) return "🔵";
+        String a = action.toLowerCase();
+        if (a.contains("login"))          return "🔑";
+        if (a.contains("logout"))         return "🚪";
+        if (a.contains("register"))       return "🎉";
+        if (a.contains("note"))           return "📝";
+        if (a.contains("resource"))       return "📚";
+        if (a.contains("question"))       return "❓";
+        if (a.contains("answer") && a.contains("best")) return "⭐";
+        if (a.contains("answer"))         return "💬";
+        if (a.contains("reward"))         return "🏆";
+        if (a.contains("task") && a.contains("complete")) return "✅";
+        if (a.contains("task"))           return "🎯";
+        if (a.contains("notification"))   return "🔔";
+        if (a.contains("download"))       return "📥";
+        if (a.contains("upload"))         return "📤";
+        return "🔵";
+    }
+
+    private String relativeTime(java.time.LocalDateTime dt) {
+        if (dt == null) return "";
+        long seconds = java.time.Duration.between(dt, java.time.LocalDateTime.now()).getSeconds();
+        if (seconds < 60)   return "Just now";
+        if (seconds < 3600) return (seconds / 60) + " min ago";
+        if (seconds < 86400) return (seconds / 3600) + " hr ago";
+        return (seconds / 86400) + " days ago";
+    }
+
     
     private void loadAchievements() {
         if (achievementsContainer == null || currentUser == null) return;
@@ -528,51 +666,7 @@ public class ProfileController {
         return card;
     }
 
-    private void loadActivityLog() {
-        List<String> activities = new ArrayList<>();
-        if (currentUser != null) {
-            try {
-                List<UserActivity> userActivities = activityDAO.getUserActivities(currentUser.getId(), 20);
-                for (UserActivity activity : userActivities) {
-                    String displayText = String.format(
-                        "%s (%s)",
-                        formatActivityText(activity),
-                        activity.getCreatedAt() != null ? activity.getCreatedAt().format(DateTimeFormatter.ofPattern("MMM dd, HH:mm")) : "N/A"
-                    );
-                    activities.add(displayText);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                activities.add("Failed to load activity log");
-            }
-        }
-        if (activities.isEmpty()) {
-            activities.add("No recent activity");
-        }
-        activityListView.setItems(FXCollections.observableArrayList(activities));
-    }
 
-    private String formatActivityText(UserActivity activity) {
-        String action = activity.getAction();
-        String targetName = activity.getTargetName();
-        
-        switch (action) {
-            case "UPLOAD_NOTE":
-                return String.format("Uploaded note: '%s'", targetName);
-            case "UPLOAD_RESOURCE":
-                return String.format("Uploaded resource: '%s'", targetName);
-            case "ASK_QUESTION":
-                return String.format("Asked question: '%s'", targetName);
-            case "SUBMIT_ANSWER":
-                return String.format("Answered question: '%s'", targetName);
-            case "APPROVE_NOTE":
-                return String.format("Approved note: '%s'", targetName);
-            case "REJECT_NOTE":
-                return String.format("Rejected note: '%s'", targetName);
-            default:
-                return String.format("%s: %s", action, targetName);
-        }
-    }
 
     @FXML
     public void handleUploadAvatar() {
@@ -843,5 +937,158 @@ public class ProfileController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void refreshNotificationBadge() {
+        if (btnNotifications != null && currentUser != null) {
+            int unread = com.studybuddy.admin.services.NotificationService.getInstance().getUnreadCountByUserId(currentUser.getId());
+            if (unread > 0) {
+                btnNotifications.setText("🔔 Notifications (" + unread + ")");
+                btnNotifications.setStyle("-fx-background-color: #fee2e2; -fx-text-fill: #ef4444; -fx-font-weight: bold;");
+            } else {
+                btnNotifications.setText("🔔 Notifications");
+                btnNotifications.setStyle("");
+            }
+        }
+    }
+
+    @FXML
+    public void handleShowNotifications() {
+        if (currentUser == null) return;
+
+        Stage dialog = new Stage();
+        dialog.setTitle("My Notifications");
+        dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+
+        VBox layout = new VBox(15);
+        layout.setPadding(new javafx.geometry.Insets(20));
+        if (getClass().getResource("/com/studybuddy/css/theme.css") != null) {
+            layout.getStylesheets().add(getClass().getResource("/com/studybuddy/css/theme.css").toExternalForm());
+        }
+
+        Label headerLabel = new Label("Notifications");
+        headerLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        Label unreadLabel = new Label();
+        unreadLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #4b5563;");
+
+        ListView<com.studybuddy.models.Notification> listView = new ListView<>();
+        listView.setPrefHeight(280);
+        listView.setCellFactory(param -> new javafx.scene.control.ListCell<com.studybuddy.models.Notification>() {
+            @Override
+            protected void updateItem(com.studybuddy.models.Notification item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    String icon = "🔔";
+                    if ("REWARD".equalsIgnoreCase(item.getRecipientType()) || "REWARD".equalsIgnoreCase(item.getNotificationType())) {
+                        icon = "🏆";
+                    } else if ("HIGH".equalsIgnoreCase(item.getPriority()) || "URGENT".equalsIgnoreCase(item.getPriority())) {
+                        icon = "🚨";
+                    }
+
+                    String dateStr = "N/A";
+                    String timeStr = "N/A";
+                    if (item.getSentAt() != null) {
+                        dateStr = item.getSentAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                        timeStr = item.getSentAt().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+                    }
+
+                    String statusText = item.isRead() ? "" : " (Unread)";
+
+                    VBox card = new VBox(4);
+                    card.setPadding(new javafx.geometry.Insets(8));
+
+                    HBox header = new HBox(8);
+                    header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                    Label iconLabel = new Label(icon);
+                    iconLabel.setStyle("-fx-font-size: 16px;");
+                    Label titleLabel = new Label(item.getTitle() + statusText);
+                    titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+                    if (!item.isRead()) {
+                        titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #3b82f6;");
+                    }
+                    javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+                    HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+                    Label dateTimeLabel = new Label(dateStr + " " + timeStr);
+                    dateTimeLabel.setStyle("-fx-text-fill: #6b7280; -fx-font-size: 11px;");
+
+                    header.getChildren().addAll(iconLabel, titleLabel, spacer, dateTimeLabel);
+
+                    Label msgLabel = new Label(item.getMessage());
+                    msgLabel.setWrapText(true);
+                    msgLabel.setStyle("-fx-text-fill: #374151; -fx-font-size: 13px;");
+
+                    card.getChildren().addAll(header, msgLabel);
+                    setGraphic(card);
+                }
+            }
+        });
+
+        Runnable updateUIOnly = () -> {
+            List<com.studybuddy.models.Notification> list = com.studybuddy.admin.services.NotificationService.getInstance()
+                    .getNotificationsByUserId(currentUser.getId());
+            listView.setItems(FXCollections.observableArrayList(list));
+            long count = list.stream().filter(n -> !n.isRead()).count();
+            unreadLabel.setText("Unread Count: " + count);
+        };
+
+        Runnable refreshList = () -> {
+            updateUIOnly.run();
+            // Publish Event to update badges on home and dashboard immediately
+            EventBus.getInstance().publish(new EventBus.NotificationsChangedEvent());
+        };
+
+        refreshList.run();
+
+        // Subscribe Dialog to events to keep in sync in real-time
+        EventBus.EventListener<EventBus.NotificationsChangedEvent> dialogListener = event -> {
+            javafx.application.Platform.runLater(updateUIOnly);
+        };
+        EventBus.getInstance().subscribe(EventBus.NotificationsChangedEvent.class, dialogListener);
+        dialog.setOnHidden(e -> {
+            EventBus.getInstance().unsubscribe(EventBus.NotificationsChangedEvent.class, dialogListener);
+        });
+
+        Button markReadBtn = new Button("✓ Mark as Read");
+        markReadBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;");
+        markReadBtn.setOnAction(e -> {
+            com.studybuddy.models.Notification selected = listView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                com.studybuddy.admin.services.NotificationService.getInstance().markAsRead(selected.getId());
+                refreshList.run();
+            }
+        });
+
+        Button markAllReadBtn = new Button("✓ Mark All Read");
+        markAllReadBtn.setStyle("-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold;");
+        markAllReadBtn.setOnAction(e -> {
+            com.studybuddy.admin.services.NotificationService.getInstance().markAllReadForUser(currentUser.getId());
+            refreshList.run();
+        });
+
+        Button deleteBtn = new Button("🗑 Delete");
+        deleteBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold;");
+        deleteBtn.setOnAction(e -> {
+            com.studybuddy.models.Notification selected = listView.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                com.studybuddy.admin.services.NotificationService.getInstance().deleteNotification(selected.getId());
+                refreshList.run();
+            }
+        });
+
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-background-color: #6b7280; -fx-text-fill: white; -fx-font-weight: bold;");
+        closeBtn.setOnAction(e -> dialog.close());
+
+        HBox actions = new HBox(10, markReadBtn, markAllReadBtn, deleteBtn, closeBtn);
+        actions.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+
+        layout.getChildren().addAll(headerLabel, unreadLabel, listView, actions);
+
+        dialog.setScene(new javafx.scene.Scene(layout, 550, 420));
+        dialog.show();
     }
 }

@@ -33,7 +33,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import com.studybuddy.models.Question;
-import com.studybuddy.models.UserActivity;
+
 import com.studybuddy.services.QuestionService;
 import com.studybuddy.services.AuthorizationService;
 import javafx.scene.layout.BorderPane;
@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
 public class DashboardController implements Initializable {
 
     @FXML private BorderPane rootPane;
+    @FXML private Button btnDashboardProfile;
     @FXML private Label welcomeLabel;
     @FXML private ImageView heroAvatarView;
     @FXML private Label achievementPointsLabel;
@@ -118,7 +119,8 @@ public class DashboardController implements Initializable {
     @FXML private HBox recentQuestionsContainer;
     @FXML private HBox recentActivityContainer;
 
-    private final com.studybuddy.dao.UserActivityDAO userActivityDAO = new com.studybuddy.dao.UserActivityDAO();
+
+    private final com.studybuddy.admin.services.ActivityLogService activityLogService = com.studybuddy.admin.services.ActivityLogService.getInstance();
 
     private final DashboardService dashboardService = DashboardService.getInstance();
     private final NoteService noteService = new NoteService();
@@ -163,6 +165,12 @@ public class DashboardController implements Initializable {
                 }
             }));
         refreshHeroAvatar();
+        refreshNotificationBadge();
+
+        EventBus.getInstance().subscribe(EventBus.NotificationsChangedEvent.class,
+            (_event) -> javafx.application.Platform.runLater(this::refreshNotificationBadge));
+        EventBus.getInstance().subscribe(EventBus.ActivityChangedEvent.class,
+            (_event) -> javafx.application.Platform.runLater(this::refreshRecentActivity));
     }
 
     private void refreshHeroAvatar() {
@@ -243,6 +251,7 @@ public class DashboardController implements Initializable {
         refreshStats();
         refreshMyUploads();
         loadRecentAndTrending();
+        refreshNotificationBadge();
     }
 
     @FXML public void handleMyUploadsTabChange(javafx.event.ActionEvent event) {
@@ -951,24 +960,61 @@ public class DashboardController implements Initializable {
         }
 
         if (recentActivityContainer != null) {
-            try {
-                List<UserActivity> activities = currentUser != null
-                        ? userActivityDAO.getUserActivities(currentUser.getId(), 4)
-                        : userActivityDAO.getRecentActivities(4);
-                if (activities != null && !activities.isEmpty()) {
-                    for (UserActivity activity : activities) {
-                        recentActivityContainer.getChildren().add(buildMiniFeedCard(
-                                activity.getAction() + " · " + activity.getTargetName(),
-                                activity.getCreatedAt() != null ? activity.getCreatedAt().toString() : "",
-                                false));
-                    }
-                } else {
-                    recentActivityContainer.getChildren().add(buildWidgetEmptyLabel("No recent activity yet."));
-                }
-            } catch (SQLException e) {
-                recentActivityContainer.getChildren().add(buildWidgetEmptyLabel("Activity feed unavailable."));
-            }
+            recentActivityContainer.getChildren().clear();
+            refreshRecentActivity();
         }
+    }
+
+    private void refreshRecentActivity() {
+        if (recentActivityContainer == null) return;
+        recentActivityContainer.getChildren().clear();
+        try {
+            List<com.studybuddy.models.ActivityLog> logs = currentUser != null
+                    ? activityLogService.getUserActivity(currentUser.getId(), 5)
+                    : List.of();
+            if (logs != null && !logs.isEmpty()) {
+                for (com.studybuddy.models.ActivityLog log : logs) {
+                    recentActivityContainer.getChildren().add(
+                            buildActivityMiniCard(log));
+                }
+            } else {
+                recentActivityContainer.getChildren().add(buildWidgetEmptyLabel("No recent activity yet."));
+            }
+        } catch (Exception e) {
+            recentActivityContainer.getChildren().add(buildWidgetEmptyLabel("Activity feed unavailable."));
+        }
+    }
+
+    private VBox buildActivityMiniCard(com.studybuddy.models.ActivityLog log) {
+        VBox card = new VBox(4);
+        card.getStyleClass().add("mini-feed-card");
+        card.setStyle("-fx-min-width: 160; -fx-max-width: 200; -fx-padding: 10 12; " +
+                "-fx-background-color: #0f172a; -fx-background-radius: 8; " +
+                "-fx-border-color: #1e293b; -fx-border-radius: 8; -fx-border-width: 1;");
+        String icon = activityIconDash(log.getAction());
+        Label iconLbl = new Label(icon + " " + log.getAction());
+        iconLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #e2e8f0; -fx-font-weight: bold;");
+        iconLbl.setWrapText(true);
+        Label sub = new Label(log.getTargetName());
+        sub.setStyle("-fx-font-size: 10px; -fx-text-fill: #64748b;");
+        sub.setWrapText(true);
+        card.getChildren().addAll(iconLbl, sub);
+        return card;
+    }
+
+    private String activityIconDash(String action) {
+        if (action == null) return "🔵";
+        String a = action.toLowerCase();
+        if (a.contains("login"))    return "🔑";
+        if (a.contains("note"))     return "📝";
+        if (a.contains("resource")) return "📚";
+        if (a.contains("question")) return "❓";
+        if (a.contains("best"))     return "⭐";
+        if (a.contains("answer"))   return "💬";
+        if (a.contains("reward"))   return "🏆";
+        if (a.contains("task") && a.contains("complete")) return "✅";
+        if (a.contains("task"))     return "🎯";
+        return "🔵";
     }
 
     private VBox buildMiniFeedCard(String title, String dateText, boolean green) {
@@ -1140,5 +1186,16 @@ public class DashboardController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void refreshNotificationBadge() {
+        if (btnDashboardProfile != null && currentUser != null) {
+            int unread = com.studybuddy.admin.services.NotificationService.getInstance().getUnreadCountByUserId(currentUser.getId());
+            if (unread > 0) {
+                btnDashboardProfile.setText("👤  Profile (" + unread + ")");
+            } else {
+                btnDashboardProfile.setText("👤  Profile");
+            }
+        }
     }
 }

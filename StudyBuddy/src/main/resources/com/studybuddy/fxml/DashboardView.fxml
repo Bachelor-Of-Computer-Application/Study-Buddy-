@@ -97,7 +97,7 @@
                             styleClass="action-btn, action-btn-purple" text="🙋  Ask Question" />
                     <Button onAction="#handleGoToAchievements"
                             styleClass="action-btn, action-btn-amber" text="🏆  Achievements" />
-                    <Button onAction="#handleGoToProfile"
+                    <Button fx:id="btnDashboardProfile" onAction="#handleGoToProfile"
                             styleClass="action-btn, action-btn-slate" text="👤  Profile" />
                     <Region HBox.hgrow="ALWAYS" />
                     <Button onAction="#refreshDashboard" styleClass="refresh-btn" text="🔄  Refresh" />

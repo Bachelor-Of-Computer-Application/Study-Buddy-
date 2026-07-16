@@ -57,6 +57,12 @@
                     <Label text="Date:" styleClass="input-label" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
                     <Label fx:id="lblDate" text="-" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
                 </GridPane>
+
+                <!-- Admin Actions -->
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <Button fx:id="btnApproveQuestion" text="✅ Approve Question"
+                            styleClass="success-btn" onAction="#handleApproveQuestion"/>
+                </HBox>
             </VBox>
 
             <!-- Answers Section -->

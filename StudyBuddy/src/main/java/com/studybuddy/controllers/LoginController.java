@@ -48,6 +48,7 @@ public class LoginController implements Initializable {
         User user = AuthService.login(email, password);
 
         if (user != null) {
+            com.studybuddy.admin.services.ActivityLogService.getInstance().logAction(user.getId(), user.getName(), "Student Login", "Session", email);
             showSuccess("Login successful! Welcome, " + user.getName());
             // Redirect to Home Page
             try {

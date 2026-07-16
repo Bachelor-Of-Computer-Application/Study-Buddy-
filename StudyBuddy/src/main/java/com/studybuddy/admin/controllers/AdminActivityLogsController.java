@@ -50,6 +50,10 @@ public class AdminActivityLogsController {
             com.studybuddy.utils.EventBus.AdminChangesEvent.class, 
             (_event) -> javafx.application.Platform.runLater(this::loadAll)
         );
+        com.studybuddy.utils.EventBus.getInstance().subscribe(
+            com.studybuddy.utils.EventBus.ActivityChangedEvent.class,
+            (_event) -> javafx.application.Platform.runLater(this::loadAll)
+        );
     }
 
     // ── Load ──────────────────────────────────────────────────────────────────

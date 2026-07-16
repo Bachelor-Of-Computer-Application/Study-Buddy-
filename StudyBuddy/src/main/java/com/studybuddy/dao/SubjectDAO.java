@@ -11,6 +11,7 @@ import java.util.List;
  * Data Access Object for Subjects table.
  */
 public class SubjectDAO {
+    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(SubjectDAO.class.getName());
 
     private static final String SUBJECT_SELECT =
             "SELECT s.id, s.semesterId, s.name, s.code, s.description, " +
@@ -42,8 +43,7 @@ public class SubjectDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching subjects by department: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error fetching subjects by department", e);
         }
 
         return subjects;
@@ -66,8 +66,7 @@ public class SubjectDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching subjects by semester number: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error fetching subjects by semester number", e);
         }
 
         return subjects;
@@ -104,10 +103,10 @@ public class SubjectDAO {
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
             for (int i = 0; i < params.size(); i++) {
-                if (params.get(i) instanceof Integer) {
-                    stmt.setInt(i + 1, (Integer) params.get(i));
-                } else if (params.get(i) instanceof String) {
-                    stmt.setString(i + 1, (String) params.get(i));
+                if (params.get(i) instanceof Integer val) {
+                    stmt.setInt(i + 1, val);
+                } else if (params.get(i) instanceof String val) {
+                    stmt.setString(i + 1, val);
                 }
             }
 
@@ -118,8 +117,7 @@ public class SubjectDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching subjects with filters: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error fetching subjects with filters", e);
         }
 
         return subjects;
@@ -146,8 +144,7 @@ public class SubjectDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching subject by ID: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error fetching subject by ID", e);
         }
 
         return null;
@@ -179,8 +176,7 @@ public class SubjectDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error searching subjects: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error searching subjects", e);
         }
 
         return subjects;
@@ -203,8 +199,7 @@ public class SubjectDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching all active subjects: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(java.util.logging.Level.SEVERE, "Error fetching all active subjects", e);
         }
 
         return subjects;

@@ -16,6 +16,8 @@ import java.util.Map;
  */
 public class AdminService {
 
+    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(AdminService.class.getName());
+
     private static AdminService instance;
     private final AdminDAO adminDAO = AdminDAO.getInstance();
     private final ActivityLogService logService = ActivityLogService.getInstance();
@@ -82,7 +84,7 @@ public class AdminService {
 
         // Verification output (as required)
         System.out.println("[AdminService] ✓ Admin login successful.");
-        System.out.println("Authenticated Admin ID = " + user.getId());
+        LOGGER.info("Authenticated Admin ID = " + user.getId());
         System.out.println("Username = "              + user.getUsername());
         System.out.println("Email = "                 + user.getEmail());
         System.out.println("Role = "                  + user.getRole());
@@ -90,9 +92,9 @@ public class AdminService {
         // Confirm SessionManager stored correctly
         User storedAdmin = SessionManager.getCurrentAdmin();
         if (storedAdmin != null) {
-            System.out.println("[AdminService] ✓ SessionManager.getCurrentAdmin() ID: " + storedAdmin.getId());
+            LOGGER.info("[AdminService] ✓ SessionManager.getCurrentAdmin() ID: " + storedAdmin.getId());
         } else {
-            System.out.println("[AdminService] ✗ SessionManager.getCurrentAdmin() is NULL!");
+            LOGGER.warning("[AdminService] ✗ SessionManager.getCurrentAdmin() is NULL!");
         }
 
         logService.logAction("Admin Login", "Session",

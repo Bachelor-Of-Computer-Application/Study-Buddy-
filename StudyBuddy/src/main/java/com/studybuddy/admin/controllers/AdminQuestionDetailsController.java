@@ -40,6 +40,7 @@ public class AdminQuestionDetailsController {
     @FXML private Label lblSubject;
     @FXML private Label lblDate;
     @FXML private VBox answersContainer;
+    @FXML private Button btnApproveQuestion;
 
     private final AdminService adminService = AdminService.getInstance();
     private final QuestionService questionService = new QuestionService();
@@ -90,12 +91,29 @@ public class AdminQuestionDetailsController {
             lblApprovalStatus.setText(isApproved ? "✅ Approved" : "⏳ Pending");
             lblApprovalStatus.setStyle(isApproved ? "-fx-text-fill: #22c55e;" : "-fx-text-fill: #f59e0b;");
 
-            // Check reward status
-            String rewardStatus = currentQuestion.getRewardStatus() != null ? currentQuestion.getRewardStatus() : "Pending";
-            lblRewardStatus.setText(rewardStatus);
-            if ("Transferred".equalsIgnoreCase(rewardStatus)) {
+            // Sync approve button state — disable once approved
+            if (btnApproveQuestion != null) {
+                if (isApproved) {
+                    btnApproveQuestion.setDisable(true);
+                    btnApproveQuestion.setText("✅ Approved");
+                } else {
+                    btnApproveQuestion.setDisable(false);
+                    btnApproveQuestion.setText("✅ Approve Question");
+                }
+            }
+
+            // Show reward status with human-readable labels and colour
+            String rewardStatus = currentQuestion.getRewardStatus() != null
+                    ? currentQuestion.getRewardStatus() : "PENDING";
+            if ("REWARDED".equalsIgnoreCase(rewardStatus)
+                    || "TRANSFERRED".equalsIgnoreCase(rewardStatus)) {
+                lblRewardStatus.setText("✔ Rewarded");
+                lblRewardStatus.setStyle("-fx-text-fill: #22c55e; -fx-font-weight: bold;");
+            } else if ("ACCEPTED".equalsIgnoreCase(rewardStatus)) {
+                lblRewardStatus.setText("✔ Accepted (no points)");
                 lblRewardStatus.setStyle("-fx-text-fill: #22c55e;");
-            } else if ("Pending".equalsIgnoreCase(rewardStatus)) {
+            } else {
+                lblRewardStatus.setText("⏳ Pending");
                 lblRewardStatus.setStyle("-fx-text-fill: #f59e0b;");
             }
 
@@ -172,17 +190,47 @@ public class AdminQuestionDetailsController {
 
         // Status badge
         Label statusBadge = new Label();
-        if (answer.isRewarded()) {
+        boolean isBestAnswer = currentQuestion != null && currentQuestion.getBestAnswerId() == answer.getId();
+        boolean isRewarded = isBestAnswer && "REWARDED".equalsIgnoreCase(currentQuestion.getRewardStatus());
+
+        if (isRewarded) {
+            statusBadge.setText("🏆 Rewarded");
+            statusBadge.setStyle("-fx-background-color: #dbeafe; -fx-text-fill: #1d4ed8; -fx-font-weight: bold; -fx-padding: 4 8; -fx-background-radius: 4;");
+        } else if (isBestAnswer) {
             statusBadge.setText("⭐ Best Answer");
             statusBadge.setStyle("-fx-background-color: #fef3c7; -fx-text-fill: #d97706; -fx-font-weight: bold; -fx-padding: 4 8; -fx-background-radius: 4;");
+        } else if (answer.isApproved()) {
+            statusBadge.setText("✅ Approved");
+            statusBadge.setStyle("-fx-background-color: #dcfce7; -fx-text-fill: #15803d; -fx-font-weight: bold; -fx-padding: 4 8; -fx-background-radius: 4;");
         } else {
             statusBadge.setText("Pending");
             statusBadge.setStyle("-fx-background-color: #e5e7eb; -fx-text-fill: #6b7280; -fx-padding: 4 8; -fx-background-radius: 4;");
         }
 
-        // Action button
+        // Buttons container
+        HBox actionButtons = new HBox(8);
+        actionButtons.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+
+        // Approve button for answers that are not approved yet
+        if (!answer.isApproved()) {
+            Button approveBtn = new Button("✅ Approve Answer");
+            approveBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;");
+            approveBtn.setOnAction(e -> {
+                boolean ok = questionService.approveAnswer(answer.getId());
+                if (ok) {
+                    loadQuestionDetails(currentQuestion.getId());
+                    showSuccess("Answer approved successfully!");
+                } else {
+                    showError("Failed to approve answer.");
+                }
+            });
+            actionButtons.getChildren().add(approveBtn);
+        }
+
+        // Action button (Reward)
         Button actionButton = new Button();
-        boolean canReward = canRewardAnswer();
+        boolean canReward = canRewardAnswer() && answer.isApproved() && 
+                            (currentQuestion.getBestAnswerId() <= 0 || currentQuestion.getBestAnswerId() == answer.getId());
         if (answer.isRewarded() || !canReward) {
             actionButton.setText("Reward Sent");
             actionButton.setDisable(true);
@@ -192,10 +240,11 @@ public class AdminQuestionDetailsController {
             actionButton.setStyle("-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-weight: bold;");
             actionButton.setOnAction(e -> handleSelectBestAnswer(answer));
         }
+        actionButtons.getChildren().add(actionButton);
 
         HBox footer = new HBox(10);
         footer.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
-        footer.getChildren().addAll(statusBadge, actionButton);
+        footer.getChildren().addAll(statusBadge, actionButtons);
 
         card.getChildren().addAll(header, answerText, footer);
 
@@ -204,12 +253,19 @@ public class AdminQuestionDetailsController {
 
     private boolean canRewardAnswer() {
         if (currentQuestion == null) return false;
-        
+
         try {
             boolean isApproved = questionService.isQuestionApproved(currentQuestion.getId());
-            String rewardStatus = currentQuestion.getRewardStatus() != null ? currentQuestion.getRewardStatus() : "Pending";
-            
-            return isApproved && !"Transferred".equals(rewardStatus);
+            String rewardStatus = currentQuestion.getRewardStatus() != null
+                    ? currentQuestion.getRewardStatus() : "PENDING";
+
+            // Reward is only possible when approved and not already finalised
+            boolean alreadyRewarded =
+                    "REWARDED".equalsIgnoreCase(rewardStatus) ||
+                    "TRANSFERRED".equalsIgnoreCase(rewardStatus) ||
+                    "ACCEPTED".equalsIgnoreCase(rewardStatus);
+
+            return isApproved && !alreadyRewarded;
         } catch (Exception e) {
             logger.warning("Failed to check reward eligibility: " + e.getMessage());
             return false;
@@ -219,28 +275,28 @@ public class AdminQuestionDetailsController {
     private void handleSelectBestAnswer(Answer answer) {
         if (currentQuestion == null) return;
 
-        // Show confirmation dialog
         boolean confirmed = showConfirmationDialog(answer);
-        
+
         if (confirmed) {
             try {
                 boolean success = questionService.markBestAnswer(currentQuestion.getId(), answer.getId());
 
                 if (success) {
-                    // Send notification to the student
+                    // Send notification to the student (best-effort, fire-and-forget)
                     sendRewardNotification(answer);
-                    
-                    // Refresh the view
+
+                    // Reload the dialog so reward status label and button state update immediately
                     loadQuestionDetails(currentQuestion.getId());
-                    
-                    // Publish events to refresh other views
+
+                    // Events already published by QuestionDAO.markBestAnswer(); broadcast once more
+                    // to ensure the questions table in the parent window also refreshes
                     EventBus.getInstance().publish(new EventBus.QuestionsChangedEvent());
                     EventBus.getInstance().publish(new EventBus.StatisticsChangedEvent());
-                    EventBus.getInstance().publish(new EventBus.PointsChangedEvent(answer.getUserId(), 0));
-                    
+
                     showSuccessDialog(answer);
                 } else {
-                    showError("Failed to transfer reward. Please try again.");
+                    showError("Failed to transfer reward. The question may already have been rewarded, " +
+                              "or the question must be approved first.");
                 }
             } catch (Exception e) {
                 logger.severe("Failed to mark best answer: " + e.getMessage());
@@ -364,17 +420,75 @@ public class AdminQuestionDetailsController {
                 currentQuestion.getTitle() != null ? currentQuestion.getTitle() : currentQuestion.getQuestionText()
             );
 
+            // Look up the answer author's email so NotificationDAO can resolve the user
+            // (NotificationDAO resolveUserIds for type=USER queries: WHERE email = ?)
+            String recipientEmail = null;
+            try {
+                com.studybuddy.models.User author = adminService.getUserById(answer.getUserId());
+                if (author != null) recipientEmail = author.getEmail();
+            } catch (Exception ex) {
+                logger.warning("Could not look up answer author email: " + ex.getMessage());
+            }
+
+            if (recipientEmail == null || recipientEmail.isBlank()) {
+                logger.warning("Skipping notification: answer author email not found for userId=" + answer.getUserId());
+                return;
+            }
+
             Notification notification = new Notification();
             notification.setTitle(notificationTitle);
             notification.setMessage(notificationMessage);
             notification.setRecipientType("USER");
-            notification.setRecipientValue(String.valueOf(answer.getUserId()));
+            notification.setRecipientValue(recipientEmail);
             notification.setPriority("HIGH");
             notification.setNotificationType("Achievement");
 
             notificationService.sendSmartNotification(notification);
         } catch (Exception e) {
             logger.warning("Failed to send reward notification: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void handleApproveQuestion() {
+        if (currentQuestion == null) return;
+
+        // Check if already approved
+        try {
+            boolean alreadyApproved = questionService.isQuestionApproved(currentQuestion.getId());
+            if (alreadyApproved) {
+                showSuccess("This question is already approved.");
+                return;
+            }
+        } catch (Exception e) {
+            logger.warning("Could not check approval status: " + e.getMessage());
+        }
+
+        // Confirm with admin
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Approve this question? This will enable the Reward button for eligible answers.",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText("Confirm Question Approval");
+        if (stage != null) confirm.initOwner(stage);
+        if (confirm.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) return;
+
+        try {
+            boolean ok = questionService.approveQuestion(currentQuestion.getId());
+            if (ok) {
+                // Immediately reload fresh data from DB so labels and buttons update
+                loadQuestionDetails(currentQuestion.getId());
+                // Disable approve button since question is now approved
+                if (btnApproveQuestion != null) {
+                    btnApproveQuestion.setDisable(true);
+                    btnApproveQuestion.setText("✅ Approved");
+                }
+                showSuccess("Question approved! The Reward button is now enabled.");
+            } else {
+                showError("Failed to approve question. Check server logs.");
+            }
+        } catch (Exception e) {
+            logger.severe("Failed to approve question: " + e.getMessage());
+            showError("Error approving question: " + e.getMessage());
         }
     }
 

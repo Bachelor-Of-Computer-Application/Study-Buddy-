@@ -46,4 +46,13 @@ public class Answer {
 
     public boolean isRewarded() { return isRewarded; }
     public void setRewarded(boolean rewarded) { this.isRewarded = rewarded; }
+
+    private boolean isApproved;
+    private String status = "Pending";
+
+    public boolean isApproved() { return isApproved; }
+    public void setApproved(boolean approved) { this.isApproved = approved; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

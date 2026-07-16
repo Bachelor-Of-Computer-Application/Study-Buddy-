@@ -107,6 +107,15 @@ public class ActivityLogDAO {
         });
     }
 
+    /** Fetch logs for a specific user, limited to recent entries. */
+    public List<ActivityLog> getLogsByUserId(int userId, int limit) {
+        String sql = "SELECT TOP (?) * FROM ActivityLogs WHERE admin_id = ? ORDER BY created_at DESC";
+        return queryLogs(sql, ps -> {
+            ps.setInt(1, limit);
+            ps.setInt(2, userId);
+        });
+    }
+
     // ── Helper ────────────────────────────────────────────────────────────────
 
     @FunctionalInterface

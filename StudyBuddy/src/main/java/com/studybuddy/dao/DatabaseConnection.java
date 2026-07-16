@@ -61,7 +61,7 @@ public class DatabaseConnection {
 
                 realConnection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
 
-                logger.info("✅ Database Connected Successfully");
+
             }
         } catch (Exception e) {
             logger.severe("❌ Database Connection Failed: " + e.getMessage());

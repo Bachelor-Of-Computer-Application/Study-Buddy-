@@ -32,7 +32,7 @@ public class NotificationService {
      * @return true on success
      */
     public boolean sendNotification(String title, String message, String recipientType,
-                                    String recipientValue, String priority) {
+                                    String recipientValue, String priority) throws java.sql.SQLException {
         int adminId = 0;
         if (SessionManager.getCurrentAdmin() != null) {
             adminId = SessionManager.getCurrentAdmin().getId();
@@ -40,44 +40,44 @@ public class NotificationService {
         Notification n = new Notification(title, message, recipientType, recipientValue, priority, adminId);
         return notificationDAO.sendNotification(n);
     }
-
+ 
     public List<Notification> getNotifications() {
         return notificationDAO.getAllNotifications();
     }
-
+ 
     public int getUnreadCount() {
         return notificationDAO.getUnreadCount();
     }
-
+ 
     public boolean deleteNotification(int id) {
         return notificationDAO.deleteNotification(id);
     }
-
+ 
     public boolean markAsRead(int id) {
         return notificationDAO.markAsRead(id);
     }
-
+ 
     public List<Notification> getNotificationsByUserId(int userId) {
         return notificationDAO.getNotificationsByUserId(userId);
     }
-
+ 
     public int getUnreadCountByUserId(int userId) {
         return notificationDAO.getUnreadCountByUserId(userId);
     }
-
+ 
     public boolean markAllReadForUser(int userId) {
         return notificationDAO.markAllReadForUser(userId);
     }
-
+ 
     public boolean archiveNotification(int id) {
         return notificationDAO.archiveNotification(id);
     }
-
+ 
     public List<Notification> searchForUser(int userId, String query, String type, String priority) {
         return notificationDAO.searchNotificationsForUser(userId, query, type, priority);
     }
-
-    public boolean sendSmartNotification(Notification n) {
+ 
+    public boolean sendSmartNotification(Notification n) throws java.sql.SQLException {
         if (SessionManager.getCurrentAdmin() != null) {
             n.setSentBy(SessionManager.getCurrentAdmin().getId());
         }
