@@ -9,10 +9,6 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
@@ -25,387 +21,246 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="rootPane" styleClass="root-pane" stylesheets="@../css/theme.css, @../css/dashboard.css"
-    xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.DashboardController">
+<BorderPane fx:id="rootPane" styleClass="root-pane"
+            stylesheets="@../css/theme.css, @../css/dashboard.css"
+            xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.studybuddy.controllers.DashboardController">
 
-    <!-- ═══ HIDDEN BarChart – keeps @FXML binding alive, never rendered ═ -->
-    <!-- The controller's studyBarChart field is kept wired to avoid NPE.  -->
+    <!-- ═══ Hidden BarChart — keeps @FXML binding alive ═══════════════ -->
     <top>
-        <BarChart fx:id="studyBarChart" managed="false" visible="false" prefHeight="0" prefWidth="0" legendVisible="false">
-            <xAxis>
-                <CategoryAxis label="Subjects"/>
-            </xAxis>
-            <yAxis>
-                <NumberAxis label="Hours"/>
-            </yAxis>
+        <BarChart fx:id="studyBarChart" legendVisible="false" managed="false"
+                  prefHeight="0" prefWidth="0" visible="false">
+            <xAxis><CategoryAxis label="Subjects" /></xAxis>
+            <yAxis><NumberAxis label="Hours" /></yAxis>
         </BarChart>
     </top>
 
-    <!-- ═══ SCROLLABLE DASHBOARD CONTENT ════════════════════════════════ -->
+    <!-- ═══ VERTICAL SCROLL ONLY — fitToWidth, no horizontal bar ══════ -->
     <center>
-        <ScrollPane fitToWidth="true" styleClass="main-scroll">
-            <content>
-                <VBox spacing="20" styleClass="main-content">
-                    <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                    styleClass="main-scroll">
+            <VBox spacing="24" styleClass="main-content">
+                <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>
 
-                    <!-- ── Hero Banner ─────────────────────────────────── -->
-                    <HBox alignment="CENTER_LEFT" spacing="20" styleClass="hero-banner">
-                        <VBox spacing="8" HBox.hgrow="ALWAYS">
-                            <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome Back! 👋"/>
-                            <Label styleClass="hero-sub" text="Track your progress, explore notes, and ask questions."/>
+                <!-- ── 1. HERO BANNER ──────────────────────────────────── -->
+                <HBox alignment="CENTER_LEFT" spacing="20" styleClass="hero-banner">
+                    <!-- Welcome text -->
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label fx:id="welcomeLabel" styleClass="welcome-label" text="Welcome Back! 👋" />
+                        <Label styleClass="hero-sub" text="Track your progress, explore notes, and ask questions." />
+                    </VBox>
+                    <!-- Personal stat chips -->
+                    <FlowPane hgap="10" vgap="8" alignment="CENTER" styleClass="hero-chips-row">
+                        <VBox alignment="CENTER" spacing="2" styleClass="hero-chip">
+                            <Label fx:id="heroLevelLabel" styleClass="hero-chip-value" text="1" />
+                            <Label styleClass="hero-chip-label" text="Level" />
                         </VBox>
-                        <VBox alignment="CENTER_RIGHT" spacing="4">
-                            <Label fx:id="achievementPointsLabel" styleClass="achievement-points-label" text="✨ 0 pts"/>
-                            <Label styleClass="achievement-points-sub" text="Achievement Points"/>
+                        <VBox alignment="CENTER" spacing="2" styleClass="hero-chip">
+                            <Label fx:id="heroAchievementsLabel" styleClass="hero-chip-value" text="0" />
+                            <Label styleClass="hero-chip-label" text="Badges" />
                         </VBox>
-                        <StackPane styleClass="hero-avatar-wrap">
-                            <ImageView fx:id="heroAvatarView" pickOnBounds="true"/>
-                        </StackPane>
-                    </HBox>
+                        <VBox alignment="CENTER" spacing="2" styleClass="hero-chip">
+                            <Label fx:id="heroBestAnswersLabel" styleClass="hero-chip-value" text="0" />
+                            <Label styleClass="hero-chip-label" text="Best Ans." />
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="2" styleClass="hero-chip">
+                            <Label fx:id="heroCompletedTasksLabel" styleClass="hero-chip-value" text="0" />
+                            <Label styleClass="hero-chip-label" text="Completed" />
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="2" styleClass="hero-chip">
+                            <Label fx:id="heroResourcesLabel" styleClass="hero-chip-value" text="0" />
+                            <Label styleClass="hero-chip-label" text="Resources" />
+                        </VBox>
+                        <VBox alignment="CENTER" spacing="2" styleClass="hero-chip">
+                            <Label fx:id="heroNotesLabel" styleClass="hero-chip-value" text="0" />
+                            <Label styleClass="hero-chip-label" text="Notes" />
+                        </VBox>
+                    </FlowPane>
+                    <!-- Points + avatar -->
+                    <VBox alignment="CENTER_RIGHT" spacing="3">
+                        <Label fx:id="achievementPointsLabel" styleClass="achievement-points-label" text="✨ 0 pts" />
+                        <Label styleClass="achievement-points-sub" text="Achievement Points" />
+                    </VBox>
+                    <StackPane styleClass="hero-avatar-wrap">
+                        <ImageView fx:id="heroAvatarView" pickOnBounds="true" />
+                    </StackPane>
+                </HBox>
 
-                    <!-- ── Achievement Stats Row ─────────────────────────── -->
-                    <HBox alignment="CENTER_LEFT" spacing="16" styleClass="achievement-stats-row">
-                        <VBox spacing="2" alignment="CENTER">
-                            <Label fx:id="heroLevelLabel" styleClass="hero-stat-value" text="Level 1"/>
-                            <Label styleClass="hero-stat-label" text="Current Level"/>
-                        </VBox>
-                        <VBox spacing="2" alignment="CENTER">
-                            <Label fx:id="heroAchievementsLabel" styleClass="hero-stat-value" text="0"/>
-                            <Label styleClass="hero-stat-label" text="Achievements"/>
-                        </VBox>
-                        <VBox spacing="2" alignment="CENTER">
-                            <Label fx:id="heroBestAnswersLabel" styleClass="hero-stat-value" text="0"/>
-                            <Label styleClass="hero-stat-label" text="Best Answers"/>
-                        </VBox>
-                        <VBox spacing="2" alignment="CENTER">
-                            <Label fx:id="heroCompletedTasksLabel" styleClass="hero-stat-value" text="0"/>
-                            <Label styleClass="hero-stat-label" text="Completed Tasks"/>
-                        </VBox>
-                        <VBox spacing="2" alignment="CENTER">
-                            <Label fx:id="heroResourcesLabel" styleClass="hero-stat-value" text="0"/>
-                            <Label styleClass="hero-stat-label" text="Resources Shared"/>
-                        </VBox>
-                        <VBox spacing="2" alignment="CENTER">
-                            <Label fx:id="heroNotesLabel" styleClass="hero-stat-value" text="0"/>
-                            <Label styleClass="hero-stat-label" text="Notes Uploaded"/>
-                        </VBox>
-                    </HBox>
+                <!-- ── 2. PRIMARY ACTIONS TOOLBAR ─────────────────────── -->
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="actions-bar">
+                    <Button onAction="#handleUploadNotes"
+                            styleClass="action-btn, action-btn-indigo" text="📝  Create Note" />
+                    <Button onAction="#handleUploadResourceAction"
+                            styleClass="action-btn, action-btn-green" text="📤  Upload Resource" />
+                    <Button onAction="#handleGoToQuestions"
+                            styleClass="action-btn, action-btn-purple" text="🙋  Ask Question" />
+                    <Button onAction="#handleGoToAchievements"
+                            styleClass="action-btn, action-btn-amber" text="🏆  Achievements" />
+                    <Button onAction="#handleGoToProfile"
+                            styleClass="action-btn, action-btn-slate" text="👤  Profile" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button onAction="#refreshDashboard" styleClass="refresh-btn" text="🔄  Refresh" />
+                </HBox>
 
-                    <!-- ── Quick Actions ───────────────────────────────── -->
-                    <HBox alignment="CENTER_LEFT" spacing="12">
-                        <Label text="Quick Actions:" styleClass="section-label"/>
-                        <Button onAction="#handleUploadNotes" styleClass="quick-action-btn, quick-btn-note" text="📝 Create Note"/>
-                        <Button onAction="#handleUploadResourceAction" styleClass="quick-action-btn, quick-btn-resource" text="📤 Upload Resource"/>
-                        <Button onAction="#handleGoToQuestions" styleClass="quick-action-btn, quick-btn-question" text="🙋 Ask Question"/>
-                        <Button onAction="#handleGoToAchievements" styleClass="quick-action-btn, quick-btn-achievement" text="🏆 Achievements"/>
-                        <Button onAction="#handleGoToProfile" styleClass="quick-action-btn, quick-btn-profile" text="👤 Profile"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Button onAction="#refreshDashboard" styleClass="refresh-btn" text="🔄 Refresh"/>
-                    </HBox>
-
-                    <!-- ── 5-Column Stat Cards ─────────────────────────── -->
-                    <GridPane hgap="16" vgap="16">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="20"/>
-                            <ColumnConstraints percentWidth="20"/>
-                            <ColumnConstraints percentWidth="20"/>
-                            <ColumnConstraints percentWidth="20"/>
-                            <ColumnConstraints percentWidth="20"/>
-                        </columnConstraints>
-                        <rowConstraints>
-                            <RowConstraints/>
-                        </rowConstraints>
-
-                        <!-- Card 1: Notes -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="0" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-indigo">
-                                    <Label text="📝" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="NOTES" styleClass="stat-label"/>
-                                    <Label fx:id="lblTotalNotes" styleClass="stat-value" text="0"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Created notebooks" styleClass="stat-desc"/>
-                        </VBox>
-
-                        <!-- Card 2: Resources -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="1" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-sky">
-                                    <Label text="📂" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="RESOURCES" styleClass="stat-label"/>
-                                    <Label fx:id="lblSharedResources" styleClass="stat-value" text="0"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Shared documents" styleClass="stat-desc"/>
-                        </VBox>
-
-                        <!-- Card 3: Questions -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-purple">
-                                    <Label text="🙋" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="QUESTIONS" styleClass="stat-label"/>
-                                    <Label fx:id="lblTotalQuestions" styleClass="stat-value" text="0"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Asked topics" styleClass="stat-desc"/>
-                        </VBox>
-
-                        <!-- Card 4: Tasks -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-amber">
-                                    <Label text="✅" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="TASKS" styleClass="stat-label"/>
-                                    <Label fx:id="lblTotalTasks" styleClass="stat-value" text="0"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Total tasks" styleClass="stat-desc"/>
-                        </VBox>
-
-                        <!-- Card 5: Progress -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="4" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-green">
-                                    <Label text="📈" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="PROGRESS" styleClass="stat-label"/>
-                                    <Label fx:id="lblProgressPercentageStat" styleClass="stat-value, stat-value-success" text="0%"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Tasks completion" styleClass="stat-desc"/>
-                        </VBox>
-                    </GridPane>
-                    
-                    <!-- ── 4 Task Stat Cards ───────────────────────────── -->
-                    <GridPane hgap="16" vgap="16">
-                        <columnConstraints>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                            <ColumnConstraints percentWidth="25"/>
-                        </columnConstraints>
-                        <rowConstraints>
-                            <RowConstraints/>
-                        </rowConstraints>
-                        
-                        <!-- Task Card 1: Completed -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="0" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-green">
-                                    <Label text="✅" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="COMPLETED" styleClass="stat-label"/>
-                                    <Label fx:id="lblCompletedTasks" styleClass="stat-value, stat-value-success" text="0"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Completed tasks" styleClass="stat-desc"/>
-                        </VBox>
-                        
-                        <!-- Task Card 2: Pending -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="1" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-amber">
-                                    <Label text="⏳" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="PENDING" styleClass="stat-label"/>
-                                    <Label fx:id="lblPendingTasks" styleClass="stat-value" text="0"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Pending tasks" styleClass="stat-desc"/>
-                        </VBox>
-                        
-                        <!-- Task Card 3: In Progress -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-sky">
-                                    <Label text="🔄" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="IN PROGRESS" styleClass="stat-label"/>
-                                    <Label fx:id="lblInProgressTasks" styleClass="stat-value" text="0"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="In progress tasks" styleClass="stat-desc"/>
-                        </VBox>
-                        
-                        <!-- Task Card 4: Completion Rate -->
-                        <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
-                            <HBox alignment="CENTER_LEFT" spacing="12">
-                                <HBox alignment="CENTER" styleClass="stat-icon-wrap, stat-icon-wrap-purple">
-                                    <Label text="🎯" styleClass="stat-icon-sm"/>
-                                </HBox>
-                                <VBox spacing="2">
-                                    <Label text="COMPLETION %" styleClass="stat-label"/>
-                                    <Label fx:id="lblTaskCompletionPercentage" styleClass="stat-value, stat-value-success" text="0%"/>
-                                </VBox>
-                            </HBox>
-                            <Label text="Task completion rate" styleClass="stat-desc"/>
-                        </VBox>
-                    </GridPane>
-
-                    <!-- ── Progress + Widgets Row ──────────────────────── -->
-                    <HBox alignment="TOP_LEFT" spacing="16">
-
-                        <!-- Progress Card -->
-                        <VBox spacing="14" styleClass="panel-card" prefWidth="260">
-                            <Label text="Overall Study Progress" styleClass="panel-title"/>
-                            <VBox alignment="CENTER" spacing="10">
-                                <Label fx:id="lblProgressPercentage" styleClass="progress-pct" text="0%"/>
-                                <ProgressBar fx:id="overallProgressBar" styleClass="progress-bar" progress="0" maxWidth="Infinity"/>
+                <!-- ── 3. LEARNING STATISTICS ROW ─────────────────────── -->
+                <HBox spacing="20">
+                    <!-- Academic Content -->
+                    <VBox spacing="10" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                        <Label text="Academic Content" styleClass="metric-card-title" />
+                        <HBox spacing="0">
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="NOTES" styleClass="metric-label" />
+                                <Label fx:id="lblTotalNotes" styleClass="metric-value" text="0" />
                             </VBox>
-                            <VBox spacing="4">
-                                <Label text="Rank: Apprentice Scholar" styleClass="progress-meta"/>
-                                <Label text="Keep it up! 🎯" styleClass="progress-meta"/>
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="RESOURCES" styleClass="metric-label" />
+                                <Label fx:id="lblSharedResources" styleClass="metric-value" text="0" />
                             </VBox>
-                        </VBox>
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="QUESTIONS" styleClass="metric-label" />
+                                <Label fx:id="lblTotalQuestions" styleClass="metric-value" text="0" />
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                    <!-- Task Status -->
+                    <VBox spacing="10" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                        <Label text="Task Status" styleClass="metric-card-title" />
+                        <HBox spacing="0">
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="TOTAL" styleClass="metric-label" />
+                                <Label fx:id="lblTotalTasks" styleClass="metric-value" text="0" />
+                            </VBox>
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="DONE" styleClass="metric-label" />
+                                <Label fx:id="lblCompletedTasks" styleClass="metric-value metric-success" text="0" />
+                            </VBox>
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="PENDING" styleClass="metric-label" />
+                                <Label fx:id="lblPendingTasks" styleClass="metric-value metric-warning" text="0" />
+                            </VBox>
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="ACTIVE" styleClass="metric-label" />
+                                <Label fx:id="lblInProgressTasks" styleClass="metric-value metric-info" text="0" />
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                    <!-- Study Progress -->
+                    <VBox spacing="10" styleClass="metric-card" HBox.hgrow="ALWAYS">
+                        <Label text="Study Progress" styleClass="metric-card-title" />
+                        <HBox spacing="0">
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="TASK PROGRESS" styleClass="metric-label" />
+                                <Label fx:id="lblProgressPercentageStat" styleClass="metric-value metric-accent" text="0%" />
+                            </VBox>
+                            <VBox spacing="3" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                <Label text="COMPLETION RATE" styleClass="metric-label" />
+                                <Label fx:id="lblTaskCompletionPercentage" styleClass="metric-value metric-success" text="0%" />
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </HBox>
 
-                        <!-- Widget 1: Recent Notes -->
-                        <VBox spacing="10" styleClass="widget-card" HBox.hgrow="ALWAYS">
-                            <Label text="📝  Recent Notes" styleClass="widget-title"/>
-                            <HBox fx:id="recentNotesContainer" spacing="10"/>
-                        </VBox>
+                <!-- ── 4. STUDY OVERVIEW (65%) + MY UPLOADS (35%) ────── -->
+                <GridPane hgap="20" vgap="0">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="65" hgrow="ALWAYS" minWidth="400" />
+                        <ColumnConstraints percentWidth="35" hgrow="ALWAYS" minWidth="280" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints vgrow="ALWAYS" />
+                    </rowConstraints>
 
-                        <!-- Widget 2: Recent Resources -->
-                        <VBox spacing="10" styleClass="widget-card" HBox.hgrow="ALWAYS">
-                            <Label text="📂  Recent Resources" styleClass="widget-title"/>
-                            <HBox fx:id="recentResourcesContainer" spacing="10"/>
+                    <!-- LEFT — Study Overview (primary, larger) -->
+                    <VBox spacing="20" styleClass="workspace-panel" GridPane.columnIndex="0">
+                        <Label text="Study Overview" styleClass="panel-heading" />
+                        <!-- Overall Progress -->
+                        <HBox alignment="CENTER_LEFT" spacing="16">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Overall Progress" styleClass="panel-sub" />
+                                <ProgressBar fx:id="overallProgressBar" styleClass="progress-bar"
+                                             progress="0" maxWidth="Infinity" />
+                            </VBox>
+                            <Label fx:id="lblProgressPercentage" styleClass="pct-badge" text="0%" />
+                        </HBox>
+                        <!-- Recent items — no internal scroll; page scrolls -->
+                        <VBox spacing="16">
+                            <Label text="Recent Notes" styleClass="recent-section-heading" maxWidth="Infinity" />
+                            <HBox fx:id="recentNotesContainer" spacing="12" />
+                            <Label text="Recent Resources" styleClass="recent-section-heading" maxWidth="Infinity" />
+                            <HBox fx:id="recentResourcesContainer" spacing="12" />
+                            <Label text="Recent Questions" styleClass="recent-section-heading" maxWidth="Infinity" />
+                            <HBox fx:id="recentQuestionsContainer" spacing="12" />
+                            <Label text="Recent Activity" styleClass="recent-section-heading" maxWidth="Infinity" />
+                            <HBox fx:id="recentActivityContainer" spacing="12" />
                         </VBox>
-
-                        <!-- Widget 3: Recent Questions -->
-                        <VBox spacing="10" styleClass="widget-card" HBox.hgrow="ALWAYS">
-                            <Label text="🙋  Recent Questions" styleClass="widget-title"/>
-                            <HBox fx:id="recentQuestionsContainer" spacing="10"/>
-                        </VBox>
-                    </HBox>
-
-                    <!-- ── Recent Activity Row ─────────────────────────── -->
-                    <VBox spacing="10" styleClass="widget-card">
-                        <Label text="⚡  Recent Activity" styleClass="widget-title"/>
-                        <HBox fx:id="recentActivityContainer" spacing="10"/>
                     </VBox>
 
-                    <!-- ── My Uploads ──────────────────────────────────── -->
-                    <VBox spacing="16" styleClass="panel-card">
-                        <!-- Header -->
-                        <HBox alignment="CENTER_LEFT" spacing="12">
-                            <Label text="📤  My Uploads" styleClass="library-section-title"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <TextField fx:id="myUploadsSearchField" prefWidth="220" promptText="🔍  Search your uploads..." styleClass="search-field"/>
-                            <Button onAction="#refreshMyUploads" styleClass="refresh-btn" text="↻ Refresh"/>
+                    <!-- RIGHT — My Uploads (secondary, smaller) -->
+                    <VBox spacing="16" styleClass="workspace-panel" GridPane.columnIndex="1">
+                        <!-- Header: title + status badges + refresh -->
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="My Uploads" styleClass="panel-heading" HBox.hgrow="ALWAYS" />
+                            <Label fx:id="summaryTotal" styleClass="status-badge" text="0" />
+                            <Label fx:id="summaryApproved" styleClass="status-badge status-ok" text="0" />
+                            <Label fx:id="summaryPending" styleClass="status-badge status-pend" text="0" />
+                            <Label fx:id="summaryRejected" styleClass="status-badge status-rej" text="0" />
+                            <Button onAction="#refreshMyUploads" styleClass="refresh-btn" text="↻" />
                         </HBox>
-                        
-                        <!-- Segmented Tabs -->
-                        <HBox spacing="8">
-                            <Button fx:id="tabMyNotes" onAction="#handleMyUploadsTabChange" styleClass="my-uploads-tab-active" text="📝 My Notes"/>
-                            <Button fx:id="tabMyResources" onAction="#handleMyUploadsTabChange" styleClass="my-uploads-tab" text="📂 My Resources"/>
-                            <Button fx:id="tabMyQuestions" onAction="#handleMyUploadsTabChange" styleClass="my-uploads-tab" text="🙋 My Questions"/>
+                        <!-- Tabs + search -->
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <HBox spacing="4">
+                                <Button fx:id="tabMyNotes" onAction="#handleMyUploadsTabChange"
+                                        styleClass="my-uploads-tab-active" text="Notes" />
+                                <Button fx:id="tabMyResources" onAction="#handleMyUploadsTabChange"
+                                        styleClass="my-uploads-tab" text="Resources" />
+                                <Button fx:id="tabMyQuestions" onAction="#handleMyUploadsTabChange"
+                                        styleClass="my-uploads-tab" text="Q&amp;A" />
+                            </HBox>
+                            <TextField fx:id="myUploadsSearchField"
+                                       promptText="🔍  Search uploads…"
+                                       styleClass="search-field"
+                                       HBox.hgrow="ALWAYS" maxWidth="Infinity" />
                         </HBox>
-                        
-                        <!-- Upload List (FlowPane for cards) -->
-                        <ScrollPane fitToWidth="true" styleClass="scroll-pane-clean" prefHeight="320">
-                            <FlowPane fx:id="myUploadsFlowPane" hgap="12" vgap="12" styleClass="my-uploads-flow"/>
-                        </ScrollPane>
-                        
-                        <!-- Bottom Summary Cards -->
-                        <GridPane hgap="12" vgap="12">
-                            <columnConstraints>
-                                <ColumnConstraints percentWidth="25"/>
-                                <ColumnConstraints percentWidth="25"/>
-                                <ColumnConstraints percentWidth="25"/>
-                                <ColumnConstraints percentWidth="25"/>
-                            </columnConstraints>
-                            
-                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="0" spacing="8">
-                                <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-indigo">
-                                        <Label text="📤" styleClass="stat-icon-sm"/>
-                                    </HBox>
-                                    <VBox spacing="2">
-                                        <Label text="TOTAL" styleClass="stat-label"/>
-                                        <Label fx:id="summaryTotal" styleClass="stat-value" text="0"/>
-                                    </VBox>
-                                </HBox>
-                                <Label text="Total uploads" styleClass="stat-desc"/>
-                            </VBox>
-                            
-                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="1" spacing="8">
-                                <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-green">
-                                        <Label text="✅" styleClass="stat-icon-sm"/>
-                                    </HBox>
-                                    <VBox spacing="2">
-                                        <Label text="APPROVED" styleClass="stat-label"/>
-                                        <Label fx:id="summaryApproved" styleClass="stat-value stat-value-success" text="0"/>
-                                    </VBox>
-                                </HBox>
-                                <Label text="Approved items" styleClass="stat-desc"/>
-                            </VBox>
-                            
-                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="2" spacing="8">
-                                <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-amber">
-                                        <Label text="⏳" styleClass="stat-icon-sm"/>
-                                    </HBox>
-                                    <VBox spacing="2">
-                                        <Label text="PENDING" styleClass="stat-label"/>
-                                        <Label fx:id="summaryPending" styleClass="stat-value" text="0"/>
-                                    </VBox>
-                                </HBox>
-                                <Label text="Pending approval" styleClass="stat-desc"/>
-                            </VBox>
-                            
-                            <VBox styleClass="stat-card-premium" GridPane.columnIndex="3" spacing="8">
-                                <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <HBox alignment="CENTER" styleClass="stat-icon-wrap stat-icon-wrap-purple">
-                                        <Label text="❌" styleClass="stat-icon-sm"/>
-                                    </HBox>
-                                    <VBox spacing="2">
-                                        <Label text="REJECTED" styleClass="stat-label"/>
-                                        <Label fx:id="summaryRejected" styleClass="stat-value" text="0"/>
-                                    </VBox>
-                                </HBox>
-                                <Label text="Rejected items" styleClass="stat-desc"/>
-                            </VBox>
-                        </GridPane>
+                        <!-- Upload cards — expands naturally, page scrolls -->
+                        <FlowPane fx:id="myUploadsFlowPane" hgap="12" vgap="12"
+                                  styleClass="my-uploads-flow" />
                     </VBox>
+                </GridPane>
 
-                    <!-- ── Community Library ───────────────────────────── -->
-                    <VBox spacing="14" styleClass="panel-card">
-                        <Label text="Approved Community Library" styleClass="library-section-title"/>
-
-                        <!-- Filter row -->
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                            <ComboBox fx:id="departmentComboBox" prefWidth="160" promptText="Choose Department" styleClass="filter-combo"/>
-                            <ComboBox fx:id="semesterComboBox" prefWidth="140" promptText="Choose Semester" styleClass="filter-combo"/>
-                            <ComboBox fx:id="subjectComboBox" prefWidth="175" promptText="Choose Subject" styleClass="filter-combo"/>
-                            <ComboBox fx:id="sortComboBox" prefWidth="145" promptText="Sort By" styleClass="filter-combo"/>
-                            <TextField fx:id="noteSearchField" prefWidth="200" promptText="🔍  Search library notes…" styleClass="search-field"/>
-                            <Button onAction="#searchNotes" styleClass="filter-btn" text="Filter"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                        </HBox>
-
-                        <!-- Notes Flow Pane -->
-                        <ScrollPane fitToWidth="true" styleClass="scroll-pane" vbarPolicy="NEVER" prefHeight="220">
-                            <FlowPane fx:id="notesFlowPane" hgap="14" vgap="14" styleClass="notes-grid"/>
-                        </ScrollPane>
-                    </VBox>
-
+                <!-- ── 5. COMMUNITY LIBRARY (full width) ──────────────── -->
+                <VBox spacing="20" styleClass="workspace-panel">
+                    <!-- Header: title + description left | filters right -->
+                    <HBox alignment="TOP_LEFT" spacing="20">
+                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                            <Label text="Community Library" styleClass="panel-heading" />
+                            <Label text="Approved peer-reviewed notes, references, and academic resources shared by the community."
+                                   styleClass="panel-sub" wrapText="true" />
+                        </VBox>
+                        <FlowPane hgap="8" vgap="8" alignment="CENTER_RIGHT">
+                            <ComboBox fx:id="departmentComboBox" prefWidth="148" promptText="Department"
+                                      styleClass="filter-combo" />
+                            <ComboBox fx:id="semesterComboBox" prefWidth="128" promptText="Semester"
+                                      styleClass="filter-combo" />
+                            <ComboBox fx:id="subjectComboBox" prefWidth="148" promptText="Subject"
+                                      styleClass="filter-combo" />
+                            <ComboBox fx:id="sortComboBox" prefWidth="118" promptText="Sort By"
+                                      styleClass="filter-combo" />
+                        </FlowPane>
+                    </HBox>
+                    <!-- Search row -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <TextField fx:id="noteSearchField"
+                                   promptText="🔍  Search library notes…"
+                                   styleClass="search-field"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                        <Button onAction="#searchNotes" styleClass="primary-btn" text="Search" />
+                    </HBox>
+                    <!-- Notes grid — expands naturally, page scrolls -->
+                    <FlowPane fx:id="notesFlowPane" hgap="14" vgap="14" styleClass="notes-grid" />
                 </VBox>
-            </content>
+
+            </VBox>
         </ScrollPane>
     </center>
 
