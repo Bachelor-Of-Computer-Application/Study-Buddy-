@@ -13,7 +13,13 @@ import com.studybuddy.services.QuestionService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.StringUtils;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,20 +27,24 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Controller for QuestionsView.fxml.
@@ -49,6 +59,8 @@ import java.util.stream.Collectors;
  * - Answer authorship check uses userId (not display name).
  */
 public class QuestionsController {
+
+    private static final Logger LOGGER = Logger.getLogger(QuestionsController.class.getName());
 
     @FXML
     private BorderPane rootPane;
@@ -132,7 +144,7 @@ public class QuestionsController {
             allQuestions = filterVisibleQuestions(allQuestions);
         } catch (Exception e) {
             allQuestions = new ArrayList<>();
-            System.err.println("[QuestionsController] Failed to load questions: " + e.getMessage());
+            LOGGER.warning("[QuestionsController] Failed to load questions: " + e.getMessage());
         }
         questionsListView.setItems(FXCollections.observableArrayList(allQuestions));
     }
@@ -228,7 +240,7 @@ public class QuestionsController {
             q.getAnswers().clear();
             q.getAnswers().addAll(fresh);
         } catch (Exception e) {
-            System.err.println("[QuestionsController] Failed to reload answers: " + e.getMessage());
+            LOGGER.warning("[QuestionsController] Failed to reload answers: " + e.getMessage());
         }
         refreshAnswers(q);
     }
@@ -487,7 +499,7 @@ public class QuestionsController {
 
             loadQuestions(); // Refresh after new question is submitted
         } catch (IOException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -500,7 +512,7 @@ public class QuestionsController {
         try {
             int userId = App.getCurrentUser().getId();
 
-            System.out.println("Current User ID = " + userId);
+            LOGGER.info("Current User ID = " + userId);
 
             boolean ok = questionDAO.updateQuestionVotes(
                     selectedQuestion.getId(),
@@ -520,7 +532,7 @@ public class QuestionsController {
 
         } catch (Exception e) {
             showError("Failed to upvote question: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -573,7 +585,7 @@ public class QuestionsController {
 
         } catch (Exception e) {
             showError("Failed to post answer: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -696,7 +708,7 @@ public class QuestionsController {
                     }
                 } catch (Exception e) {
                     showError("Error: " + e.getMessage());
-                    e.printStackTrace();
+                    java.util.logging.Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 }
             }
         });

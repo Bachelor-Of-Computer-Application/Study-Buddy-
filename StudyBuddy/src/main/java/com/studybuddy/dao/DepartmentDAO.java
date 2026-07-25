@@ -1,8 +1,12 @@
 package com.studybuddy.dao;
 
 import com.studybuddy.models.Department;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +29,8 @@ public class DepartmentDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching departments: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DepartmentDAO.class.getName()).warning("Error fetching departments: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DepartmentDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return departments;
@@ -47,8 +51,8 @@ public class DepartmentDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching department by ID: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DepartmentDAO.class.getName()).warning("Error fetching department by ID: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DepartmentDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -69,8 +73,8 @@ public class DepartmentDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching department by code: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DepartmentDAO.class.getName()).warning("Error fetching department by code: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DepartmentDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -90,7 +94,7 @@ public class DepartmentDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching all departments: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DepartmentDAO.class.getName()).warning("Error fetching all departments: " + e.getMessage());
         }
 
         return departments;

@@ -79,8 +79,8 @@ public class RegisterController implements Initializable {
                             try {
                                 SceneManager.showLoginPage(getStage());
                             } catch (java.io.IOException ex) {
-                                System.err.println("[RegisterController] ❌ Could not load LoginView.fxml");
-                                ex.printStackTrace();
+                                java.util.logging.Logger.getLogger(RegisterController.class.getName()).warning("[RegisterController] ❌ Could not load LoginView.fxml");
+                                java.util.logging.Logger.getLogger(RegisterController.class.getName()).log(java.util.logging.Level.SEVERE, ex.getMessage(), ex);
                             }
                         }
                     })
@@ -99,8 +99,8 @@ public class RegisterController implements Initializable {
         try {
             SceneManager.showLoginPage(getStage());
         } catch (java.io.IOException e) {
-            System.err.println("[RegisterController] ❌ Could not load LoginView.fxml");
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(RegisterController.class.getName()).warning("[RegisterController] ❌ Could not load LoginView.fxml");
+            java.util.logging.Logger.getLogger(RegisterController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             showError("Navigation error: " + e.getMessage());
         }
     }

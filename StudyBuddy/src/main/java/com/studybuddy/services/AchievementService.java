@@ -1,7 +1,7 @@
 
 package com.studybuddy.services;
 
-import com.studybuddy.dao.*;
+import com.studybuddy.dao.TaskDAO;
 import com.studybuddy.models.Achievement;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +57,7 @@ public class AchievementService {
             int noteCount = statsService.getNotesUploaded(userId);
             noteScholar.setCurrentProgress(Math.min(noteCount, 1));
             noteScholar.setUnlocked(noteCount >= 1);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { java.util.logging.Logger.getLogger(AchievementService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e); }
         achievements.add(noteScholar);
         
         // 3. Curious Learner (ask first question)
@@ -73,7 +73,7 @@ public class AchievementService {
             int questionCount = statsService.getQuestionsAsked(userId);
             curiousLearner.setCurrentProgress(Math.min(questionCount, 1));
             curiousLearner.setUnlocked(questionCount >= 1);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { java.util.logging.Logger.getLogger(AchievementService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e); }
         achievements.add(curiousLearner);
         
         // 4. Helpful Student (answer first question)
@@ -89,7 +89,7 @@ public class AchievementService {
             int answerCount = statsService.getAnswersSubmitted(userId);
             helpfulStudent.setCurrentProgress(Math.min(answerCount, 1));
             helpfulStudent.setUnlocked(answerCount >= 1);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { java.util.logging.Logger.getLogger(AchievementService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e); }
         achievements.add(helpfulStudent);
         
         // 5. Resource Contributor (upload first resource)
@@ -105,7 +105,7 @@ public class AchievementService {
             int resourceCount = statsService.getResourcesUploaded(userId);
             resourceContributor.setCurrentProgress(Math.min(resourceCount, 1));
             resourceContributor.setUnlocked(resourceCount >= 1);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { java.util.logging.Logger.getLogger(AchievementService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e); }
         achievements.add(resourceContributor);
         
         // 6. Task Master (complete 5 tasks)
@@ -135,7 +135,7 @@ public class AchievementService {
             int noteCount = statsService.getNotesUploaded(userId);
             noteCollector.setCurrentProgress(noteCount);
             noteCollector.setUnlocked(noteCount >= 5);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { java.util.logging.Logger.getLogger(AchievementService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e); }
         achievements.add(noteCollector);
         
         // 8. Inquisitive Mind (ask 5 questions)
@@ -151,7 +151,7 @@ public class AchievementService {
             int questionCount = statsService.getQuestionsAsked(userId);
             inquisitiveMind.setCurrentProgress(questionCount);
             inquisitiveMind.setUnlocked(questionCount >= 5);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { java.util.logging.Logger.getLogger(AchievementService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e); }
         achievements.add(inquisitiveMind);
         
         // 9. Consistent Learner (complete 10 tasks)
@@ -194,7 +194,7 @@ public class AchievementService {
             int resourceCount = statsService.getResourcesUploaded(userId);
             resourceProvider.setCurrentProgress(resourceCount);
             resourceProvider.setUnlocked(resourceCount >= 5);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { java.util.logging.Logger.getLogger(AchievementService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e); }
         achievements.add(resourceProvider);
         
         return achievements;

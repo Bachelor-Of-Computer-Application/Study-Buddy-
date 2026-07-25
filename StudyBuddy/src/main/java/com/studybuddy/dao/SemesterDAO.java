@@ -1,8 +1,12 @@
 package com.studybuddy.dao;
 
 import com.studybuddy.models.Semester;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,8 +51,8 @@ public class SemesterDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching semesters by department: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(SemesterDAO.class.getName()).warning("Error fetching semesters by department: " + e.getMessage());
+            java.util.logging.Logger.getLogger(SemesterDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return semesters;
@@ -88,8 +92,8 @@ public class SemesterDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching semester by ID: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(SemesterDAO.class.getName()).warning("Error fetching semester by ID: " + e.getMessage());
+            java.util.logging.Logger.getLogger(SemesterDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -113,7 +117,7 @@ public class SemesterDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Error fetching all semesters: " + e.getMessage());
+            java.util.logging.Logger.getLogger(SemesterDAO.class.getName()).warning("Error fetching all semesters: " + e.getMessage());
         }
 
         return semesters;

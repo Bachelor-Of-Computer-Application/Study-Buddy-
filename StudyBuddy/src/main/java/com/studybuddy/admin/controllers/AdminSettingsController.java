@@ -5,14 +5,21 @@ import com.studybuddy.admin.services.SettingsService;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.services.AcademicService;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Settings: app config + Department/Semester CRUD (all from database).

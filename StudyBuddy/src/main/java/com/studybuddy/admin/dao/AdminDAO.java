@@ -1,10 +1,25 @@
 package com.studybuddy.admin.dao;
 
-import com.studybuddy.models.*;
+import com.studybuddy.models.Answer;
+import com.studybuddy.models.Note;
+import com.studybuddy.models.Notification;
+import com.studybuddy.models.Question;
+import com.studybuddy.models.Resource;
+import com.studybuddy.models.Subject;
+import com.studybuddy.models.Task;
+import com.studybuddy.models.User;
 import com.studybuddy.utils.DatabaseUtil;
-
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -17,6 +32,20 @@ public class AdminDAO {
     private static AdminDAO instance;
 
     private AdminDAO() {}
+
+    private static class ForeignKeyReference {
+        private final String schemaName;
+        private final String tableName;
+        private final String columnName;
+        private final String foreignKeyName;
+
+        private ForeignKeyReference(String schemaName, String tableName, String columnName, String foreignKeyName) {
+            this.schemaName = schemaName;
+            this.tableName = tableName;
+            this.columnName = columnName;
+            this.foreignKeyName = foreignKeyName;
+        }
+    }
 
     public static synchronized AdminDAO getInstance() {
         if (instance == null) instance = new AdminDAO();
@@ -425,46 +454,46 @@ public class AdminDAO {
      * @return DeletionResult containing success status, counts, and any error message
      */
     public DeletionResult hardDeleteUser(int userId) {
-        System.out.println("=== ENTERING hardDeleteUser for userId=" + userId + " ===");
+        logger.info("=== ENTERING hardDeleteUser for userId=" + userId + " ===");
         DeletionResult result = new DeletionResult();
         
         try (Connection conn = DatabaseUtil.getConnection()) {
-            System.out.println("STEP 1: Got database connection");
+            logger.info("STEP 1: Got database connection");
             
             // Start transaction
             conn.setAutoCommit(false);
-            System.out.println("STEP 2: Set autoCommit=false (transaction started)");
+            logger.info("STEP 2: Set autoCommit=false (transaction started)");
             
             try {
                 // Count items before deletion for logging
-                System.out.println("STEP 3: Counting Notes...");
+                logger.info("STEP 3: Counting Notes...");
                 result.notesCount = countUserItems(conn, "Notes", "userId", userId);
-                System.out.println("STEP 3 DONE: Notes count = " + result.notesCount);
+                logger.info("STEP 3 DONE: Notes count = " + result.notesCount);
                 
-                System.out.println("STEP 4: Counting Resources...");
+                logger.info("STEP 4: Counting Resources...");
                 result.resourcesCount = countUserItems(conn, "Resources", "uploadedBy", userId);
-                System.out.println("STEP 4 DONE: Resources count = " + result.resourcesCount);
+                logger.info("STEP 4 DONE: Resources count = " + result.resourcesCount);
                 
-                System.out.println("STEP 5: Counting Questions...");
+                logger.info("STEP 5: Counting Questions...");
                 result.questionsCount = countUserItems(conn, "Questions", "user_id", userId);
-                System.out.println("STEP 5 DONE: Questions count = " + result.questionsCount);
+                logger.info("STEP 5 DONE: Questions count = " + result.questionsCount);
                 
-                System.out.println("STEP 6: Counting Answers...");
+                logger.info("STEP 6: Counting Answers...");
                 result.answersCount = countUserItems(conn, "Answers", "user_id", userId);
-                System.out.println("STEP 6 DONE: Answers count = " + result.answersCount);
+                logger.info("STEP 6 DONE: Answers count = " + result.answersCount);
                 
-                System.out.println("STEP 7: Counting Tasks...");
+                logger.info("STEP 7: Counting Tasks...");
                 result.tasksCount = countUserItems(conn, "Tasks", "user_id", userId);
-                System.out.println("STEP 7 DONE: Tasks count = " + result.tasksCount);
+                logger.info("STEP 7 DONE: Tasks count = " + result.tasksCount);
                 
-                System.out.println("STEP 8: Counting Notifications...");
+                logger.info("STEP 8: Counting Notifications...");
                 result.notificationsCount = countUserItems(conn, "Notifications", "userId", userId);
-                System.out.println("STEP 8 DONE: Notifications count = " + result.notificationsCount);
+                logger.info("STEP 8 DONE: Notifications count = " + result.notificationsCount);
                 
                 // 1. Delete ALL votes on user's Questions (by question_id, not user_id)
-                System.out.println("STEP 9: Checking if QuestionVotes table exists...");
+                logger.info("STEP 9: Checking if QuestionVotes table exists...");
                 if (DatabaseUtil.tableExists(conn, "QuestionVotes")) {
-                    System.out.println("STEP 9a: QuestionVotes exists, deleting...");
+                    logger.info("STEP 9a: QuestionVotes exists, deleting...");
                     String deleteQuestionVotesSQL = 
                         "DELETE FROM QuestionVotes WHERE question_id IN " +
                         "(SELECT question_id FROM Questions WHERE user_id = ?)";
@@ -475,18 +504,18 @@ public class AdminDAO {
                             userId
                     );
                     deleteWithStatement(conn, deleteQuestionVotesSQL, userId);
-                    System.out.println("STEP 9a DONE: QuestionVotes deleted");
+                    logger.info("STEP 9a DONE: QuestionVotes deleted");
                 } else {
-                    System.out.println("STEP 9a SKIPPED: QuestionVotes table does not exist");
+                    logger.info("STEP 9a SKIPPED: QuestionVotes table does not exist");
                 }
                 
                 // 2. Delete ALL votes on user's Answers (by answer_id, not user_id)
                 // 2. Delete ALL AnswerVotes
-                System.out.println("STEP 10: Checking if AnswerVotes table exists...");
+                logger.info("STEP 10: Checking if AnswerVotes table exists...");
 
                 if (DatabaseUtil.tableExists(conn, "AnswerVotes")) {
 
-                    System.out.println("STEP 10a: Deleting votes on answers under user's questions...");
+                    logger.info("STEP 10a: Deleting votes on answers under user's questions...");
 
                     String deleteAnswerVotesSQL =
                             "DELETE FROM AnswerVotes WHERE answer_id IN (" +
@@ -496,7 +525,7 @@ public class AdminDAO {
 
                     deleteWithStatement(conn, deleteAnswerVotesSQL, userId);
 
-                    System.out.println("STEP 10b: Deleting votes on user's own answers...");
+                    logger.info("STEP 10b: Deleting votes on user's own answers...");
 
                     String deleteOwnAnswerVotesSQL =
                             "DELETE FROM AnswerVotes WHERE answer_id IN (" +
@@ -504,14 +533,14 @@ public class AdminDAO {
 
                     deleteWithStatement(conn, deleteOwnAnswerVotesSQL, userId);
 
-                    System.out.println("STEP 10 DONE: AnswerVotes deleted");
+                    logger.info("STEP 10 DONE: AnswerVotes deleted");
 
                 } else {
-                    System.out.println("STEP 10 SKIPPED: AnswerVotes table does not exist");
+                    logger.info("STEP 10 SKIPPED: AnswerVotes table does not exist");
                 }
 
                 // 3. Delete ALL answers on the user's questions
-                System.out.println("STEP 11: Deleting Answers on user's Questions...");
+                logger.info("STEP 11: Deleting Answers on user's Questions...");
 
                 deleteWithStatement(
                         conn,
@@ -520,10 +549,10 @@ public class AdminDAO {
                         userId
                 );
 
-                System.out.println("STEP 11a DONE");
+                logger.info("STEP 11a DONE");
 
 // 3b. Delete answers written by the user on other people's questions
-                System.out.println("STEP 11b: Deleting user's own Answers...");
+                logger.info("STEP 11b: Deleting user's own Answers...");
 
                 deleteWithStatement(
                         conn,
@@ -531,122 +560,122 @@ public class AdminDAO {
                         userId
                 );
 
-                System.out.println("STEP 11b DONE");
+                logger.info("STEP 11b DONE");
                 // 4. Delete user's Questions (Answers and Votes already deleted)
-                System.out.println("STEP 12: Deleting Questions...");
+                logger.info("STEP 12: Deleting Questions...");
                 deleteWithStatement(conn, "DELETE FROM Questions WHERE user_id = ?", userId);
-                System.out.println("STEP 12 DONE: Questions deleted");
+                logger.info("STEP 12 DONE: Questions deleted");
                 
                 // 5. Delete user's Notes
-                System.out.println("STEP 13: Deleting Notes...");
+                logger.info("STEP 13: Deleting Notes...");
                 deleteWithStatement(conn, "DELETE FROM Notes WHERE userId = ?", userId);
-                System.out.println("STEP 13 DONE: Notes deleted");
+                logger.info("STEP 13 DONE: Notes deleted");
                 
                 // 6. Delete user's Resources
-                System.out.println("STEP 14: Deleting Resources...");
+                logger.info("STEP 14: Deleting Resources...");
                 deleteWithStatement(conn, "DELETE FROM Resources WHERE uploadedBy = ?", userId);
-                System.out.println("STEP 14 DONE: Resources deleted");
+                logger.info("STEP 14 DONE: Resources deleted");
                 
                 // 7. Delete user's Tasks
-                System.out.println("STEP 15: Deleting Tasks...");
+                logger.info("STEP 15: Deleting Tasks...");
                 deleteWithStatement(conn, "DELETE FROM Tasks WHERE user_id = ?", userId);
-                System.out.println("STEP 15 DONE: Tasks deleted");
+                logger.info("STEP 15 DONE: Tasks deleted");
                 
                 // 8. Delete user's Notifications
-                System.out.println("STEP 16: Deleting Notifications...");
+                logger.info("STEP 16: Deleting Notifications...");
                 deleteWithStatement(conn, "DELETE FROM Notifications WHERE userId = ?", userId);
-                System.out.println("STEP 16 DONE: Notifications deleted");
+                logger.info("STEP 16 DONE: Notifications deleted");
                 
                 // 9. Delete user's UploadedFiles (if table exists)
-                System.out.println("STEP 17: Checking if UploadedFiles table exists...");
+                logger.info("STEP 17: Checking if UploadedFiles table exists...");
                 if (DatabaseUtil.tableExists(conn, "UploadedFiles")) {
-                    System.out.println("STEP 17a: UploadedFiles exists, deleting...");
+                    logger.info("STEP 17a: UploadedFiles exists, deleting...");
                     deleteWithStatement(conn, "DELETE FROM UploadedFiles WHERE uploaded_by = ?", userId);
-                    System.out.println("STEP 17a DONE: UploadedFiles deleted");
+                    logger.info("STEP 17a DONE: UploadedFiles deleted");
                 } else {
-                    System.out.println("STEP 17a SKIPPED: UploadedFiles table does not exist");
+                    logger.info("STEP 17a SKIPPED: UploadedFiles table does not exist");
                 }
                 
                 // 10. Delete user's Activity Logs (if table exists)
-                System.out.println("STEP 18: Checking if UserActivities table exists...");
+                logger.info("STEP 18: Checking if UserActivities table exists...");
                 if (DatabaseUtil.tableExists(conn, "UserActivities")) {
-                    System.out.println("STEP 18a: UserActivities exists, deleting...");
+                    logger.info("STEP 18a: UserActivities exists, deleting...");
                     deleteWithStatement(conn, "DELETE FROM UserActivities WHERE user_id = ?", userId);
-                    System.out.println("STEP 18a DONE: UserActivities deleted");
+                    logger.info("STEP 18a DONE: UserActivities deleted");
                 } else {
-                    System.out.println("STEP 18a SKIPPED: UserActivities table does not exist");
+                    logger.info("STEP 18a SKIPPED: UserActivities table does not exist");
                 }
                 
                 // 11. Delete user's Bookmarks (if table exists)
-                System.out.println("STEP 19: Checking if Bookmarks table exists...");
+                logger.info("STEP 19: Checking if Bookmarks table exists...");
                 if (DatabaseUtil.tableExists(conn, "Bookmarks")) {
-                    System.out.println("STEP 19a: Bookmarks exists, deleting...");
+                    logger.info("STEP 19a: Bookmarks exists, deleting...");
                     deleteWithStatement(conn, "DELETE FROM Bookmarks WHERE user_id = ?", userId);
-                    System.out.println("STEP 19a DONE: Bookmarks deleted");
+                    logger.info("STEP 19a DONE: Bookmarks deleted");
                 } else {
-                    System.out.println("STEP 19a SKIPPED: Bookmarks table does not exist");
+                    logger.info("STEP 19a SKIPPED: Bookmarks table does not exist");
                 }
                 
                 // 12. Finally, delete the User record itself
-                System.out.println("STEP 20: Deleting User record...");
+                logger.info("STEP 20: Deleting User record...");
                 int userRows;
                 try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Users WHERE id = ?")) {
                     ps.setInt(1, userId);
                     userRows = ps.executeUpdate();
                 }
-                System.out.println("STEP 20 DONE: User deleted, rows affected = " + userRows);
+                logger.info("STEP 20 DONE: User deleted, rows affected = " + userRows);
                 
                 if (userRows == 0) {
-                    System.out.println("STEP 21: User not found, rolling back...");
+                    logger.info("STEP 21: User not found, rolling back...");
                     conn.rollback();
                     result.success = false;
                     result.errorMessage = "User not found (id=" + userId + ")";
-                    System.out.println("=== EXITING hardDeleteUser (user not found) ===");
+                    logger.info("=== EXITING hardDeleteUser (user not found) ===");
                     return result;
                 }
                 
                 // Commit transaction
-                System.out.println("STEP 22: Committing transaction...");
+                logger.info("STEP 22: Committing transaction...");
                 conn.commit();
-                System.out.println("STEP 22 DONE: Transaction committed");
+                logger.info("STEP 22 DONE: Transaction committed");
                 
                 result.success = true;
-                System.out.println("=== EXITING hardDeleteUser (SUCCESS) ===");
+                logger.info("=== EXITING hardDeleteUser (SUCCESS) ===");
                 return result;
                 
             } catch (SQLException e) {
-                System.out.println("STEP ERROR: SQLException caught: " + e.getMessage());
-                e.printStackTrace();
+                logger.info("STEP ERROR: SQLException caught: " + e.getMessage());
+                java.util.logging.Logger.getLogger(AdminDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 
                 // Rollback on any error
                 try {
-                    System.out.println("STEP ERROR: Rolling back transaction...");
+                    logger.info("STEP ERROR: Rolling back transaction...");
                     conn.rollback();
-                    System.out.println("STEP ERROR: Rollback complete");
+                    logger.info("STEP ERROR: Rollback complete");
                 } catch (SQLException rollbackEx) {
-                    System.out.println("STEP ERROR: Rollback FAILED: " + rollbackEx.getMessage());
+                    logger.info("STEP ERROR: Rollback FAILED: " + rollbackEx.getMessage());
                     logger.log(java.util.logging.Level.SEVERE, "Rollback failed", rollbackEx);
                 }
                 
                 result.success = false;
                 result.errorMessage = "Database error: " + e.getMessage();
                 logger.log(java.util.logging.Level.SEVERE, "hardDeleteUser failed for userId=" + userId, e);
-                System.out.println("=== EXITING hardDeleteUser (SQL ERROR) ===");
+                logger.info("=== EXITING hardDeleteUser (SQL ERROR) ===");
                 return result;
                 
             } finally {
-                System.out.println("STEP FINALLY: Resetting autoCommit=true...");
+                logger.info("STEP FINALLY: Resetting autoCommit=true...");
                 conn.setAutoCommit(true);
-                System.out.println("STEP FINALLY DONE: autoCommit reset");
+                logger.info("STEP FINALLY DONE: autoCommit reset");
             }
             
         } catch (SQLException e) {
-            System.out.println("STEP CONN ERROR: Connection error: " + e.getMessage());
-            e.printStackTrace();
+            logger.info("STEP CONN ERROR: Connection error: " + e.getMessage());
+            java.util.logging.Logger.getLogger(AdminDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             result.success = false;
             result.errorMessage = "Connection error: " + e.getMessage();
             logger.log(java.util.logging.Level.SEVERE, "hardDeleteUser connection failed for userId=" + userId, e);
-            System.out.println("=== EXITING hardDeleteUser (CONNECTION ERROR) ===");
+            logger.info("=== EXITING hardDeleteUser (CONNECTION ERROR) ===");
             return result;
         }
     }
@@ -741,13 +770,13 @@ public class AdminDAO {
                 n.setUserId(rs.getInt("userId"));
                 n.setPrivate(rs.getBoolean("isPrivate"));
                 n.setStatus(rs.getString("status"));
-                try { n.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
-                try { n.setDownloads(rs.getInt("downloads")); } catch (SQLException ignored) {}
+                try { n.setTags(rs.getString("tags")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+                try { n.setDownloads(rs.getInt("downloads")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
                 String uploader = rs.getString("fullName");
                 if (uploader == null || uploader.isBlank()) uploader = rs.getString("uploaderName");
                 if (uploader != null) n.setSource(uploader);
-                try { n.setUserDepartment(rs.getString("department")); } catch (SQLException ignored) {}
-                try { n.setUserSemester(rs.getString("semester")); } catch (SQLException ignored) {}
+                try { n.setUserDepartment(rs.getString("department")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+                try { n.setUserSemester(rs.getString("semester")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
                 list.add(n);
             }
         } catch (SQLException e) {
@@ -990,23 +1019,27 @@ public class AdminDAO {
         try (Connection conn = DatabaseUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                logger.info("deleteQuestion: starting transaction for questionId=" + questionId);
+                logQuestionForeignKeyReferences(conn);
                 deleteQuestionChildrenIfPresent(conn, questionId);
                 int rows;
                 try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Questions WHERE question_id = ?")) {
                     ps.setInt(1, questionId);
                     rows = ps.executeUpdate();
                 }
+                logger.info("deleteQuestion: deleted " + rows + " Questions rows for questionId=" + questionId);
                 if (rows == 0) {
                     conn.rollback();
                     logger.warning("deleteQuestion: no question found with id=" + questionId);
                     return false;
                 }
                 conn.commit();
+                logger.info("deleteQuestion: committed transaction for questionId=" + questionId);
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
                 logger.log(java.util.logging.Level.SEVERE,
-                        "deleteQuestion failed for questionId=" + questionId, e);
+                        "deleteQuestion failed; rolled back transaction for questionId=" + questionId, e);
                 return false;
             } finally {
                 conn.setAutoCommit(true);
@@ -1020,22 +1053,193 @@ public class AdminDAO {
 
     /** Deletes optional child rows when their tables exist (backward-compatible with older schemas). */
     private void deleteQuestionChildrenIfPresent(Connection conn, int questionId) throws SQLException {
-        if (DatabaseUtil.tableExists(conn, "QuestionVotes")) {
-            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM QuestionVotes WHERE question_id = ?")) {
-                ps.setInt(1, questionId);
-                ps.executeUpdate();
-            }
+        logger.info("deleteQuestion: deleting child data for questionId=" + questionId);
+
+        deleteIfTableExists(conn, "RewardTransactions",
+                "DELETE FROM RewardTransactions WHERE question_id = ? OR answer_id IN " +
+                        "(SELECT answer_id FROM Answers WHERE question_id = ?)",
+                ps -> {
+                    ps.setInt(1, questionId);
+                    ps.setInt(2, questionId);
+                },
+                questionId);
+
+        deleteIfTableExists(conn, "AnswerVotes",
+                "DELETE FROM AnswerVotes WHERE answer_id IN " +
+                        "(SELECT answer_id FROM Answers WHERE question_id = ?)",
+                ps -> ps.setInt(1, questionId),
+                questionId);
+
+        deleteIfTableExists(conn, "AnswerReports",
+                "DELETE FROM AnswerReports WHERE answer_id IN " +
+                        "(SELECT answer_id FROM Answers WHERE question_id = ?)",
+                ps -> ps.setInt(1, questionId),
+                questionId);
+
+        deleteRemainingAnswerForeignKeyReferences(conn, questionId);
+
+        if (DatabaseUtil.tableExists(conn, "Questions") && columnExists(conn, "Questions", "best_answer_id")) {
+            executeDeleteStep(conn,
+                    "Questions.best_answer_id",
+                    "UPDATE Questions SET best_answer_id = NULL WHERE question_id = ?",
+                    ps -> ps.setInt(1, questionId),
+                    questionId);
         } else {
-            logger.fine("deleteQuestion: skipping QuestionVotes (table not present)");
+            logger.info("deleteQuestion: skipping Questions.best_answer_id cleanup (column not present)");
         }
-        if (DatabaseUtil.tableExists(conn, "Answers")) {
-            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM Answers WHERE question_id = ?")) {
-                ps.setInt(1, questionId);
-                ps.executeUpdate();
+
+        deleteIfTableExists(conn, "Answers",
+                "DELETE FROM Answers WHERE question_id = ?",
+                ps -> ps.setInt(1, questionId),
+                questionId);
+
+        deleteIfTableExists(conn, "QuestionVotes",
+                "DELETE FROM QuestionVotes WHERE question_id = ?",
+                ps -> ps.setInt(1, questionId),
+                questionId);
+
+        deleteIfTableExists(conn, "QuestionReports",
+                "DELETE FROM QuestionReports WHERE question_id = ?",
+                ps -> ps.setInt(1, questionId),
+                questionId);
+
+        deleteRemainingQuestionForeignKeyReferences(conn, questionId);
+
+        deleteOptionalQuestionReference(conn, "Notifications", questionId);
+        deleteOptionalQuestionReference(conn, "Bookmarks", questionId);
+        deleteOptionalQuestionReference(conn, "Favorites", questionId);
+        deleteOptionalQuestionReference(conn, "ActivityLogs", questionId);
+        deleteOptionalQuestionReference(conn, "UserActivities", questionId);
+    }
+
+    private void logQuestionForeignKeyReferences(Connection conn) throws SQLException {
+        logForeignKeyReferences(conn, "Questions");
+        logForeignKeyReferences(conn, "Answers");
+    }
+
+    private void logForeignKeyReferences(Connection conn, String tableName) throws SQLException {
+        List<ForeignKeyReference> references = getForeignKeyReferences(conn, tableName);
+        if (references.isEmpty()) {
+            logger.info("deleteQuestion: no foreign keys reference " + tableName);
+            return;
+        }
+        for (ForeignKeyReference reference : references) {
+            logger.info("deleteQuestion: " + reference.foreignKeyName + " references " +
+                    tableName + " from " + qualifiedTableName(reference) + "." + reference.columnName);
+        }
+    }
+
+    private List<ForeignKeyReference> getForeignKeyReferences(Connection conn, String tableName) throws SQLException {
+        List<ForeignKeyReference> references = new ArrayList<>();
+        DatabaseMetaData metaData = conn.getMetaData();
+        try (ResultSet rs = metaData.getExportedKeys(conn.getCatalog(), null, tableName)) {
+            while (rs.next()) {
+                references.add(new ForeignKeyReference(
+                        rs.getString("FKTABLE_SCHEM"),
+                        rs.getString("FKTABLE_NAME"),
+                        rs.getString("FKCOLUMN_NAME"),
+                        rs.getString("FK_NAME")));
             }
-        } else {
-            logger.fine("deleteQuestion: skipping Answers (table not present)");
         }
+        return references;
+    }
+
+    private void deleteRemainingAnswerForeignKeyReferences(Connection conn, int questionId) throws SQLException {
+        for (ForeignKeyReference reference : getForeignKeyReferences(conn, "Answers")) {
+            if ("Answers".equalsIgnoreCase(reference.tableName)) {
+                continue;
+            }
+            if ("Questions".equalsIgnoreCase(reference.tableName)) {
+                executeDeleteStep(conn,
+                        qualifiedTableName(reference) + "." + reference.columnName,
+                        "UPDATE " + qualifiedTableName(reference) + " SET " + quoteIdentifier(reference.columnName) +
+                                " = NULL WHERE question_id = ? AND " + quoteIdentifier(reference.columnName) +
+                                " IN (SELECT answer_id FROM Answers WHERE question_id = ?)",
+                        ps -> {
+                            ps.setInt(1, questionId);
+                            ps.setInt(2, questionId);
+                        },
+                        questionId);
+                continue;
+            }
+            executeDeleteStep(conn,
+                    qualifiedTableName(reference) + "." + reference.columnName,
+                    "DELETE FROM " + qualifiedTableName(reference) + " WHERE " + quoteIdentifier(reference.columnName) +
+                            " IN (SELECT answer_id FROM Answers WHERE question_id = ?)",
+                    ps -> ps.setInt(1, questionId),
+                    questionId);
+        }
+    }
+
+    private void deleteRemainingQuestionForeignKeyReferences(Connection conn, int questionId) throws SQLException {
+        for (ForeignKeyReference reference : getForeignKeyReferences(conn, "Questions")) {
+            if ("Answers".equalsIgnoreCase(reference.tableName) || "Questions".equalsIgnoreCase(reference.tableName)) {
+                continue;
+            }
+            executeDeleteStep(conn,
+                    qualifiedTableName(reference) + "." + reference.columnName,
+                    "DELETE FROM " + qualifiedTableName(reference) + " WHERE " + quoteIdentifier(reference.columnName) + " = ?",
+                    ps -> ps.setInt(1, questionId),
+                    questionId);
+        }
+    }
+
+    private void deleteOptionalQuestionReference(Connection conn, String tableName, int questionId) throws SQLException {
+        if (!DatabaseUtil.tableExists(conn, tableName)) {
+            logger.info("deleteQuestion: skipping " + tableName + " (table not present)");
+            return;
+        }
+
+        if (columnExists(conn, tableName, "question_id")) {
+            deleteIfColumnExists(conn, tableName, "question_id", questionId);
+        } else if (columnExists(conn, tableName, "questionId")) {
+            deleteIfColumnExists(conn, tableName, "questionId", questionId);
+        } else {
+            logger.info("deleteQuestion: skipping " + tableName + " (no question reference column present)");
+        }
+    }
+
+    private void deleteIfColumnExists(Connection conn, String tableName, String columnName, int questionId) throws SQLException {
+        executeDeleteStep(conn,
+                tableName + "." + columnName,
+                "DELETE FROM " + tableName + " WHERE " + columnName + " = ?",
+                ps -> ps.setInt(1, questionId),
+                questionId);
+    }
+
+    private void deleteIfTableExists(Connection conn, String tableName, String sql, ParamSetter setter, int questionId) throws SQLException {
+        if (!DatabaseUtil.tableExists(conn, tableName)) {
+            logger.info("deleteQuestion: skipping " + tableName + " (table not present)");
+            return;
+        }
+        executeDeleteStep(conn, tableName, sql, setter, questionId);
+    }
+
+    private void executeDeleteStep(Connection conn, String stepName, String sql, ParamSetter setter, int questionId) throws SQLException {
+        logger.info("deleteQuestion: deleting from " + stepName + " for questionId=" + questionId);
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            setter.set(ps);
+            int rows = ps.executeUpdate();
+            logger.info("deleteQuestion: deleted/updated " + rows + " rows in " + stepName +
+                    " for questionId=" + questionId);
+        }
+    }
+
+    private boolean columnExists(Connection conn, String tableName, String columnName) throws SQLException {
+        try (ResultSet rs = conn.getMetaData().getColumns(conn.getCatalog(), null, tableName, columnName)) {
+            return rs.next();
+        }
+    }
+
+    private String qualifiedTableName(ForeignKeyReference reference) {
+        if (reference.schemaName == null || reference.schemaName.isBlank()) {
+            return quoteIdentifier(reference.tableName);
+        }
+        return quoteIdentifier(reference.schemaName) + "." + quoteIdentifier(reference.tableName);
+    }
+
+    private String quoteIdentifier(String identifier) {
+        return "[" + identifier.replace("]", "]]") + "]";
     }
 
     public boolean deleteAnswer(int answerId) {
@@ -1383,11 +1587,11 @@ public class AdminDAO {
 
     private User mapUserFull(ResultSet rs) throws SQLException {
         User u = mapUserBasic(rs);
-        try { u.setUsername(rs.getString("username")); } catch (SQLException ignored) {}
-        try { u.setFullName(rs.getString("fullName")); } catch (SQLException ignored) {}
-        try { u.setDepartment(rs.getString("department")); } catch (SQLException ignored) {}
-        try { u.setSemester(rs.getString("semester")); } catch (SQLException ignored) {}
-        try { u.setPoints(rs.getInt("points")); } catch (SQLException ignored) {}
+        try { u.setUsername(rs.getString("username")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { u.setFullName(rs.getString("fullName")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { u.setDepartment(rs.getString("department")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { u.setSemester(rs.getString("semester")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { u.setPoints(rs.getInt("points")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         return u;
     }
 }

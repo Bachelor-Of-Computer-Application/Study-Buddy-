@@ -1,7 +1,6 @@
 package com.studybuddy.admin.services;
 
 import com.studybuddy.admin.dao.SettingsDAO;
-
 import java.util.Map;
 
 /**

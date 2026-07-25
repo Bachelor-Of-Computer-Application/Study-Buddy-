@@ -38,7 +38,7 @@
 
     <!-- ═══ VERTICAL SCROLL ONLY — fitToWidth, no horizontal bar ══════ -->
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                     styleClass="main-scroll">
             <VBox spacing="24" styleClass="main-content">
                 <padding><Insets top="24" right="24" bottom="24" left="24" /></padding>

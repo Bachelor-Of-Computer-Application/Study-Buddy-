@@ -67,7 +67,7 @@
                         <Button text="Export CSV" styleClass="secondary-btn, chart-ctrl-btn"
                                 onAction="#handleExportSubjects"/>
                     </HBox>
-                    <PieChart fx:id="subjectPieChart" prefHeight="240" legendVisible="true" labelsVisible="true"/>
+                    <PieChart fx:id="subjectPieChart" prefHeight="240"/>
                 </VBox>
 
                 <VBox styleClass="panel-card" spacing="12" GridPane.columnIndex="1">

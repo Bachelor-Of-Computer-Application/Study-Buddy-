@@ -6,7 +6,6 @@ import com.studybuddy.dao.UserDAO;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.EventBus;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,8 +31,8 @@ public class QuestionService {
             }
             return ok;
         } catch (SQLException e) {
-            System.err.println("[QuestionService] ❌ Failed to save question: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).warning("[QuestionService] ❌ Failed to save question: " + e.getMessage());
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -108,8 +107,8 @@ public class QuestionService {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            System.err.println("[QuestionService] ❌ Failed to save question with deduction: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).warning("[QuestionService] ❌ Failed to save question with deduction: " + e.getMessage());
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -140,7 +139,7 @@ public class QuestionService {
         try {
             return questionDAO.getAvailableSubjects();
         } catch (SQLException e) {
-            System.err.println("[QuestionService] Could not load subjects: " + e.getMessage());
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).warning("[QuestionService] Could not load subjects: " + e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -219,8 +218,8 @@ public class QuestionService {
             }
             return ok;
         } catch (SQLException e) {
-            System.err.println("[QuestionService] Failed to mark best answer: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).warning("[QuestionService] Failed to mark best answer: " + e.getMessage());
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }
@@ -240,8 +239,8 @@ public class QuestionService {
         try {
             return questionDAO.approveQuestion(questionId);
         } catch (SQLException e) {
-            System.err.println("[QuestionService] Failed to approve question: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).warning("[QuestionService] Failed to approve question: " + e.getMessage());
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }
@@ -257,8 +256,8 @@ public class QuestionService {
         try {
             return questionDAO.isQuestionApproved(questionId);
         } catch (SQLException e) {
-            System.err.println("[QuestionService] Failed to check question approval: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).warning("[QuestionService] Failed to check question approval: " + e.getMessage());
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }
@@ -271,8 +270,8 @@ public class QuestionService {
             }
             return ok;
         } catch (SQLException e) {
-            System.err.println("[QuestionService] Failed to approve answer: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).warning("[QuestionService] Failed to approve answer: " + e.getMessage());
+            java.util.logging.Logger.getLogger(QuestionService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }

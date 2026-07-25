@@ -6,13 +6,12 @@ import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
 import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.AuthorizationService;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.control.ComboBox;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.ComboBox;
 
 /**
  * Virtual "All Departments" / "All Semesters" options and content visibility rules.
@@ -65,7 +64,7 @@ public final class AcademicFilterHelper {
         try {
             items.addAll(academic.getAllActiveDepartments());
         } catch (Exception e) {
-            System.err.println("[AcademicFilterHelper] Failed to load departments: " + e.getMessage());
+            java.util.logging.Logger.getLogger(AcademicFilterHelper.class.getName()).warning("[AcademicFilterHelper] Failed to load departments: " + e.getMessage());
         }
         return FXCollections.observableArrayList(items);
     }
@@ -82,7 +81,7 @@ public final class AcademicFilterHelper {
                         .toList());
             }
         } catch (Exception e) {
-            System.err.println("[AcademicFilterHelper] Failed to load semesters: " + e.getMessage());
+            java.util.logging.Logger.getLogger(AcademicFilterHelper.class.getName()).warning("[AcademicFilterHelper] Failed to load semesters: " + e.getMessage());
         }
         return FXCollections.observableArrayList(items);
     }
@@ -180,7 +179,7 @@ public final class AcademicFilterHelper {
             subjectBox.setItems(FXCollections.observableArrayList(subjects));
             subjectBox.setDisable(dept == null);
         } catch (Exception e) {
-            System.err.println("[AcademicFilterHelper] Failed to load subjects: " + e.getMessage());
+            java.util.logging.Logger.getLogger(AcademicFilterHelper.class.getName()).warning("[AcademicFilterHelper] Failed to load subjects: " + e.getMessage());
         }
     }
 
@@ -201,7 +200,7 @@ public final class AcademicFilterHelper {
             subjectBox.setItems(FXCollections.observableArrayList(subjects));
             subjectBox.setDisable(false);
         } catch (Exception e) {
-            System.err.println("[AcademicFilterHelper] Failed to load semester subjects: " + e.getMessage());
+            java.util.logging.Logger.getLogger(AcademicFilterHelper.class.getName()).warning("[AcademicFilterHelper] Failed to load semester subjects: " + e.getMessage());
         }
     }
 

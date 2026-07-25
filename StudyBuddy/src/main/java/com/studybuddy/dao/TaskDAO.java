@@ -2,8 +2,11 @@ package com.studybuddy.dao;
 
 import com.studybuddy.models.Task;
 import com.studybuddy.utils.EventBus;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +55,7 @@ public class TaskDAO {
             return success;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -131,7 +134,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return tasks;
@@ -168,7 +171,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return tasks;
@@ -216,7 +219,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return 0;
@@ -249,7 +252,7 @@ public class TaskDAO {
             return success;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -277,7 +280,7 @@ public class TaskDAO {
             return success;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -305,7 +308,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return 0;
@@ -334,7 +337,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return 0;
@@ -359,7 +362,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return 0;
@@ -384,7 +387,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return 0;
@@ -429,7 +432,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return false;
@@ -452,7 +455,7 @@ public class TaskDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -479,7 +482,7 @@ public class TaskDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return 0;
@@ -554,7 +557,7 @@ public class TaskDAO {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(TaskDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -652,8 +655,7 @@ public class TaskDAO {
                     String dueValue = entry.replace("due=", "").trim();
                     try {
                         metadata.dueDate = Timestamp.valueOf(java.time.LocalDate.parse(dueValue).atStartOfDay());
-                    } catch (Exception ignored) {
-                    }
+                    } catch (Exception ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
                 } else if (entry.contains("estimate=")) {
                     metadata.estimatedTime = entry.replace("estimate=", "").trim();
                 }

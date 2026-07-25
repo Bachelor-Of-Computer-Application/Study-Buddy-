@@ -2,9 +2,8 @@ package com.studybuddy.admin.services;
 
 import com.studybuddy.admin.dao.ActivityLogDAO;
 import com.studybuddy.models.ActivityLog;
-import com.studybuddy.utils.SessionManager;
 import com.studybuddy.utils.EventBus;
-
+import com.studybuddy.utils.SessionManager;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;

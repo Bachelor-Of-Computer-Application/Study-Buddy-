@@ -6,7 +6,6 @@ import com.studybuddy.dao.SubjectDAO;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
-
 import java.util.ArrayList;
 import java.util.List;
 

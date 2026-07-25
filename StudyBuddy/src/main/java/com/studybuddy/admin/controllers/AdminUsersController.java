@@ -1,11 +1,18 @@
 package com.studybuddy.admin.controllers;
 
 import com.studybuddy.admin.services.AdminService;
-import com.studybuddy.services.AcademicService;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.User;
+import com.studybuddy.services.AcademicService;
 import com.studybuddy.utils.StringUtils;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,19 +21,24 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.Pagination;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Full-featured user management controller.
@@ -34,6 +46,8 @@ import java.util.stream.Collectors;
  * promote/demote, soft-delete, CSV export. Every action is activity-logged.
  */
 public class AdminUsersController {
+
+    private static final Logger LOGGER = Logger.getLogger(AdminUsersController.class.getName());
 
     @FXML
     private TextField searchField;
@@ -180,8 +194,7 @@ public class AdminUsersController {
                             || userSem.equals(String.valueOf(s.getSemesterNumber()));
                 }
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         return false;
     }
 
@@ -429,7 +442,7 @@ public class AdminUsersController {
             dialogStage.showAndWait();
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Failed to load user details dialog: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AdminUsersController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -477,7 +490,7 @@ public class AdminUsersController {
 
         progressAlert.show();
 
-        System.out.println(">>> UI: Progress dialog shown");
+        LOGGER.info(">>> UI: Progress dialog shown");
 
         // Block EventBus-triggered loadData() for the entire deletion window.
         // AdminChangesEvent is published by hardDeleteUser() on the background
@@ -485,20 +498,20 @@ public class AdminUsersController {
 
         // Perform deletion in background thread to keep FX thread free
         Thread deletionThread = new Thread(() -> {
-            System.out.println(">>> THREAD: Background deletion thread STARTED for user: " + u.getName() + " (ID="
+            LOGGER.info(">>> THREAD: Background deletion thread STARTED for user: " + u.getName() + " (ID="
                     + u.getId() + ")");
 
             com.studybuddy.admin.dao.AdminDAO.DeletionResult deleteResult = null;
             Exception caughtException = null;
 
             try {
-                System.out.println(">>> THREAD: Calling adminService.hardDeleteUser()...");
+                LOGGER.info(">>> THREAD: Calling adminService.hardDeleteUser()...");
                 deleteResult = adminService.hardDeleteUser(u.getId(), u.getName());
-                System.out.println(">>> THREAD: adminService.hardDeleteUser() RETURNED. Success="
+                LOGGER.info(">>> THREAD: adminService.hardDeleteUser() RETURNED. Success="
                         + (deleteResult != null && deleteResult.success));
             } catch (Exception e) {
-                System.out.println(">>> THREAD: Exception caught: " + e.getMessage());
-                e.printStackTrace();
+                LOGGER.info(">>> THREAD: Exception caught: " + e.getMessage());
+                java.util.logging.Logger.getLogger(AdminUsersController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 caughtException = e;
             }
 
@@ -506,15 +519,15 @@ public class AdminUsersController {
             final com.studybuddy.admin.dao.AdminDAO.DeletionResult finalResult = deleteResult;
             final Exception finalException = caughtException;
 
-            System.out.println(">>> THREAD: Queueing Platform.runLater() for UI update...");
+            LOGGER.info(">>> THREAD: Queueing Platform.runLater() for UI update...");
 
             // ── Platform.runLater: UI UPDATES ONLY — no DB calls, no loadData() ──
             javafx.application.Platform.runLater(() -> {
-                System.out.println(">>> UI: Platform.runLater() ENTERED");
+                LOGGER.info(">>> UI: Platform.runLater() ENTERED");
 
                 try {
                     // 1. Close progress dialog first — must complete before any showAndWait()
-                    System.out.println(">>> UI: Closing progress dialog...");
+                    LOGGER.info(">>> UI: Closing progress dialog...");
                     // Add a button type back so JavaFX allows it to close, then set result
                     progressAlert.getButtonTypes().add(ButtonType.CANCEL);
                     progressAlert.setResult(ButtonType.CANCEL);
@@ -522,14 +535,14 @@ public class AdminUsersController {
                     progressAlert.hide();
 
                     javafx.application.Platform.runLater(() -> {
-                        System.out.println("AFTER CLOSE = " + progressAlert.isShowing());
+                        LOGGER.info("AFTER CLOSE = " + progressAlert.isShowing());
                     });
-                    System.out.println(">>> UI: Progress dialog CLOSED");
+                    LOGGER.info(">>> UI: Progress dialog CLOSED");
 
                     if (finalException != null) {
                         // ── Exception path ──────────────────────────────────
                         deletionInProgress = false; // release guard before dialog
-                        System.out.println(">>> UI: Showing exception error dialog");
+                        LOGGER.info(">>> UI: Showing exception error dialog");
                         Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                         errorAlert.setTitle("Error");
                         errorAlert.setHeaderText("Deletion failed");
@@ -539,19 +552,19 @@ public class AdminUsersController {
                     } else if (finalResult != null && finalResult.success) {
                         // ── Success path ─────────────────────────────────────
                         // 2. Remove from in-memory lists (pure UI — no SQL)
-                        System.out.println(">>> UI: Deletion successful, updating lists...");
+                        LOGGER.info(">>> UI: Deletion successful, updating lists...");
                         masterList.remove(u);
                         filteredList.remove(u);
                         updateTable();
 
                         // 3. Show success dialog — safe: no DB calls queued on FX thread
-                        System.out.println(">>> UI: Showing success dialog");
+                        LOGGER.info(">>> UI: Showing success dialog");
                         Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
                         successAlert.setTitle("User Deleted");
                         successAlert.setHeaderText("User deleted successfully");
                         successAlert.setContentText(finalResult.getSummary());
                         successAlert.showAndWait();
-                        System.out.println(">>> UI: Success dialog closed");
+                        LOGGER.info(">>> UI: Success dialog closed");
 
                         // 4. Release guard AFTER dialog closes, then reload off-thread
                         deletionInProgress = false;
@@ -560,7 +573,7 @@ public class AdminUsersController {
                     } else {
                         // ── Failure path ─────────────────────────────────────
                         deletionInProgress = false; // release guard before dialog
-                        System.out.println(">>> UI: Deletion failed, showing error dialog");
+                        LOGGER.info(">>> UI: Deletion failed, showing error dialog");
                         String errorMsg = (finalResult != null && finalResult.errorMessage != null)
                                 ? finalResult.errorMessage
                                 : "Unknown error occurred";
@@ -571,26 +584,25 @@ public class AdminUsersController {
                         errorAlert.showAndWait();
                     }
 
-                    System.out.println(">>> UI: Platform.runLater() COMPLETED");
+                    LOGGER.info(">>> UI: Platform.runLater() COMPLETED");
 
                 } catch (Exception uiEx) {
-                    System.out.println(">>> UI: Exception in Platform.runLater(): " + uiEx.getMessage());
-                    uiEx.printStackTrace();
+                    LOGGER.info(">>> UI: Exception in Platform.runLater(): " + uiEx.getMessage());
+                    java.util.logging.Logger.getLogger(AdminUsersController.class.getName()).log(java.util.logging.Level.SEVERE, uiEx.getMessage(), uiEx);
                     deletionInProgress = false; // always release on unexpected error
                     try {
                         progressAlert.close();
-                    } catch (Exception ignored) {
-                    }
+                    } catch (Exception ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
                 }
             });
 
-            System.out.println(">>> THREAD: Background deletion thread FINISHED");
+            LOGGER.info(">>> THREAD: Background deletion thread FINISHED");
         });
 
         deletionThread.setName("UserDeletionThread-" + u.getId());
         deletionThread.setDaemon(true);
         deletionThread.start();
-        System.out.println(">>> UI: Background thread STARTED (thread name: " + deletionThread.getName() + ")");
+        LOGGER.info(">>> UI: Background thread STARTED (thread name: " + deletionThread.getName() + ")");
     }
 
     /**
@@ -617,7 +629,7 @@ public class AdminUsersController {
             filteredList = new java.util.ArrayList<>(masterList);
             currentPage = 1;
             updateTable();
-            System.out.println(">>> UI: Background reload completed (" + fresh.size() + " users)");
+            LOGGER.info(">>> UI: Background reload completed (" + fresh.size() + " users)");
 
             // Publish events AFTER the success dialog has closed and data is reloaded.
             // This is safe because we're no longer in a showAndWait() modal state.
@@ -628,7 +640,7 @@ public class AdminUsersController {
         });
 
         reloadTask.setOnFailed(evt -> {
-            System.out.println(">>> UI: Background reload failed: " + reloadTask.getException());
+            LOGGER.info(">>> UI: Background reload failed: " + reloadTask.getException());
         });
 
         Thread reloadThread = new Thread(reloadTask, "UserReloadThread");
@@ -710,8 +722,7 @@ public class AdminUsersController {
                         .distinct()
                         .sorted()
                         .forEach(semNames::add);
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
             semesterFilter.setItems(FXCollections.observableArrayList(semNames));
         }
     }

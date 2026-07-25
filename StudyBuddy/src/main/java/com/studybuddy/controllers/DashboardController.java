@@ -5,39 +5,22 @@ import com.studybuddy.App;
 import com.studybuddy.dao.QuestionDAO;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Note;
+import com.studybuddy.models.Question;
 import com.studybuddy.models.Resource;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
 import com.studybuddy.models.User;
 import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.AchievementService;
+import com.studybuddy.services.AuthorizationService;
 import com.studybuddy.services.DashboardService;
 import com.studybuddy.services.NoteService;
+import com.studybuddy.services.QuestionService;
 import com.studybuddy.services.ResourceService;
 import com.studybuddy.services.TaskService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.ImageLoader;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.XYChart;
-import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import com.studybuddy.models.Question;
-
-import com.studybuddy.services.QuestionService;
-import com.studybuddy.services.AuthorizationService;
-import javafx.scene.layout.BorderPane;
-import javafx.stage.FileChooser;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +34,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 public class DashboardController implements Initializable {
 
@@ -232,8 +237,8 @@ public class DashboardController implements Initializable {
             }
             
         } catch (Exception e) {
-            System.err.println("Failed to refresh hero stats: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).warning("Failed to refresh hero stats: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -346,7 +351,7 @@ public class DashboardController implements Initializable {
             summaryRejected.setText(String.valueOf(rejected));
             
         } catch (SQLException e) {
-            System.err.println("Failed to load my uploads: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).warning("Failed to load my uploads: " + e.getMessage());
         }
     }
     
@@ -710,7 +715,7 @@ public class DashboardController implements Initializable {
             showAlert("Download Success", "'" + title + "' has been downloaded successfully.");
         } catch (IOException e) {
             showAlert("Download Error", "Failed to download file: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -893,7 +898,7 @@ public class DashboardController implements Initializable {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             series.getData().add(new XYChart.Data<>("Error", 0));
         }
         
@@ -939,7 +944,7 @@ public class DashboardController implements Initializable {
             }
         } catch (Exception e) {
             recentResourcesContainer.getChildren().add(buildWidgetEmptyLabel("Could not load resources."));
-            System.err.println("Could not load recent resources: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).warning("Could not load recent resources: " + e.getMessage());
         }
 
         if (recentQuestionsContainer != null) {
@@ -1059,7 +1064,7 @@ public class DashboardController implements Initializable {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Error finding subject ID: " + e.getMessage());
+                java.util.logging.Logger.getLogger(DashboardController.class.getName()).warning("Error finding subject ID: " + e.getMessage());
             }
         }
 
@@ -1068,7 +1073,7 @@ public class DashboardController implements Initializable {
         try {
             filtered = noteDAO.searchNotesWithHierarchy(query, deptId, semId, subjectId);
         } catch (SQLException e) {
-            System.err.println("Error searching notes with hierarchy: " + e.getMessage());
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).warning("Error searching notes with hierarchy: " + e.getMessage());
             filtered = dashboardService.searchNotes(query);
         }
         displayNotes(filtered);
@@ -1162,7 +1167,7 @@ public class DashboardController implements Initializable {
             }
         } catch (Exception e) {
             showAlert("Navigation Error", "Could not navigate to " + fxmlPath + ": " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 

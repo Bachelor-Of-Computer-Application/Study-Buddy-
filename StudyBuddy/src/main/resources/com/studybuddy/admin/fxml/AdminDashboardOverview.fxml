@@ -122,7 +122,7 @@
                 <!-- Pie chart -->
                 <VBox styleClass="panel-card" spacing="14" GridPane.columnIndex="0" GridPane.rowIndex="0">
                     <Label text="Notes by Subject" styleClass="panel-title"/>
-                    <PieChart fx:id="subjectPieChart" prefHeight="240" legendVisible="true"/>
+                            <PieChart fx:id="subjectPieChart" prefHeight="240"/>
                 </VBox>
 
                 <!-- Recent Users -->

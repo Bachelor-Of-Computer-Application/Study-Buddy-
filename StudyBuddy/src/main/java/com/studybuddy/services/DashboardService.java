@@ -3,7 +3,6 @@ package com.studybuddy.services;
 import com.studybuddy.dao.NoteDAO;
 import com.studybuddy.models.Category;
 import com.studybuddy.models.Note;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,7 @@ public class DashboardService {
         try {
             return noteDAO.getAllPublicNotes();
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -67,7 +66,7 @@ public class DashboardService {
         try {
             return noteDAO.getRecentNotes(5);
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -84,7 +83,7 @@ public class DashboardService {
         try {
             return noteDAO.getRecentNotes(3);
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -101,7 +100,7 @@ public class DashboardService {
         try {
             return noteDAO.searchPublicNotes(query, null);
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DashboardService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return new ArrayList<>();
         }
     }

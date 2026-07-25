@@ -14,7 +14,7 @@
 
     <!-- ══ CENTER – Main scrollable form content ══════════════════════ -->
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane-clean" vbarPolicy="AS_NEEDED">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane-clean">
             <content>
                 <VBox alignment="TOP_CENTER" spacing="20" styleClass="content-container">
                     <padding><Insets bottom="36" left="60" right="60" top="28" /></padding>
@@ -38,7 +38,7 @@
                         <Button fx:id="toolsButton" onAction="#handleMath" styleClass="toolbar-button" text="🛠 Apply Special Tools" />
                         <Button fx:id="filesButton" onAction="#handleSymbols" styleClass="toolbar-button" text="📁 Attach Relevant Files" />
                         <!-- Attachment status label — bound to controller @FXML attachmentLabel -->
-                        <Label fx:id="attachmentLabel" styleClass="attachment-label" text="" />
+                        <Label fx:id="attachmentLabel" styleClass="attachment-label" />
                     </HBox>
 
                     <!-- ── Bottom controls card ────────────────────── -->

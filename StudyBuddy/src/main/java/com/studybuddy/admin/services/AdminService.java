@@ -1,12 +1,19 @@
 package com.studybuddy.admin.services;
 
 import com.studybuddy.admin.dao.AdminDAO;
-import com.studybuddy.services.FileStorageService;
 import com.studybuddy.dao.UserDAO;
-import com.studybuddy.models.*;
+import com.studybuddy.models.Answer;
+import com.studybuddy.models.Department;
+import com.studybuddy.models.Note;
+import com.studybuddy.models.Notification;
+import com.studybuddy.models.Question;
+import com.studybuddy.models.Resource;
+import com.studybuddy.models.Semester;
+import com.studybuddy.models.Task;
+import com.studybuddy.models.User;
+import com.studybuddy.services.FileStorageService;
 import com.studybuddy.utils.PasswordHasher;
 import com.studybuddy.utils.SessionManager;
-
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +46,7 @@ public class AdminService {
      * @return true if login is valid
      */
     public boolean validateAdminLogin(String usernameOrEmail, String password) {
-        System.out.println("[AdminService] Attempting login for: " + usernameOrEmail);
+        LOGGER.info("[AdminService] Attempting login for: " + usernameOrEmail);
 
         // Support both username and email — try the combined lookup first.
         User user = new UserDAO().getUserByUsernameOrEmail(usernameOrEmail);
@@ -50,11 +57,11 @@ public class AdminService {
         }
 
         if (user == null) {
-            System.out.println("[AdminService] User not found in database: " + usernameOrEmail);
+            LOGGER.info("[AdminService] User not found in database: " + usernameOrEmail);
             return false;
         }
 
-        System.out.println("[AdminService] User found. ID: " + user.getId()
+        LOGGER.info("[AdminService] User found. ID: " + user.getId()
                 + ", Name: "  + user.getName()
                 + ", Role: "  + user.getRole()
                 + ", Email: " + user.getEmail());
@@ -66,7 +73,7 @@ public class AdminService {
                     || role.equalsIgnoreCase("Administrator"));
 
         if (!isAdmin) {
-            System.out.println("[AdminService] User is not an admin. Role: " + role);
+            LOGGER.info("[AdminService] User is not an admin. Role: " + role);
             return false;
         }
 
@@ -75,7 +82,7 @@ public class AdminService {
                 || password.equals(user.getPassword());
 
         if (!valid) {
-            System.out.println("[AdminService] Password verification failed");
+            LOGGER.info("[AdminService] Password verification failed");
             return false;
         }
 
@@ -83,11 +90,11 @@ public class AdminService {
         SessionManager.setCurrentAdmin(user);
 
         // Verification output (as required)
-        System.out.println("[AdminService] ✓ Admin login successful.");
+        LOGGER.info("[AdminService] ✓ Admin login successful.");
         LOGGER.info("Authenticated Admin ID = " + user.getId());
-        System.out.println("Username = "              + user.getUsername());
-        System.out.println("Email = "                 + user.getEmail());
-        System.out.println("Role = "                  + user.getRole());
+        LOGGER.info("Username = "              + user.getUsername());
+        LOGGER.info("Email = "                 + user.getEmail());
+        LOGGER.info("Role = "                  + user.getRole());
 
         // Confirm SessionManager stored correctly
         User storedAdmin = SessionManager.getCurrentAdmin();
@@ -261,14 +268,14 @@ public class AdminService {
      * @return DeletionResult with success status, counts, and error message if any
      */
     public AdminDAO.DeletionResult hardDeleteUser(int userId, String userName) {
-        System.out.println(">>> SERVICE: Entering AdminService.hardDeleteUser() for user=" + userName + ", id=" + userId);
+        LOGGER.info(">>> SERVICE: Entering AdminService.hardDeleteUser() for user=" + userName + ", id=" + userId);
         
         AdminDAO.DeletionResult result = adminDAO.hardDeleteUser(userId);
         
-        System.out.println(">>> SERVICE: AdminDAO.hardDeleteUser() returned. Success=" + result.success);
+        LOGGER.info(">>> SERVICE: AdminDAO.hardDeleteUser() returned. Success=" + result.success);
         
         if (result.success) {
-            System.out.println(">>> SERVICE: Deletion successful, creating activity log...");
+            LOGGER.info(">>> SERVICE: Deletion successful, creating activity log...");
             
             // Log detailed deletion information
             StringBuilder details = new StringBuilder();
@@ -282,9 +289,9 @@ public class AdminService {
             if (result.tasksCount > 0) details.append("- ").append(result.tasksCount).append(" Task(s)\n");
             if (result.notificationsCount > 0) details.append("- ").append(result.notificationsCount).append(" Notification(s)\n");
             
-            System.out.println(">>> SERVICE: Calling logService.logAction()...");
+            LOGGER.info(">>> SERVICE: Calling logService.logAction()...");
             logService.logAction("User Permanently Deleted", "User", details.toString());
-            System.out.println(">>> SERVICE: Activity log completed");
+            LOGGER.info(">>> SERVICE: Activity log completed");
             
             // NOTE: EventBus events are NOT published here because:
             // 1. This runs on a background thread
@@ -293,14 +300,14 @@ public class AdminService {
             //    with DB calls, which execute during showAndWait() modal dialog blocking, freezing the UI.
             // The explicit scheduleBackgroundReload() in AdminUsersController provides a clean, controlled
             // reload after all dialogs have closed.
-            System.out.println(">>> SERVICE: Skipping EventBus events (handled by AdminUsersController.scheduleBackgroundReload)");
+            LOGGER.info(">>> SERVICE: Skipping EventBus events (handled by AdminUsersController.scheduleBackgroundReload)");
         } else {
-            System.out.println(">>> SERVICE: Deletion failed, logging failure...");
+            LOGGER.info(">>> SERVICE: Deletion failed, logging failure...");
             logService.logAction("User Deletion Failed", "User", 
                 userName + " - Error: " + result.errorMessage);
         }
         
-        System.out.println(">>> SERVICE: Exiting AdminService.hardDeleteUser()");
+        LOGGER.info(">>> SERVICE: Exiting AdminService.hardDeleteUser()");
         return result;
     }
 

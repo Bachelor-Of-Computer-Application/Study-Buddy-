@@ -1,7 +1,10 @@
 
 package com.studybuddy.services;
 
-import com.studybuddy.dao.*;
+import com.studybuddy.dao.DatabaseConnection;
+import com.studybuddy.dao.NoteDAO;
+import com.studybuddy.dao.QuestionDAO;
+import com.studybuddy.dao.ResourceDAO;
 import java.sql.SQLException;
 
 public class StatisticsService {

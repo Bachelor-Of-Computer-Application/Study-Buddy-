@@ -1,13 +1,13 @@
 package com.studybuddy.utils;
-import com.studybuddy.utils.SceneManager;
+
 import com.studybuddy.App;
 import com.studybuddy.models.User;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.Parent;
-import javafx.stage.Stage;
-
+import com.studybuddy.utils.SceneManager;
 import java.io.IOException;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
 /**
  * Handles view switching and stage loading.

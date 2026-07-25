@@ -1,0 +1,17 @@
+.header-container {
+    -fx-background-color: sb-surface;
+    -fx-border-color: sb-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.achievements-flow {
+    -fx-alignment: top-left;
+}
+
+.stat-value-success {
+    -fx-text-fill: sb-success;
+}
+
+.stat-value-purple {
+    -fx-text-fill: #7c3aed;
+}

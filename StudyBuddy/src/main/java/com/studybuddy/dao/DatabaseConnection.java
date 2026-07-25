@@ -65,7 +65,7 @@ public class DatabaseConnection {
             }
         } catch (Exception e) {
             logger.severe("❌ Database Connection Failed: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DatabaseConnection.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -109,7 +109,7 @@ public class DatabaseConnection {
                 logger.info("🔒 Database Connection Closed");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(DatabaseConnection.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 

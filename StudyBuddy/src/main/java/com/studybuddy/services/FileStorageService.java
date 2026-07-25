@@ -1,7 +1,6 @@
 package com.studybuddy.services;
 
 import com.studybuddy.admin.services.SettingsService;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

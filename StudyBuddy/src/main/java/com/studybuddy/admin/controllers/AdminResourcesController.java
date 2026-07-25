@@ -1,6 +1,7 @@
 package com.studybuddy.admin.controllers;
 
 import com.studybuddy.admin.services.AdminService;
+import com.studybuddy.dao.UserActivityDAO;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Resource;
 import com.studybuddy.models.Semester;
@@ -13,22 +14,29 @@ import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.SessionManager;
 import com.studybuddy.utils.StringUtils;
-import com.studybuddy.dao.UserActivityDAO;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.FileChooser;
-
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Pagination;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 
 /**
  * Resource management: activate/deactivate, delete, preview/download, search, sort, download count.
@@ -369,7 +377,7 @@ public class AdminResourcesController {
                     );
                     new UserActivityDAO().logActivity(activity);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    java.util.logging.Logger.getLogger(AdminResourcesController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 }
             }
             
@@ -399,7 +407,7 @@ public class AdminResourcesController {
                     );
                     new UserActivityDAO().logActivity(activity);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    java.util.logging.Logger.getLogger(AdminResourcesController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 }
             }
             

@@ -1,49 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="rootPane" styleClass="root-pane"
-    stylesheets="@../css/theme.css, @../css/auth.css"
-    xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1"
-    fx:controller="com.studybuddy.controllers.LoginController">
+<BorderPane fx:id="rootPane" styleClass="root-pane" stylesheets="@../css/theme.css, @../css/auth.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.studybuddy.controllers.LoginController">
 
     <!-- LEFT  – Branding panel -->
     <left>
         <VBox alignment="CENTER" spacing="24" styleClass="auth-left-panel">
-            <padding><Insets top="60" right="40" bottom="60" left="40" /></padding>
-
-            <!-- Brand logo -->
-            <ImageView fitWidth="150" fitHeight="50" preserveRatio="true" smooth="true" cache="true"
-                       styleClass="auth-logo-image app-brand-logo">
-                <image>
-                    <Image url="@../images/main_logo_study_buddyy.png"/>
-                </image>
-            </ImageView>
+            <padding><Insets bottom="60" left="40" right="40" top="60" /></padding>
+         <ImageView cache="true" fitHeight="176.0" fitWidth="157.0" preserveRatio="true" smooth="true" styleClass="auth-logo-image app-brand-logo">
+            <image>
+               <Image url="@../images/main_logo_study_buddyy.png" />
+            </image>
+         </ImageView>
 
             <!-- Tagline -->
             <VBox alignment="CENTER" spacing="10">
-                <Label styleClass="auth-brand-sub"
-                       text="Your all-in-one academic companion. Notes, resources, questions, and more."
-                       wrapText="true"/>
+                <Label styleClass="auth-brand-sub" text="Your all-in-one academic companion. Notes, resources, questions, and more." wrapText="true" />
             </VBox>
 
             <!-- Feature list -->
             <VBox spacing="12">
-                <Label text="✓  Smart notes &amp; study guides" styleClass="auth-feature-item"/>
-                <Label text="✓  Community Q&amp;A forum" styleClass="auth-feature-item"/>
-                <Label text="✓  Resource library" styleClass="auth-feature-item"/>
-                <Label text="✓  Progress tracking" styleClass="auth-feature-item"/>
+                <Label styleClass="auth-feature-item" text="✓  Smart notes &amp; study guides" />
+                <Label styleClass="auth-feature-item" text="✓  Community Q&amp;A forum" />
+                <Label styleClass="auth-feature-item" text="✓  Resource library" />
+                <Label styleClass="auth-feature-item" text="✓  Progress tracking" />
             </VBox>
         </VBox>
     </left>
@@ -51,44 +42,40 @@
     <!-- RIGHT – Login form -->
     <center>
         <VBox alignment="CENTER" styleClass="auth-right-panel" HBox.hgrow="ALWAYS">
-            <VBox styleClass="auth-form-card" spacing="20" maxWidth="420">
-                <padding><Insets top="40" right="40" bottom="40" left="40" /></padding>
+            <VBox maxWidth="420" spacing="20" styleClass="auth-form-card">
+                <padding><Insets bottom="40" left="40" right="40" top="40" /></padding>
 
                 <!-- Heading -->
                 <VBox spacing="6">
-                    <Label text="Welcome back 👋" styleClass="auth-page-title"/>
-                    <Label text="Sign in to your account to continue" styleClass="auth-page-subtitle"/>
+                    <Label styleClass="auth-page-title" text="Welcome back 👋" />
+                    <Label styleClass="auth-page-subtitle" text="Sign in to your account to continue" />
                 </VBox>
 
                 <!-- Email -->
                 <VBox spacing="6">
-                    <Label text="Email Address" styleClass="auth-field-label"/>
-                    <TextField fx:id="emailInput" promptText="you@example.com"
-                               styleClass="auth-text-field" maxWidth="Infinity"/>
+                    <Label styleClass="auth-field-label" text="Email Address" />
+                    <TextField fx:id="emailInput" maxWidth="Infinity" promptText="you@example.com" styleClass="auth-text-field" />
                 </VBox>
 
                 <!-- Password -->
                 <VBox spacing="6">
-                    <Label text="Password" styleClass="auth-field-label"/>
-                    <PasswordField fx:id="passwordInput" promptText="Enter your password"
-                                  styleClass="auth-text-field" maxWidth="Infinity"/>
+                    <Label styleClass="auth-field-label" text="Password" />
+                    <PasswordField fx:id="passwordInput" maxWidth="Infinity" promptText="Enter your password" styleClass="auth-text-field" />
                 </VBox>
 
                 <!-- Spacer -->
-                <Region prefHeight="4"/>
+                <Region prefHeight="4" />
 
                 <!-- Login button -->
-                <Button text="Sign In" onAction="#onLoginButtonClick"
-                        styleClass="auth-primary-btn" maxWidth="Infinity"/>
+                <Button maxWidth="Infinity" onAction="#onLoginButtonClick" styleClass="auth-primary-btn" text="Sign In" />
 
                 <!-- Divider -->
                 <HBox alignment="CENTER">
-                    <Label text="Don't have an account?" styleClass="auth-divider-label"/>
+                    <Label styleClass="auth-divider-label" text="Don't have an account?" />
                 </HBox>
 
                 <!-- Register link -->
-                <Button text="Create new account" onAction="#onGoToRegistrationClick"
-                        styleClass="auth-secondary-btn" maxWidth="Infinity"/>
+                <Button maxWidth="Infinity" onAction="#onGoToRegistrationClick" styleClass="auth-secondary-btn" text="Create new account" />
 
                 <!-- Note -->
             </VBox>

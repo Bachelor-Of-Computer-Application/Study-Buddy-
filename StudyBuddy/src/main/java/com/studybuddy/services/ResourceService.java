@@ -5,7 +5,6 @@ import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.EventBus;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -108,7 +107,7 @@ public class ResourceService {
         try {
             return resourceDAO.getAllSubjectNames();
         } catch (SQLException e) {
-            System.err.println("[ResourceService] Could not load subject names: " + e.getMessage());
+            java.util.logging.Logger.getLogger(ResourceService.class.getName()).warning("[ResourceService] Could not load subject names: " + e.getMessage());
             return new java.util.ArrayList<>();
         }
     }

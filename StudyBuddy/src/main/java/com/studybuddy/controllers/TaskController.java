@@ -6,6 +6,15 @@ import com.studybuddy.models.Task;
 import com.studybuddy.models.User;
 import com.studybuddy.services.TaskService;
 import com.studybuddy.utils.EventBus;
+import java.net.URL;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
@@ -17,17 +26,26 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-
-import java.net.URL;
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class TaskController implements Initializable {
 
@@ -766,7 +784,7 @@ public class TaskController implements Initializable {
                     int newPoints = userDAO.getAchievementPoints(currentUser.getId());
                     currentUser.setAchievementPoints(newPoints);
                 } catch (Exception e) {
-                    System.err.println("Failed to refresh achievement points: " + e.getMessage());
+                    java.util.logging.Logger.getLogger(TaskController.class.getName()).warning("Failed to refresh achievement points: " + e.getMessage());
                 }
             }
         } else {

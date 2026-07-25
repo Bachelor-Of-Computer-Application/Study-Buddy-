@@ -3,7 +3,6 @@ package com.studybuddy.dao;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
 import com.studybuddy.utils.EventBus;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -393,7 +392,7 @@ public class ResourceDAO {
         resource.setDownloads(rs.getInt("downloads"));
         resource.setActive(rs.getBoolean("isActive"));
         try { resource.setStatus(rs.getString("status")); } catch (SQLException ignored) { resource.setStatus("Pending"); }
-        try { resource.setCategory(rs.getString("category")); } catch (SQLException ignored) {}
+        try { resource.setCategory(rs.getString("category")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
 
         // Load user info (full name, department, semester)
         try {
@@ -436,7 +435,6 @@ public class ResourceDAO {
             if (!rs.wasNull()) {
                 setter.accept(val);
             }
-        } catch (SQLException ignored) {
-        }
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
     }
 }

@@ -3,17 +3,19 @@ package com.studybuddy.admin.controllers;
 import com.studybuddy.admin.services.AdminService;
 import com.studybuddy.admin.utils.AdminSceneManager;
 import com.studybuddy.utils.SessionManager;
+import java.io.IOException;
+import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.logging.Logger;
 
 public class AdminDashboardController {
 
@@ -187,7 +189,7 @@ public class AdminDashboardController {
 
         } catch (IOException ex) {
             logger.severe("Failed to load AdminGlobalSearch.fxml: " + ex.getMessage());
-            ex.printStackTrace();
+            java.util.logging.Logger.getLogger(AdminDashboardController.class.getName()).log(java.util.logging.Level.SEVERE, ex.getMessage(), ex);
             showOverview();
         }
     }
@@ -217,7 +219,7 @@ public class AdminDashboardController {
 
         } catch (Exception ex) {
             logger.severe("Failed to load FXML " + fxmlPath + ": " + ex.getMessage());
-            ex.printStackTrace();
+            java.util.logging.Logger.getLogger(AdminDashboardController.class.getName()).log(java.util.logging.Level.SEVERE, ex.getMessage(), ex);
 
             Alert alert = new Alert(
                     Alert.AlertType.ERROR,

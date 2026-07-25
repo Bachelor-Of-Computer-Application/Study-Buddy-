@@ -301,3 +301,29 @@
     -fx-background-radius: 999px;
     -fx-padding: 3 10 3 10;
 }
+.dialog-root {
+    -fx-background-color: sb-bg;
+}
+
+.dialog-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.form-section {
+    -fx-background-color: sb-surface;
+    -fx-background-radius: 8px;
+    -fx-border-color: sb-border;
+    -fx-border-radius: 8px;
+    -fx-padding: 16px;
+}
+
+.section-separator {
+    -fx-opacity: 0.55;
+}
+
+.dialog-footer {
+    -fx-background-color: sb-surface;
+    -fx-border-color: sb-border;
+    -fx-border-width: 1 0 0 0;
+}

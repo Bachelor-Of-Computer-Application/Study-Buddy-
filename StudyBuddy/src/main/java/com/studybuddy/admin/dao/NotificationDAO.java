@@ -2,14 +2,17 @@ package com.studybuddy.admin.dao;
 
 import com.studybuddy.models.Notification;
 import com.studybuddy.utils.DatabaseUtil;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-
 
 /**
  * DAO for Notifications with smart recipient targeting.
@@ -354,24 +357,24 @@ public class NotificationDAO {
         n.setMessage(rs.getString("message"));
         try { n.setRecipientType(rs.getString("recipientType")); }
         catch (SQLException e) { n.setRecipientType(rs.getString("type")); }
-        try { n.setRecipientValue(rs.getString("recipientValue")); } catch (SQLException ignored) {}
+        try { n.setRecipientValue(rs.getString("recipientValue")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try { n.setPriority(rs.getString("priority")); } catch (SQLException e) { n.setPriority("Normal"); }
-        try { n.setNotificationType(rs.getString("notificationType")); } catch (SQLException ignored) {}
+        try { n.setNotificationType(rs.getString("notificationType")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             Timestamp exp = rs.getTimestamp("expiryDate");
             if (exp != null) n.setExpiryDate(exp.toLocalDateTime());
-        } catch (SQLException ignored) {}
-        try { n.setAttachmentPath(rs.getString("attachmentPath")); } catch (SQLException ignored) {}
-        try { n.setSentBy(rs.getInt("sentBy")); } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { n.setAttachmentPath(rs.getString("attachmentPath")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { n.setSentBy(rs.getInt("sentBy")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             int deptId = rs.getInt("departmentId");
             if (!rs.wasNull()) n.setDepartmentId(deptId);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             int semId = rs.getInt("semesterId");
             if (!rs.wasNull()) n.setSemesterId(semId);
-        } catch (SQLException ignored) {}
-        try { n.setArchived(rs.getBoolean("isArchived")); } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { n.setArchived(rs.getBoolean("isArchived")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) n.setSentAt(ts.toLocalDateTime());
         n.setRead(rs.getBoolean("isRead"));

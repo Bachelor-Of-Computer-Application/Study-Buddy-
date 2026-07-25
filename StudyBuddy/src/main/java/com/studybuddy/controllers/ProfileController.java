@@ -5,16 +5,35 @@ import com.studybuddy.models.Achievement;
 import com.studybuddy.models.Department;
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.User;
-
 import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.AchievementService;
 import com.studybuddy.services.StatisticsService;
 import com.studybuddy.services.UserService;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.ImageLoader;
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -25,15 +44,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
-
-import java.util.List;
-import javafx.scene.control.TextFormatter;
-
 public class ProfileController {
+
+    private static final Logger LOGGER = Logger.getLogger(ProfileController.class.getName());
 
     @FXML private TabPane profileTabPane;
     @FXML private Button uploadAvatarBtn;
@@ -147,16 +160,16 @@ public class ProfileController {
                     )
             );
 
-            System.out.println("Departments loaded:");
+            LOGGER.info("Departments loaded:");
 
             for (Department d : departmentField.getItems()) {
-                System.out.println(
+                LOGGER.info(
                         d.getId() + " - " + d.getName()
                 );
             }
 
         } catch (Exception e) {
-            System.err.println("Failed to load departments: " + e.getMessage());
+            LOGGER.warning("Failed to load departments: " + e.getMessage());
         }
         
         // Set cell factory for department ComboBox
@@ -219,12 +232,12 @@ public class ProfileController {
                     );
 
                 } catch(Exception ex) {
-                    ex.printStackTrace();
+                    java.util.logging.Logger.getLogger(ProfileController.class.getName()).log(java.util.logging.Level.SEVERE, ex.getMessage(), ex);
                 }
             }
             // Allow only digits and limit phone number to 10 digits
             phoneNumberField.setTextFormatter(new TextFormatter<>(change -> {
-                System.out.println("New text: " + change.getControlNewText());
+                LOGGER.info("New text: " + change.getControlNewText());
 
                 if (!change.getText().matches("[0-9]*")) {
                     return null;
@@ -409,7 +422,7 @@ public class ProfileController {
                         }
                         break;
                     } catch (Exception e) {
-                        System.err.println("Failed to load semesters: " + e.getMessage());
+                        LOGGER.warning("Failed to load semesters: " + e.getMessage());
                     }
                 }
             }

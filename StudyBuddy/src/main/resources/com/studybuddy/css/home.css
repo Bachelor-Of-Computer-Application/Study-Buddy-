@@ -588,3 +588,6 @@
     -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #3730a3, #6d28d9);
     -fx-effect:           dropshadow(three-pass-box, rgba(79,70,229,0.55), 14, 0, 0, 4);
 }
+.sidebar-user-role-icon {
+    -fx-font-size: 12px;
+}

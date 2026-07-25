@@ -1,11 +1,10 @@
 package com.studybuddy.admin;
 
 import com.studybuddy.admin.utils.AdminSceneManager;
+import java.util.Objects;
 import javafx.application.Application;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-
-import java.util.Objects;
 
 public class AdminApp extends Application {
     @Override

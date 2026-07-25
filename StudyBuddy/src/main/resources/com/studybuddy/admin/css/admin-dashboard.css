@@ -879,3 +879,11 @@
     -fx-text-fill: #94a3b8;
     -fx-font-size: 13px;
 }
+.admin-role-icon {
+    -fx-font-size: 12px;
+}
+
+.highlight-text {
+    -fx-text-fill: #4f46e5;
+    -fx-font-weight: bold;
+}

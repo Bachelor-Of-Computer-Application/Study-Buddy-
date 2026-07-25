@@ -1,12 +1,12 @@
 package com.studybuddy.admin.utils;
 
 import com.studybuddy.admin.AdminApp;
+import java.util.logging.Logger;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import java.util.logging.Logger;
 
 public class AdminSceneManager {
     private static final Logger logger = Logger.getLogger(AdminSceneManager.class.getName());
@@ -62,7 +62,7 @@ public class AdminSceneManager {
             stage.show();
         } catch (Exception e) {
             logger.severe("Failed to load AdminLoginView.fxml: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AdminSceneManager.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -78,7 +78,7 @@ public class AdminSceneManager {
             stage.show();
         } catch (Exception e) {
             logger.severe("Failed to load AdminDashboardView.fxml: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AdminSceneManager.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 }

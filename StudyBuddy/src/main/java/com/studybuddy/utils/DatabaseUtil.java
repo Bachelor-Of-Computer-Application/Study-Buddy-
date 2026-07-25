@@ -1,7 +1,6 @@
 package com.studybuddy.utils;
 
 import com.studybuddy.dao.DatabaseConnection;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -5,7 +5,6 @@ import com.studybuddy.dao.SubjectDAO;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.EventBus;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -153,7 +152,7 @@ public class NoteService {
         try {
             return noteDAO.countNotesByUser(userId);
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(NoteService.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return 0;
         }
     }
@@ -169,7 +168,7 @@ public class NoteService {
                     .sorted()
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            System.err.println("[NoteService] getAllSubjectNames failed: " + e.getMessage());
+            java.util.logging.Logger.getLogger(NoteService.class.getName()).warning("[NoteService] getAllSubjectNames failed: " + e.getMessage());
             return new ArrayList<>();
         }
     }

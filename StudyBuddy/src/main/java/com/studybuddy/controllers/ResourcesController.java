@@ -14,22 +14,6 @@ import com.studybuddy.services.ResourceService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.StringUtils;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,6 +27,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 /**
  * Controller for ResourcesView.fxml.
@@ -184,7 +193,7 @@ public class ResourcesController {
                 historyTable.setItems(FXCollections.observableArrayList(userUploadedHistory));
 
         } catch (Exception e) {
-            System.err.println("[ResourcesController] Failed to load resources: " + e.getMessage());
+            java.util.logging.Logger.getLogger(ResourcesController.class.getName()).warning("[ResourcesController] Failed to load resources: " + e.getMessage());
             activeResources = new ArrayList<>();
             displayResources(activeResources);
         }
@@ -507,7 +516,7 @@ public class ResourcesController {
                         "Upload failed: " + ex.getMessage());
                 err.setHeaderText("Upload Error");
                 err.showAndWait();
-                ex.printStackTrace();
+                java.util.logging.Logger.getLogger(ResourcesController.class.getName()).log(java.util.logging.Level.SEVERE, ex.getMessage(), ex);
             }
         });
 
@@ -585,7 +594,7 @@ public class ResourcesController {
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Download Error", 
                 "Failed to download file: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(ResourcesController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 

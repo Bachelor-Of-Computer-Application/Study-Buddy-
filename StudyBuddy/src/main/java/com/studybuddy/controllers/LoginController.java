@@ -54,8 +54,8 @@ public class LoginController implements Initializable {
             try {
                 SceneManager.showHomePage(getStage(), user);
             } catch (java.io.IOException e) {
-                System.err.println("[LoginController] ❌ Could not load HomeView.fxml");
-                e.printStackTrace();
+                java.util.logging.Logger.getLogger(LoginController.class.getName()).warning("[LoginController] ❌ Could not load HomeView.fxml");
+                java.util.logging.Logger.getLogger(LoginController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 showError("Navigation error: " + e.getMessage());
             }
         } else {
@@ -71,8 +71,8 @@ public class LoginController implements Initializable {
         try {
             SceneManager.showRegistrationPage(getStage());
         } catch (java.io.IOException e) {
-            System.err.println("[LoginController] ❌ Could not load RegisterView.fxml");
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(LoginController.class.getName()).warning("[LoginController] ❌ Could not load RegisterView.fxml");
+            java.util.logging.Logger.getLogger(LoginController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             showError("Navigation error: " + e.getMessage());
         }
     }

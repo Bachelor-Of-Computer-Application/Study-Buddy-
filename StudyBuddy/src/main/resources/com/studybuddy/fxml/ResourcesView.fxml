@@ -65,8 +65,7 @@
 
                     <!-- Community Library tab -->
                     <Tab text="📚  Community Library">
-                        <ScrollPane fitToWidth="true" styleClass="scroll-pane"
-                                    vbarPolicy="AS_NEEDED">
+                        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
                             <content>
                                 <VBox spacing="16">
                                     <FlowPane fx:id="resourcesFlowPane" hgap="16" vgap="16"

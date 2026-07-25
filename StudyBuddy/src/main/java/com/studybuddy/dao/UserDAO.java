@@ -2,7 +2,12 @@ package com.studybuddy.dao;
 
 import com.studybuddy.models.User;
 import com.studybuddy.utils.PasswordHasher;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 
 /**
  * Data Access Object for User operations.
@@ -58,7 +63,7 @@ public class UserDAO {
             return -1;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return -1;
         }
     }
@@ -92,7 +97,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -137,7 +142,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -168,7 +173,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -199,7 +204,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -245,7 +250,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -271,7 +276,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -295,7 +300,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -319,7 +324,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -343,7 +348,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -367,7 +372,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -399,7 +404,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -423,7 +428,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -447,7 +452,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -471,7 +476,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -495,7 +500,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -523,7 +528,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -551,7 +556,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -575,7 +580,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -600,7 +605,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -624,7 +629,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -652,7 +657,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -680,7 +685,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return false;
@@ -712,7 +717,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -751,7 +756,7 @@ public class UserDAO {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -788,7 +793,7 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         return null;
@@ -813,7 +818,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -859,7 +864,7 @@ public class UserDAO {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }
@@ -885,7 +890,7 @@ public class UserDAO {
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(UserDAO.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             return false;
         }
     }

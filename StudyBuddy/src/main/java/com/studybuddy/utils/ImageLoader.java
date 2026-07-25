@@ -1,12 +1,5 @@
 package com.studybuddy.utils;
 
-import javafx.geometry.Rectangle2D;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
-import javafx.scene.shape.Circle;
-
-import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -18,6 +11,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.logging.Logger;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
+import javafx.scene.shape.Circle;
+import javax.imageio.ImageIO;
 
 /**
  * Loads, validates, resizes, and displays user profile avatars.
@@ -202,11 +201,13 @@ public class ImageLoader {
         if (img != null) {
             return img;
         }
-        Image fx = new Image(new FileInputStream(source), 0, 0, true, true);
-        if (fx.isError() || fx.getWidth() <= 0) {
-            throw new IOException("Could not read the selected image.");
+        try (FileInputStream fis = new FileInputStream(source)) {
+            Image fx = new Image(fis, 0, 0, true, true);
+            if (fx.isError() || fx.getWidth() <= 0) {
+                throw new IOException("Could not read the selected image.");
+            }
+            return fxImageToBufferedImage(fx);
         }
-        return fxImageToBufferedImage(fx);
     }
 
     private BufferedImage fxImageToBufferedImage(Image fx) {

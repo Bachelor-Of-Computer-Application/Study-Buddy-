@@ -8,16 +8,21 @@ import com.studybuddy.models.Question;
 import com.studybuddy.services.QuestionService;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.StringUtils;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
 
 /**
  * Controller for the Question Details view.

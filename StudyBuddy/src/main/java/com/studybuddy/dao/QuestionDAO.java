@@ -4,7 +4,6 @@ import com.studybuddy.models.Answer;
 import com.studybuddy.models.Question;
 import com.studybuddy.utils.DatabaseUtil;
 import com.studybuddy.utils.EventBus;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -1028,11 +1027,11 @@ public class QuestionDAO {
             throw e;
         } finally {
             if (stmt != null) {
-                try { stmt.close(); } catch (SQLException ignored) {}
+                try { stmt.close(); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
             }
             if (conn != null) {
-                try { conn.setAutoCommit(true); } catch (SQLException ignored) {}
-                try { conn.close(); } catch (SQLException ignored) {}
+                try { conn.setAutoCommit(true); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+                try { conn.close(); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
             }
         }
     }
@@ -1075,26 +1074,26 @@ public class QuestionDAO {
 
     private Question mapQuestionBank(ResultSet rs) throws SQLException {
         Question q = mapQuestion(rs);
-        try { q.setTitle(rs.getString("title")); } catch (SQLException ignored) {}
-        try { q.setDifficulty(rs.getString("difficulty")); } catch (SQLException ignored) {}
-        try { q.setQuestionType(rs.getString("question_type")); } catch (SQLException ignored) {}
-        try { q.setStatus(rs.getString("status")); } catch (SQLException ignored) {}
+        try { q.setTitle(rs.getString("title")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { q.setDifficulty(rs.getString("difficulty")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { q.setQuestionType(rs.getString("question_type")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { q.setStatus(rs.getString("status")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             int deptId = rs.getInt("departmentId");
             if (!rs.wasNull()) q.setDepartmentId(deptId);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             int semId = rs.getInt("semesterId");
             if (!rs.wasNull()) q.setSemesterId(semId);
-        } catch (SQLException ignored) {}
-        try { q.setDepartmentName(rs.getString("departmentName")); } catch (SQLException ignored) {}
-        try { q.setSemesterName(rs.getString("semesterName")); } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { q.setDepartmentName(rs.getString("departmentName")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
+        try { q.setSemesterName(rs.getString("semesterName")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             int answerCount = rs.getInt("answer_count");
             java.util.List<Answer> placeholder = new java.util.ArrayList<>();
             for (int i = 0; i < answerCount; i++) placeholder.add(null);
             q.setAnswers(placeholder);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         return q;
     }
 
@@ -1134,11 +1133,11 @@ public class QuestionDAO {
         try {
             int deptId = rs.getInt("departmentId");
             if (!rs.wasNull()) q.setDepartmentId(deptId);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             int semId = rs.getInt("semesterId");
             if (!rs.wasNull()) q.setSemesterId(semId);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
 
         // Load user info (full name, department, semester)
         try {
@@ -1169,11 +1168,11 @@ public class QuestionDAO {
             if (rewardStatus != null) {
                 q.setRewardStatus(rewardStatus);
             }
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             boolean approved = rs.getBoolean("approved");
             q.setApproved(approved);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
 
         return q;
     }

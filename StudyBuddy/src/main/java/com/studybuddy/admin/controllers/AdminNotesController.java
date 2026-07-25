@@ -12,21 +12,29 @@ import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.SessionManager;
 import com.studybuddy.utils.StringUtils;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.FileChooser;
-
 import java.awt.Desktop;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 
 /**
  * Admin Notes Management: upload form + moderation table with full CRUD.
@@ -338,7 +346,7 @@ public class AdminNotesController {
     @FXML public void handleDownload() {
         Note n = selected(); if (n == null) return;
         openSelectedFile(true);
-        try { noteService.incrementDownloads(n.getId()); loadData(); } catch (Exception ignored) {}
+        try { noteService.incrementDownloads(n.getId()); loadData(); } catch (Exception ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
     }
 
     @FXML public void handleEdit() {

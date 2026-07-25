@@ -11,17 +11,22 @@ import com.studybuddy.services.FileStorageService;
 import com.studybuddy.services.NoteService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-
 import java.io.File;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 public class CreateNoteController {
 
@@ -152,7 +157,7 @@ public class CreateNoteController {
                 try {
                     activityDAO.logActivity(activity);
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    java.util.logging.Logger.getLogger(CreateNoteController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 }
             }
 
@@ -161,7 +166,7 @@ public class CreateNoteController {
             showAlert(Alert.AlertType.INFORMATION, "Success", "Note saved successfully!");
             closeDialog();
         } catch (Exception e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(CreateNoteController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to save note: " + e.getMessage());
         }
     }

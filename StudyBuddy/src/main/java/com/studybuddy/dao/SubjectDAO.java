@@ -2,8 +2,11 @@ package com.studybuddy.dao;
 
 import com.studybuddy.models.Semester;
 import com.studybuddy.models.Subject;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 

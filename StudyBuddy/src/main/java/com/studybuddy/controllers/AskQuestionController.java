@@ -9,6 +9,9 @@ import com.studybuddy.services.AcademicService;
 import com.studybuddy.services.QuestionService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.EventBus;
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import javafx.animation.ScaleTransition;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -16,15 +19,15 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 
 /**
  * Controller for AskQuestionView.fxml - with cascading Department → Semester → Subject.
@@ -46,8 +49,6 @@ public class AskQuestionController implements Initializable {
     @FXML private Button filesButton;
     @FXML private Button attachmentButton;
     @FXML private Label attachmentLabel;
-    @FXML private Button homeButton;
-    @FXML private Button profileButton;
 
     private QuestionService questionService;
     private AcademicService academicService;
@@ -176,7 +177,7 @@ public class AskQuestionController implements Initializable {
             int rewardPoints = 0;
             String rewardStr = rewardPointsComboBox.getValue();
             if (rewardStr != null) {
-                try { rewardPoints = Integer.parseInt(rewardStr); } catch (NumberFormatException ignored) {}
+                try { rewardPoints = Integer.parseInt(rewardStr); } catch (NumberFormatException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
             }
 
             // Requirement 2: Validate reward > 0 and balance before deducting
@@ -209,7 +210,7 @@ public class AskQuestionController implements Initializable {
                     try {
                         activityDAO.logActivity(activity);
                     } catch (SQLException ex) {
-                        ex.printStackTrace();
+                        java.util.logging.Logger.getLogger(AskQuestionController.class.getName()).log(java.util.logging.Level.SEVERE, ex.getMessage(), ex);
                     }
                 }
 
@@ -236,7 +237,7 @@ public class AskQuestionController implements Initializable {
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Error",
                     "An unexpected error occurred.", e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AskQuestionController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -302,7 +303,7 @@ public class AskQuestionController implements Initializable {
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Error",
                     "Failed to load home page.", e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AskQuestionController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -326,7 +327,7 @@ public class AskQuestionController implements Initializable {
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Error",
                     "Failed to open profile page.", e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AskQuestionController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 

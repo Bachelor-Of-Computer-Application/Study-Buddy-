@@ -3,11 +3,10 @@ package com.studybuddy;
 import com.studybuddy.dao.DatabaseConnection;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.SceneManager;
+import java.util.Objects;
 import javafx.application.Application;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-
-import java.util.Objects;
 
 /**
  * Main application class extending Application to manage JavaFX life cycle.
@@ -45,7 +44,7 @@ public class App extends Application {
         try {
             DatabaseConnection.initialize();
         } catch (Exception e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(App.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
 
         // Register stage in SceneManager
@@ -55,7 +54,7 @@ public class App extends Application {
         try {
             SceneManager.showLoginPage(stage);
         } catch (Exception e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(App.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             throw new RuntimeException("Failed to launch Login screen", e);
         }
     }

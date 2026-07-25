@@ -1,8 +1,10 @@
 
 package com.studybuddy.utils;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class EventBus {
     private static EventBus instance;
@@ -35,7 +37,7 @@ public class EventBus {
                 try {
                     publishToListener(listener, event);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    java.util.logging.Logger.getLogger(EventBus.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
                 }
             }
         }

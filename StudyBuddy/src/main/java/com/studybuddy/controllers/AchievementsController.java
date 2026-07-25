@@ -5,21 +5,22 @@ import com.studybuddy.models.Achievement;
 import com.studybuddy.models.User;
 import com.studybuddy.services.AchievementService;
 import com.studybuddy.utils.EventBus;
+import java.net.URL;
+import java.util.List;
+import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
-
 public class AchievementsController implements Initializable {
 
+    @FXML private BorderPane rootPane;
     @FXML private Button refreshBtn;
     @FXML private Label totalAchievementsLabel;
     @FXML private Label unlockedAchievementsLabel;
@@ -87,8 +88,8 @@ public class AchievementsController implements Initializable {
             }
 
         } catch (Exception e) {
-            System.err.println("[AchievementsController] Failed to load achievements: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AchievementsController.class.getName()).warning("[AchievementsController] Failed to load achievements: " + e.getMessage());
+            java.util.logging.Logger.getLogger(AchievementsController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -200,8 +201,8 @@ public class AchievementsController implements Initializable {
                 mainBorderPane.setCenter(view);
             }
         } catch (Exception e) {
-            System.err.println("[AchievementsController] Failed to navigate to profile: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AchievementsController.class.getName()).warning("[AchievementsController] Failed to navigate to profile: " + e.getMessage());
+            java.util.logging.Logger.getLogger(AchievementsController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 }

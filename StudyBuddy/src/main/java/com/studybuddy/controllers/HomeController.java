@@ -1,46 +1,46 @@
 package com.studybuddy.controllers;
 
 import com.studybuddy.App;
+import com.studybuddy.admin.services.NotificationService;
+import com.studybuddy.models.Notification;
 import com.studybuddy.models.Task;
 import com.studybuddy.models.User;
-import com.studybuddy.models.Notification;
-import com.studybuddy.admin.services.NotificationService;
 import com.studybuddy.services.AuthService;
 import com.studybuddy.services.TaskService;
 import com.studybuddy.utils.EventBus;
 import com.studybuddy.utils.ImageLoader;
 import com.studybuddy.utils.SceneManager;
+import java.util.List;
 import javafx.animation.FadeTransition;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.collections.FXCollections;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.Button;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.Scene;
-import javafx.stage.Modality;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import java.util.List;
 
 /**
  * Controller for the HomeView.fxml.
  *
- * Dashboard data is loaded from SQL Server via TaskService → TaskDAO.
+ * Dashboard data is loaded from SQL Server via TaskService â†’ TaskDAO.
  *
  * Architecture:
- *   HomeController → TaskService → TaskDAO → DatabaseConnection → SQL Server
+ *   HomeController â†’ TaskService â†’ TaskDAO â†’ DatabaseConnection â†’ SQL Server
  */
 public class HomeController {
 
@@ -199,12 +199,11 @@ public class HomeController {
         // (loaded views); task cards would be rendered inside DashboardView.
         // This method ensures data is fetched and available without stubs.
         if (contentArea != null && recentTasks != null && !recentTasks.isEmpty()) {
-            // Tasks are available — they will be displayed when the user
+            // Tasks are available â€” they will be displayed when the user
             // navigates to DashboardView via goToDashboard().
-            // No stub print — real data has been retrieved from SQL Server.
+            // Real data has been retrieved from SQL Server.
         }
 
-        // No System.out.println stub — real query was executed above.
     }
 
     // =========================
@@ -235,7 +234,6 @@ public class HomeController {
             completedTasksCount.setText(progress + "%");
         }
 
-        // No System.out.println stub — real query was executed above.
     }
 
     // =========================
@@ -281,7 +279,7 @@ public class HomeController {
             fadeInContent(view);
         } catch (Exception e) {
             showAlert("Navigation Error", "Could not navigate to Profile: " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(HomeController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -291,8 +289,8 @@ public class HomeController {
         try {
             SceneManager.showLoginPage(getStage());
         } catch (java.io.IOException e) {
-            System.err.println("[HomeController] ❌ Could not navigate back to LoginView.fxml");
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(HomeController.class.getName()).warning("[HomeController] âŒ Could not navigate back to LoginView.fxml");
+            java.util.logging.Logger.getLogger(HomeController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
             showAlert("Navigation Error", "Could not return to login: " + e.getMessage());
         }
     }
@@ -309,7 +307,7 @@ public class HomeController {
             fadeInContent(view);
         } catch (Exception e) {
             showAlert("Navigation Error", "Could not navigate to " + fxmlPath + ": " + e.getMessage());
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(HomeController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -350,7 +348,7 @@ public class HomeController {
                 showNotificationsDialog();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(HomeController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -372,7 +370,7 @@ public class HomeController {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(HomeController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -406,11 +404,11 @@ public class HomeController {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    String icon = "🔔";
+                    String icon = "ðŸ””";
                     if ("REWARD".equalsIgnoreCase(item.getRecipientType()) || "REWARD".equalsIgnoreCase(item.getNotificationType())) {
-                        icon = "🏆";
+                        icon = "ðŸ†";
                     } else if ("HIGH".equalsIgnoreCase(item.getPriority()) || "URGENT".equalsIgnoreCase(item.getPriority())) {
-                        icon = "🚨";
+                        icon = "ðŸš¨";
                     }
                     String dateStr = "N/A";
                     String timeStr = "N/A";
@@ -451,7 +449,7 @@ public class HomeController {
             EventBus.getInstance().unsubscribe(EventBus.NotificationsChangedEvent.class, dialogListener);
         });
 
-        Button markReadBtn = new Button("✓ Mark as Read");
+        Button markReadBtn = new Button("âœ“ Mark as Read");
         markReadBtn.getStyleClass().add("btn-primary");
         markReadBtn.setOnAction(e -> {
             Notification selected = listView.getSelectionModel().getSelectedItem();
@@ -461,14 +459,14 @@ public class HomeController {
             }
         });
 
-        Button markAllReadBtn = new Button("✓ Mark All Read");
+        Button markAllReadBtn = new Button("âœ“ Mark All Read");
         markAllReadBtn.getStyleClass().add("btn-success");
         markAllReadBtn.setOnAction(e -> {
             NotificationService.getInstance().markAllReadForUser(currentUser.getId());
             refreshList.run();
         });
 
-        Button deleteBtn = new Button("🗑 Delete");
+        Button deleteBtn = new Button("ðŸ—‘ Delete");
         deleteBtn.getStyleClass().add("btn-danger");
         deleteBtn.setOnAction(e -> {
             Notification selected = listView.getSelectionModel().getSelectedItem();

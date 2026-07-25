@@ -9,18 +9,25 @@ import com.studybuddy.services.FileStorageService;
 import com.studybuddy.utils.AcademicFilterHelper;
 import com.studybuddy.utils.SessionManager;
 import com.studybuddy.utils.StringUtils;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.FileChooser;
-
 import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 
 /**
  * Smart notification management with targeting, types, priority, expiry, attachments.
@@ -154,7 +161,7 @@ public class AdminNotificationsController {
                 warn("Failed to send. Recipient list is empty (no matching users found).");
             }
         } catch (java.sql.SQLException e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(AdminNotificationsController.class.getName()).log(java.util.logging.Level.SEVERE, e.getMessage(), e);
 
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Notification Error");

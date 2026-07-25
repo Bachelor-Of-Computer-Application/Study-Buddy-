@@ -16,7 +16,7 @@
     <HBox alignment="CENTER_LEFT" spacing="16">
         <VBox spacing="3" HBox.hgrow="ALWAYS">
             <Label text="Activity Logs" styleClass="section-title"/>
-            <Label fx:id="lblTotalCount" text="" styleClass="section-subtitle"/>
+            <Label fx:id="lblTotalCount" styleClass="section-subtitle"/>
         </VBox>
         <Button text="📤 Export CSV" styleClass="secondary-btn" onAction="#handleExport"/>
         <Button text="↻ Refresh"    styleClass="secondary-btn" onAction="#handleRefresh"/>

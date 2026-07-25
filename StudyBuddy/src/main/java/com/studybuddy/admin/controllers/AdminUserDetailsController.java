@@ -4,15 +4,16 @@ import com.studybuddy.admin.services.AdminService;
 import com.studybuddy.models.Note;
 import com.studybuddy.models.Resource;
 import com.studybuddy.models.User;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.stage.Stage;
-
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.stage.Stage;
 
 public class AdminUserDetailsController {
 

@@ -37,7 +37,7 @@
 
     <!-- ══ CENTER – Scrollable Form Content ═══════════════════════════ -->
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="dialog-scroll">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="dialog-scroll">
             <content>
                 <VBox spacing="20" maxWidth="Infinity">
                     <padding><Insets top="16" right="32" bottom="16" left="32" /></padding>

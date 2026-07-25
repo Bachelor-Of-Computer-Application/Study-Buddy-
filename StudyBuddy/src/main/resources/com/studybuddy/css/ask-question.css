@@ -228,3 +228,10 @@
 .content-container {
     -fx-background-color: transparent;
 }
+.points-group {
+    -fx-min-width: 140px;
+}
+
+.points-display-group {
+    -fx-min-width: 120px;
+}

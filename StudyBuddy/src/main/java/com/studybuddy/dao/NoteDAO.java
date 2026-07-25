@@ -485,11 +485,11 @@ public class NoteDAO {
         note.setPrivate(rs.getBoolean("isPrivate"));       // SQL column: isPrivate
         // Safely read status — column may not exist in older DB versions
         try { note.setStatus(rs.getString("status")); } catch (SQLException ignored) { note.setStatus("Pending"); }
-        try { note.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
+        try { note.setTags(rs.getString("tags")); } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
         try {
             int dl = rs.getInt("downloads");
             if (!rs.wasNull()) note.setDownloads(dl);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) { /* intentionally ignored: optional data or best-effort cleanup */ }
 
         // Load user info (full name, department, semester)
         try {

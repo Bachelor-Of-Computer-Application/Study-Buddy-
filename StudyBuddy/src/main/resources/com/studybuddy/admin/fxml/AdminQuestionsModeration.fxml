@@ -12,9 +12,7 @@
     <center>
         <ScrollPane fx:id="pageScrollPane"
                     fitToWidth="true"
-                    fitToHeight="false"
                     pannable="true"
-                    vbarPolicy="AS_NEEDED"
                     hbarPolicy="NEVER"
                     styleClass="content-scroll">
             <content>

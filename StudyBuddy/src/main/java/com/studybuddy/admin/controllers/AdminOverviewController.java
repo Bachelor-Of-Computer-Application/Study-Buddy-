@@ -5,16 +5,17 @@ import com.studybuddy.models.Note;
 import com.studybuddy.models.Question;
 import com.studybuddy.models.User;
 import com.studybuddy.utils.EventBus;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.chart.PieChart;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.chart.PieChart;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 /**
  * Controller for the AdminDashboardOverview.fxml panel.
